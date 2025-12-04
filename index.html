@@ -1,47 +1,49 @@
 <!DOCTYPE html>
-<html lang="pt-br" class="dark">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login | Dashboard Divertilândia</title>
-
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
-
-  <!-- <script src="protect.js"></script> -->
-  
+  <meta charset="UTF-8">
+  <title>Login - Dashboard</title>
   <style>
-    body { background: #0f0f12; }
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .box {
+      background: #1a1a1a;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      width: 300px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      font-size: 15px;
+    }
   </style>
 </head>
+<body>
 
-<body class="flex items-center justify-center h-screen px-4">
+<div class="box">
+  <h2>Dashboard Login</h2>
+  <button onclick="loginGoogle()">Entrar com Google</button>
+</div>
 
-  <div class="w-full max-w-md bg-neutral-900 rounded-2xl shadow-xl border border-neutral-800 p-8">
-    <h1 class="text-2xl font-semibold text-white text-center mb-6">
-      Acesso à Dashboard
-    </h1>
+<!-- Firebase compat -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
-    <!-- LOGIN COM GOOGLE -->
-    <button
-      onclick="loginGoogle()"
-      class="w-full flex items-center justify-center gap-3 bg-white text-black py-3 rounded-lg font-medium hover:bg-neutral-200 transition mb-6"
-    >
-      <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6" />
-      Entrar com Google
-    </button>
-
-    <p class="text-center text-neutral-500 mt-4 text-sm">
-      Divertilândia Festas © 2025
-    </p>
-  </div>
-
-  <script src="./js/firebase.js"></script>
-  <script src="./js/auth.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth.js"></script>
 
 </body>
 </html>
