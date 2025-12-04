@@ -8,12 +8,15 @@
       background: #111;
       color: #fff;
       font-family: Arial;
+      margin: 0;
     }
     .top {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       padding: 20px;
       background: #1a1a1a;
+      border-bottom: 1px solid #222;
     }
     button {
       background: crimson;
@@ -28,18 +31,24 @@
 <body>
 
 <div class="top">
-  <h1>Painel</h1>
+  <h1>Painel Administrativo</h1>
   <button onclick="logout()">Sair</button>
 </div>
 
-<p>Bem-vindo à dashboard! ✔</p>
+<div style="padding:20px;">
+  <p>Bem-vindo(a)! ✔<br>
+  Agora você pode adicionar pacotes, valores, fotos e tudo mais.</p>
+</div>
 
 <!-- Firebase compat -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
 <script src="firebase-config.js"></script>
 <script src="protect.js"></script>
+
 <script>
 function logout() {
   firebase.auth().signOut().then(() => {
@@ -47,5 +56,6 @@ function logout() {
   });
 }
 </script>
+
 </body>
 </html>
