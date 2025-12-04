@@ -1,12 +1,13 @@
 // dashboard/js/firebase.js
 
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJECT.firebaseapp.com",
-  projectId: "SEU_PROJECT",
-  storageBucket: "SEU_PROJECT.appspot.com",
-  messagingSenderId: "XXXXXXX",
-  appId: "XXXXXXX",
+  apiKey: "AIzaSyCi6kRFPaEzyPq5oVGKn6tIsNmT6QpWgBg",
+  authDomain: "dashdivert.firebaseapp.com",
+  projectId: "dashdivert",
+  storageBucket: "dashdivert.firebasestorage.app",
+  messagingSenderId: "1055393730382",
+  appId: "1:1055393730382:web:81147d937b3ee3db59981f",
+  measurementId: "G-9YPFN6EV44"
 };
 
 firebase.initializeApp(firebaseConfig);
