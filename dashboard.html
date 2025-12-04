@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+      background: #1a1a1a;
+    }
+    button {
+      background: crimson;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<div class="top">
+  <h1>Painel</h1>
+  <button onclick="logout()">Sair</button>
+</div>
+
+<p>Bem-vindo à dashboard! ✔</p>
+
+<!-- Firebase compat -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
+<script src="firebase-config.js"></script>
+<script src="protect.js"></script>
+<script>
+function logout() {
+  firebase.auth().signOut().then(() => {
+    window.location.href = "index.html";
+  });
+}
+</script>
+</body>
+</html>
