@@ -1,5 +1,7 @@
-// dashboard/js/protect.js
+const auth = firebase.auth();
 
-if (localStorage.getItem("auth") !== "ok") {
-  window.location.href = "./index.html";
-}
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "index.html";
+  }
+});
