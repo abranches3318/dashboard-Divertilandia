@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard — Divertilandia</title>
+  <meta charset="UTF-8" />
+  <title>Dashboard - Divertilândia</title>
 
-  <!-- Estilos base -->
-  <link rel="stylesheet" href="css/dashboard.css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/dashboard.css" />
 
-  <!-- Firebase compat -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -19,46 +19,100 @@
 
 <body>
 
-<div class="sidebar">
-  <div class="logo">🎪 Divertilandia</div>
-  <ul class="menu">
-    <li class="menu-item active" data-page="home">🏠 Dashboard</li>
-    <li class="menu-item" data-page="items">🎈 Brinquedos</li>
-    <li class="menu-item" data-page="pacotes">📦 Pacotes</li>
-    <li class="menu-item" data-page="conversas">💬 Conversas</li>
-    <li class="menu-item" data-page="financeiro">💰 Financeiro</li>
-    <li class="menu-item" data-page="usuarios">👤 Usuários</li>
-    <li class="menu-item" data-page="notificacoes">🔔 Notificações</li>
-  </ul>
-  <div class="logout-area"><button onclick="logout()">Sair</button></div>
-</div>
-
-<div class="content">
-  <div class="navbar">
-    <div class="navbar-title">Painel Divertilandia</div>
-    <div class="navbar-right">
-      <div id="notifIcon" class="notif-icon" onclick="openNotifications()">🔔 <span id="notifBadge" class="notif-badge">0</span></div>
-      <div class="user-info">
-        <img id="userPhoto" class="user-photo" src="https://i.imgur.com/4ZQZ4fD.png">
-        <span id="userName" class="user-name">Carregando...</span>
-      </div>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <img src="img/logo.png" class="logo-img" alt="Divertilândia" />
     </div>
-  </div>
 
-  <div id="pageContent" class="page-content">
-    <h2>Carregando...</h2>
-  </div>
-</div>
+    <nav>
+      <ul>
+        <li class="active" onclick="nav('dashboard')">📊 Dashboard</li>
+        <li onclick="nav('agendamentos')">📅 Agendamentos</li>
+        <li onclick="nav('financeiro')">💰 Financeiro</li>
+        <li onclick="nav('itens')">🎈 Itens / Catálogo</li>
+        <li onclick="nav('pacotes')">🎁 Pacotes</li>
+        <li onclick="nav('monitores')">🧑‍🏫 Monitores</li>
+        <li onclick="nav('tarefas')">📝 Tarefas</li>
+        <li onclick="nav('conversas')">💬 Conversas (tempo real)</li>
+        <li onclick="logout()">🚪 Sair</li>
+      </ul>
+    </nav>
+  </aside>
 
-<script src="js/menu.js"></script>
-<script src="js/realtime.js"></script>
-<script src="js/notifications.js"></script>
+  <!-- Conteúdo -->
+  <main class="content">
 
-<script>
-function logout() {
-  firebase.auth().signOut().then(() => { window.location.href = "index.html"; });
-}
-</script>
+    <!-- Navbar -->
+    <header class="topbar">
+      <h1 id="titulo-pagina">Dashboard</h1>
+
+      <div class="top-right">
+        <div class="notif" onclick="abrirNotificacoes()">
+          🔔 <span id="notif-count">0</span>
+        </div>
+
+        <div class="user-info">
+          <span id="user-name">Usuário</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Container das páginas -->
+    <section id="pagina-dashboard" class="pagina ativa">
+      <div class="cards">
+
+        <div class="card">
+          <h3>Agendamentos Hoje</h3>
+          <p id="ag-hoje">0</p>
+        </div>
+
+        <div class="card">
+          <h3>Receita Mensal</h3>
+          <p id="receita-mes">R$ 0,00</p>
+        </div>
+
+        <div class="card">
+          <h3>Tarefas Pendentes</h3>
+          <p id="tarefas-pendentes">0</p>
+        </div>
+
+      </div>
+
+      <div class="panel">
+        <h2>📅 Calendário</h2>
+        <div id="calendar"></div>
+      </div>
+
+    </section>
+
+    <!-- Outras páginas (conteúdo vazio, preenchido pelos JS) -->
+    <section id="pagina-agendamentos" class="pagina"></section>
+    <section id="pagina-financeiro" class="pagina"></section>
+    <section id="pagina-itens" class="pagina"></section>
+    <section id="pagina-pacotes" class="pagina"></section>
+    <section id="pagina-monitores" class="pagina"></section>
+    <section id="pagina-tarefas" class="pagina"></section>
+    <section id="pagina-conversas" class="pagina"></section>
+
+  </main>
+
+  <!-- JS -->
+  <script src="js/dashboard.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/monitor.js"></script>
+  <script src="js/checklist.js"></script>
+  <script src="js/ordemServico.js"></script>
+  <script src="js/tarefas.js"></script>
+  <script src="js/notificacoes.js"></script>
+
+  <script>
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "index.html";
+      });
+    }
+  </script>
 
 </body>
 </html>
