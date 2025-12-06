@@ -1,17 +1,17 @@
 // ============================
-// FIREBASE
+// FIREBASE (compat, global)
 // ============================
-const auth = firebase.auth();
-const db = firebase.firestore();
-const storage = firebase.storage();
+window.auth = window.auth || firebase.auth();
+window.db = window.db || firebase.firestore();
+window.storage = window.storage || firebase.storage();
 
 // ============================
 // ELEMENTOS
 // ============================
 const paginas = document.querySelectorAll(".pagina");
-const menuLinks = document.querySelectorAll("[data-page]");
+const menuLinks = document.querySelectorAll("aside nav ul li");
 const notifCountEl = document.getElementById("notif-count");
-const logoImg = document.getElementById("logo-img");
+const logoImg = document.querySelector(".logo-img");
 
 // ============================
 // ESTADO GLOBAL
@@ -24,117 +24,149 @@ window.dashboardState = {
 };
 
 // ============================
+// FUNÇÃO GLOBAL NAV
+// ============================
+window.nav = function (idPagina) {
+  // Mostrar a página
+  paginas.forEach(p => p.classList.remove("ativa"));
+  const pagina = document.getElementById("pagina-" + idPagina);
+  if (pagina) pagina.classList.add("ativa");
+
+  // Destacar menu ativo
+  menuLinks.forEach(li => li.classList.remove("active"));
+  const menuItem = Array.from(menuLinks).find(li => li.getAttribute("onclick")?.includes(`'${idPagina}'`));
+  if (menuItem) menuItem.classList.add("active");
+
+  // Atualizar título
+  const titulo = document.getElementById("titulo-pagina");
+  if (titulo) titulo.textContent = pagina ? pagina.querySelector("h2")?.textContent || idPagina.charAt(0).toUpperCase() + idPagina.slice(1) : "";
+};
+
+// ============================
 // INICIALIZAÇÃO
 // ============================
-auth.onAuthStateChanged(async user => {
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
+window.addEventListener("DOMContentLoaded", () => {
+  auth.onAuthStateChanged(async user => {
+    if (!user) {
+      window.location.href = "index.html";
+      return;
+    }
 
-  dashboardState.user = user;
+    dashboardState.user = user;
 
-  // Carregar nome do usuário
-  const userInfoEl = document.querySelector(".user-info");
-  if (userInfoEl) {
-    userInfoEl.textContent = user.displayName || user.email;
-  }
+    // Nome do usuário
+    const userInfoEl = document.querySelector(".user-info");
+    if (userInfoEl) userInfoEl.textContent = user.displayName || user.email;
 
-  // Carregar logo da pasta /img
-  if (logoImg) {
-    logoImg.src = "img/logo.png";
-  }
+    // Logo
+    if (logoImg) logoImg.src = "img/logo.png";
 
-  await carregarResumo();
-  await carregarNotificacoes();
-  await carregarCalendario();
+    // Carregar dados
+    await carregarResumo();
+    await carregarNotificacoes();
+    await carregarCalendario();
 
-  ativarPagina("inicio");
-});
-
-// ============================
-// TROCA DE PÁGINAS
-// ============================
-menuLinks.forEach(btn => {
-  btn.addEventListener("click", () => {
-    const page = btn.dataset.page;
-    ativarPagina(page);
-
-    // destacar item ativo
-    menuLinks.forEach(i => i.classList.remove("active"));
-    btn.classList.add("active");
+    // Abrir dashboard inicialmente
+    nav("dashboard");
   });
 });
-
-function ativarPagina(id) {
-  paginas.forEach(p => p.classList.remove("ativa"));
-  document.getElementById(id).classList.add("ativa");
-}
 
 // ============================
 // RESUMO (CARDS)
 // ============================
 async function carregarResumo() {
-  // TOTAL CLIENTES
-  const clientesSnap = await db.collection("clientes").get();
-  document.getElementById("total-clientes").textContent = clientesSnap.size;
+  try {
+    // AGENDAMENTOS HOJE
+    const hoje = new Date();
+    const inicioDia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+    const fimDia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate(), 23, 59, 59);
 
-  // TOTAL AGENDAMENTOS
-  const eventosSnap = await db.collection("agendamentos").get();
-  document.getElementById("total-agendamentos").textContent = eventosSnap.size;
+    const snap = await db.collection("agendamentos")
+      .where("data", ">=", inicioDia)
+      .where("data", "<=", fimDia)
+      .get();
 
-  // TOTAL ITENS DO CATÁLOGO
-  const itensSnap = await db.collection("item").get();
-  document.getElementById("total-itens").textContent = itensSnap.size;
+    const agHoje = snap.size;
+    const agHojeEl = document.getElementById("ag-hoje");
+    if (agHojeEl) agHojeEl.textContent = agHoje;
 
-  // RECEITA APENAS SOMA (BASEADO NO CAMPO "entrada_paga")
-  const pagamentosSnap = await db.collection("agendamentos").get();
-  let receita = 0;
-  pagamentosSnap.forEach(doc => {
-    const data = doc.data();
-    if (data?.entrada_paga) receita += Number(data.valor_entrada || 0);
-  });
+    // RECEITA MENSAL
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59);
 
-  document.getElementById("total-receita").textContent = "R$ " + receita.toFixed(2);
+    const snapMes = await db.collection("agendamentos")
+      .where("data", ">=", inicioMes)
+      .where("data", "<=", fimMes)
+      .get();
+
+    let receita = 0;
+    snapMes.forEach(doc => {
+      const data = doc.data();
+      if (data?.entrada_paga) receita += Number(data.valor_entrada || 0);
+    });
+
+    const receitaEl = document.getElementById("receita-mes");
+    if (receitaEl) receitaEl.textContent = "R$ " + receita.toFixed(2);
+
+    // TAREFAS PENDENTES
+    const tarefasSnap = await db.collection("tarefas")
+      .where("status", "==", "pendente")
+      .get();
+
+    const tarefasEl = document.getElementById("tarefas-pendentes");
+    if (tarefasEl) tarefasEl.textContent = tarefasSnap.size;
+  } catch (err) {
+    console.error("Erro ao carregar resumo:", err);
+  }
 }
 
 // ============================
 // NOTIFICAÇÕES
 // ============================
 async function carregarNotificacoes() {
-  const snap = await db.collection("notificacoes")
-    .orderBy("criado_em", "desc")
-    .limit(20)
-    .get();
+  try {
+    const snap = await db.collection("notificacoes")
+      .orderBy("criado_em", "desc")
+      .limit(20)
+      .get();
 
-  dashboardState.notificacoes = snap.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+    dashboardState.notificacoes = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
-  notifCountEl.textContent = dashboardState.notificacoes.length;
+    if (notifCountEl) notifCountEl.textContent = dashboardState.notificacoes.length;
+  } catch (err) {
+    console.error("Erro ao carregar notificações:", err);
+  }
 }
+
+window.abrirNotificacoes = function () {
+  nav("notificacoes");
+};
 
 // ============================
 // CALENDÁRIO
 // ============================
 async function carregarCalendario() {
-  const calendarEl = document.getElementById("calendar");
-  if (!calendarEl) return;
+  try {
+    const calendarEl = document.getElementById("calendar");
+    if (!calendarEl) return;
 
-  // Carregar agendamentos do mês
-  const snap = await db.collection("agendamentos").get();
+    const snap = await db.collection("agendamentos").get();
+    const eventos = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
 
-  const eventos = snap.docs.map(d => ({
-    id: d.id,
-    ...d.data()
-  }));
+    dashboardState.agendamentosCache = eventos;
 
-  dashboardState.agendamentosCache = eventos;
-
-  // render externo (calendar.js)
-  if (window.renderCalendar) {
-    window.renderCalendar(eventos);
+    // Renderizar calendário (calendar.js)
+    if (window.renderCalendar) {
+      window.renderCalendar(eventos);
+    }
+  } catch (err) {
+    console.error("Erro ao carregar calendário:", err);
   }
 }
 
@@ -153,10 +185,3 @@ window.logout = function () {
     window.location.href = "index.html";
   });
 };
-
-// ============================
-// RECARREGAR NOTIFICAÇÕES
-// ============================
-document.querySelector(".notif").addEventListener("click", () => {
-  ativarPagina("notificacoes");
-});
