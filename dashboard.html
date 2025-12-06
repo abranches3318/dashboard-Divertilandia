@@ -19,59 +19,25 @@
 
 <body>
 
-<!------------------------- SIDEBAR ------------------------->
 <div class="sidebar">
-  <div class="logo">
-    🎪 Divertilandia
-  </div>
-
+  <div class="logo">🎪 Divertilandia</div>
   <ul class="menu">
-    <li class="menu-item active" data-page="home">
-      <span>🏠</span> Dashboard
-    </li>
-
-    <li class="menu-item" data-page="items">
-      <span>🎈</span> Brinquedos
-    </li>
-
-    <li class="menu-item" data-page="pacotes">
-      <span>📦</span> Pacotes
-    </li>
-
-    <li class="menu-item" data-page="conversas">
-      <span>💬</span> Conversas
-    </li>
-
-    <li class="menu-item" data-page="financeiro">
-      <span>💰</span> Financeiro
-    </li>
-
-    <li class="menu-item" data-page="usuarios">
-      <span>👤</span> Usuários
-    </li>
-
-    <li class="menu-item" data-page="notificacoes">
-      <span>🔔</span> Notificações
-    </li>
+    <li class="menu-item active" data-page="home">🏠 Dashboard</li>
+    <li class="menu-item" data-page="items">🎈 Brinquedos</li>
+    <li class="menu-item" data-page="pacotes">📦 Pacotes</li>
+    <li class="menu-item" data-page="conversas">💬 Conversas</li>
+    <li class="menu-item" data-page="financeiro">💰 Financeiro</li>
+    <li class="menu-item" data-page="usuarios">👤 Usuários</li>
+    <li class="menu-item" data-page="notificacoes">🔔 Notificações</li>
   </ul>
-
-  <div class="logout-area">
-    <button onclick="logout()">Sair</button>
-  </div>
+  <div class="logout-area"><button onclick="logout()">Sair</button></div>
 </div>
 
-<!------------------------- CONTENT WRAPPER ------------------------->
 <div class="content">
-
-  <!------------------------- NAVBAR ------------------------->
   <div class="navbar">
-    <div class="navbar-title">Dashboard</div>
-
+    <div class="navbar-title">Painel Divertilandia</div>
     <div class="navbar-right">
-      <div class="notif-icon" onclick="openNotifications()">
-        🔔 <span id="notifBadge" class="notif-badge">0</span>
-      </div>
-
+      <div id="notifIcon" class="notif-icon" onclick="openNotifications()">🔔 <span id="notifBadge" class="notif-badge">0</span></div>
       <div class="user-info">
         <img id="userPhoto" class="user-photo" src="https://i.imgur.com/4ZQZ4fD.png">
         <span id="userName" class="user-name">Carregando...</span>
@@ -79,26 +45,20 @@
     </div>
   </div>
 
-  <!------------------------- MAIN VIEW LOADER ------------------------->
   <div id="pageContent" class="page-content">
     <h2>Carregando...</h2>
   </div>
-
 </div>
 
-<!------------------------- JS CONTROLLERS ------------------------->
 <script src="js/menu.js"></script>
 <script src="js/realtime.js"></script>
 <script src="js/notifications.js"></script>
 
 <script>
 function logout() {
-  firebase.auth().signOut().then(() => {
-    window.location.href = "index.html";
-  });
+  firebase.auth().signOut().then(() => { window.location.href = "index.html"; });
 }
 </script>
 
 </body>
 </html>
-
