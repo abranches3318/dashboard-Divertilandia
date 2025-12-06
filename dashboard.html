@@ -1,43 +1,154 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard</title>
+  <meta charset="UTF-8" />
+  <title>Dashboard - Divertilândia</title>
+
+  <!-- ====== ESTILO GLOBAL DARK SAAS ====== -->
   <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: Arial;
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Inter", Arial, sans-serif;
     }
-    .top {
+
+    body {
+      background: #0e0e0f;
+      color: #f5f5f7;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      background: #1a1a1a;
-      border-bottom: 1px solid #222;
+      overflow: hidden;
     }
-    button {
-      background: crimson;
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      width: 260px;
+      background: #141416;
+      border-right: 1px solid #1f1f22;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      height: 100vh;
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 40px;
+      letter-spacing: 0.5px;
+    }
+
+    .menu-item {
+      padding: 12px 14px;
+      color: #c9c9d0;
+      cursor: pointer;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: 0.2s;
+    }
+
+    .menu-item:hover {
+      background: #1e1e22;
+      color: #fff;
+    }
+
+    .menu-item.active {
+      background: #2b2b33;
+      color: #fff;
+    }
+
+    /* ===== Navbar ===== */
+    .navbar {
+      height: 70px;
+      background: #141416;
+      border-bottom: 1px solid #1f1f22;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 0 25px;
+      position: fixed;
+      left: 260px;
+      right: 0;
+      top: 0;
+    }
+
+    .logout-btn {
+      padding: 10px 16px;
+      background: #ff4d4f;
       border: none;
-      padding: 10px 15px;
+      color: white;
       border-radius: 6px;
       cursor: pointer;
-      color: white;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+
+    .logout-btn:hover {
+      background: #d9363e;
+    }
+
+    /* ===== Conteúdo principal ===== */
+    .content {
+      margin-left: 260px;
+      margin-top: 70px;
+      padding: 30px;
+      height: calc(100vh - 70px);
+      overflow-y: auto;
+    }
+
+    h2 {
+      margin-bottom: 15px;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .card {
+      background: #1a1b1e;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #222227;
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
 
-<div class="top">
-  <h1>Painel Administrativo</h1>
-  <button onclick="logout()">Sair</button>
+<!-- ========== SIDEBAR ========== -->
+<div class="sidebar">
+  <div class="brand">🎪 Divertilândia</div>
+
+  <div class="menu-item active" onclick="carregarPagina('inicio')">🏠 Início</div>
+  <div class="menu-item" onclick="carregarPagina('itens')">🎈 Itens / Brinquedos</div>
+  <div class="menu-item" onclick="carregarPagina('clientes')">👥 Clientes</div>
+  <div class="menu-item" onclick="carregarPagina('orcamentos')">📝 Orçamentos</div>
+  <div class="menu-item" onclick="carregarPagina('agendamentos')">📅 Agendamentos</div>
+  <div class="menu-item" onclick="carregarPagina('fotos')">📸 Fotos</div>
 </div>
 
-<div style="padding:20px;">
-  <p>Bem-vindo(a)! ✔<br>
-  Agora você pode adicionar pacotes, valores, fotos e tudo mais.</p>
+<!-- ========== NAVBAR ========== -->
+<div class="navbar">
+  <button class="logout-btn" onclick="logout()">Sair</button>
+</div>
+
+<!-- ========== CONTEÚDO ========== -->
+<div class="content" id="conteudo">
+
+  <h2>Bem-vindo(a)! ✔</h2>
+  <div class="card">
+    <p>Use o menu à esquerda para gerenciar:<br><br>
+      • Brinquedos / Itens<br>
+      • Clientes<br>
+      • Orçamentos<br>
+      • Agendamentos<br>
+      • Fotos<br><br>
+    </p>
+  </div>
+
 </div>
 
 <!-- Firebase compat -->
@@ -50,10 +161,56 @@
 <script src="protect.js"></script>
 
 <script>
+/* =======================
+    Logout
+======================= */
 function logout() {
   firebase.auth().signOut().then(() => {
     window.location.href = "index.html";
   });
+}
+
+/* =======================
+    Sistema de navegação
+======================= */
+function carregarPagina(pagina) {
+  const conteudo = document.getElementById("conteudo");
+
+  document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("active"));
+  document.querySelector(`.menu-item[onclick="carregarPagina('${pagina}')"]`).classList.add("active");
+
+  if (pagina === "inicio") {
+    conteudo.innerHTML = `
+      <h2>Bem-vindo(a)! ✔</h2>
+      <div class="card">
+        <p>Use o menu à esquerda para gerenciar:<br><br>
+          • Brinquedos / Itens<br>
+          • Clientes<br>
+          • Orçamentos<br>
+          • Agendamentos<br>
+          • Fotos<br><br>
+        </p>
+      </div>
+    `;
+  } 
+  
+  else {
+    conteudo.innerHTML = `
+      <h2>${pagina.charAt(0).toUpperCase() + pagina.slice(1)}</h2>
+      <div class="card">
+        <p>Carregando módulo: <b>${pagina}.js</b>...</p>
+      </div>
+    `;
+
+    // Quando criarmos cada módulo:
+    // carregarArquivoJS(`${pagina}.js`);
+  }
+}
+
+function carregarArquivoJS(arquivo) {
+  const tag = document.createElement("script");
+  tag.src = arquivo;
+  document.body.appendChild(tag);
 }
 </script>
 
