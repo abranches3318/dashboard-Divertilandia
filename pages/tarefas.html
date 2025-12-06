@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Tarefas - Divertilândia</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../css/dashboard.css">
+
+  <style>
+    .lista-tarefas { margin-top: 20px; }
+    .lista-tarefas table { width: 100%; border-collapse: collapse; }
+    .lista-tarefas th, .lista-tarefas td { padding: 10px; border-bottom: 1px solid #333; }
+    .btn { padding: 6px 12px; margin-left: 5px; }
+    .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: #1a1a1a; padding: 25px; border-radius: 12px; width: 450px; }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>Tarefas</h1>
+  <div>
+    <button class="btn" onclick="window.history.back()">⬅ Voltar</button>
+    <button class="btn" onclick="abrirModalNovaTarefa()">➕ Nova Tarefa</button>
+  </div>
+</header>
+
+<main class="content" style="padding:20px;">
+  <div id="container-tarefas" class="lista-tarefas"></div>
+</main>
+
+<!-- Modal Nova/Edição de Tarefa -->
+<div id="modal-editar-tarefa" class="modal">
+  <div class="modal-content">
+    <h3>Nova Tarefa</h3>
+    <input type="hidden" id="tarefa-editar-id">
+    <label>Descrição</label>
+    <input type="text" id="tarefa-editar-descricao" placeholder="Descrição da tarefa">
+    <label>Responsável</label>
+    <input type="text" id="tarefa-editar-responsavel" placeholder="Responsável">
+    <div style="margin-top:15px; display:flex; justify-content:flex-end;">
+      <button class="btn btn-dark" onclick="fecharModalTarefa()">Cancelar</button>
+      <button class="btn btn" onclick="salvarTarefa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const tarefasRef = firebase.firestore().collection('tarefas');
+  const container = document.getElementById('container-tarefas');
+
+  // Observar tarefas em tempo real
+  tarefasRef.orderBy('criado_em', 'desc').onSnapshot(snap => {
+    const lista = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderizarTarefas(lista);
+  });
+
+  function renderizarTarefas(lista) {
+    if (!container) return;
+    if (lista.length === 0) {
+      container.innerHTML = "<p>Nenhuma tarefa cadastrada.</p>";
+      return;
+    }
+
+    container.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Descrição</th>
+            <th>Responsável</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${lista.map(t => `
+            <tr>
+              <td>${t.descricao}</td>
+              <td>${t.responsavel || '-'}</td>
+              <td>${t.concluida ? 'Concluída ✅' : 'Pendente ⏳'}</td>
+              <td>
+                <button class="btn" onclick="abrirModalEditarTarefa('${t.id}', '${t.descricao}', '${t.responsavel || ''}')">Editar</button>
+                <button class="btn" onclick="toggleTarefaConcluida('${t.id}', ${t.concluida})">${t.concluida ? 'Desmarcar' : 'Concluir'}</button>
+                <button class="btn btn-danger" onclick="excluirTarefa('${t.id}')">Excluir</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function abrirModalNovaTarefa() {
+    document.getElementById('tarefa-editar-id').value = '';
+    document.getElementById('tarefa-editar-descricao').value = '';
+    document.getElementById('tarefa-editar-responsavel').value = '';
+    document.getElementById('modal-editar-tarefa').style.display = 'flex';
+  }
+
+  function abrirModalEditarTarefa(id, descricao, responsavel) {
+    document.getElementById('tarefa-editar-id').value = id;
+    document.getElementById('tarefa-editar-descricao').value = descricao;
+    document.getElementById('tarefa-editar-responsavel').value = responsavel;
+    document.getElementById('modal-editar-tarefa').style.display = 'flex';
+  }
+
+  function fecharModalTarefa() {
+    document.getElementById('modal-editar-tarefa').style.display = 'none';
+  }
+
+  async function salvarTarefa() {
+    const id = document.getElementById('tarefa-editar-id').value;
+    const descricao = document.getElementById('tarefa-editar-descricao').value.trim();
+    const responsavel = document.getElementById('tarefa-editar-responsavel').value.trim();
+
+    if (!descricao) { alert('Descrição é obrigatória.'); return; }
+
+    if (id) {
+      await tarefasRef.doc(id).set({ descricao, responsavel }, { merge: true });
+    } else {
+      await tarefasRef.add({ descricao, responsavel, concluida: false, criado_em: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+
+    fecharModalTarefa();
+  }
+
+  async function toggleTarefaConcluida(id, atual) {
+    await tarefasRef.doc(id).update({ concluida: !atual });
+  }
+
+  async function excluirTarefa(id) {
+    if (confirm('Deseja realmente excluir esta tarefa?')) {
+      await tarefasRef.doc(id).delete();
+    }
+  }
+</script>
+
+</body>
+</html>
