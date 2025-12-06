@@ -1,64 +1,53 @@
 // ======================================
-// CALENDÁRIO — DIVERTILÂNDIA DASHBOARD (FullCalendar)
+// CALENDÁRIO — DIVERTILÂNDIA DASHBOARD
 // ======================================
 
-window.fcInstance = null;
-
-window.renderCalendar = function(eventos) {
+document.addEventListener("DOMContentLoaded", () => {
   const calendarEl = document.getElementById("calendar");
   if (!calendarEl) return;
 
+  // Obter eventos do cache do dashboard
+  const eventos = window.dashboardState?.agendamentosCache || [];
+
+  // Preparar eventos para o FullCalendar
   const fcEvents = eventos.map(ev => ({
     id: ev.id,
     title: ev.item_nome || "Evento",
-    start: ev.data_evento,
-    extendedProps: {
-      cliente: ev.cliente_nome || "",
-      endereco: ev.endereco || "",
-      monitores: ev.monitores || []
-    }
+    start: ev.data_evento, // deve estar no formato YYYY-MM-DD
+    allDay: true
   }));
 
-  if (window.fcInstance) {
-    window.fcInstance.destroy();
-  }
-
-  window.fcInstance = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
+  // Inicializar FullCalendar
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: "dayGridMonth",
+    locale: "pt-br",
+    height: "auto",
+    contentHeight: "auto",
     headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'dayGridMonth,timeGridWeek'
+      left: "prev,next today",
+      center: "title",
+      right: "dayGridMonth,timeGridWeek"
     },
-    locale: 'pt-br',       // português
-    themeSystem: 'standard', // calendário branco
-    navLinks: true,
-    editable: false,
-    selectable: true,
-    dayMaxEvents: true,
+    buttonText: {
+      today: "Hoje",
+      month: "Mês",
+      week: "Semana",
+      day: "Dia",
+      list: "Lista"
+    },
     events: fcEvents,
-    height: 'auto',
     eventClick: function(info) {
-      const id = info.event.id;
-      if (id) {
-        window.abrirAgendamento(id); 
-      }
+      // Ao clicar no evento, abrir página de agendamento
+      window.location.href = "paginas/ver-agendamento.html?id=" + info.event.id;
     },
     dateClick: function(info) {
-      const dateISO = info.dateStr;
-      // vai para página de agendamentos do dia
-      window.location.href = `paginas/ver-agendamento.html?data=${dateISO}`;
-    }
+      // Ao clicar em uma data, abrir página de agendamentos daquele dia
+      window.location.href = "paginas/ver-agendamento.html?data=" + info.dateStr;
+    },
+    dayMaxEventRows: true,
+    displayEventTime: false,
+    themeSystem: "standard"
   });
 
-  window.fcInstance.render();
-};
-
-window.abrirAgendamento = function(id) {
-  if (!id) return;
-  window.location.href = `paginas/ver-agendamento.html?id=${id}`;
-};
-
-window.abrirListaDoDia = function(dataISO) {
-  window.location.href = `paginas/ver-agendamento.html?data=${dataISO}`;
-};
+  calendar.render();
+});
