@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitores - Divertilândia</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../css/dashboard.css">
+
+  <style>
+    .lista-monitores { margin-top: 20px; }
+    .lista-monitores table { width: 100%; border-collapse: collapse; }
+    .lista-monitores th, .lista-monitores td { padding: 10px; border-bottom: 1px solid #333; }
+    .btn { padding: 6px 12px; margin-left: 5px; }
+    .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: #1a1a1a; padding: 25px; border-radius: 12px; width: 450px; }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>Monitores</h1>
+  <div>
+    <button class="btn" onclick="window.history.back()">⬅ Voltar</button>
+    <button class="btn" onclick="abrirModalNovoMonitor()">➕ Novo Monitor</button>
+  </div>
+</header>
+
+<main class="content" style="padding:20px;">
+  <div id="container-monitores" class="lista-monitores"></div>
+</main>
+
+<!-- Modal Novo/Editar Monitor -->
+<div id="modal-editar-monitor" class="modal">
+  <div class="modal-content">
+    <h3>Editar Monitor</h3>
+    <input type="hidden" id="monitor-editar-id">
+    <label>Nome</label>
+    <input type="text" id="monitor-editar-nome" placeholder="Nome do monitor">
+    <label>Telefone</label>
+    <input type="text" id="monitor-editar-telefone" placeholder="Telefone">
+    <label>Observações</label>
+    <textarea id="monitor-editar-observacoes" placeholder="Observações"></textarea>
+    <div style="margin-top:15px; display:flex; justify-content:flex-end;">
+      <button class="btn btn-dark" onclick="fecharModalMonitor()">Cancelar</button>
+      <button class="btn btn" onclick="salvarEdicaoMonitor()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/monitor.js"></script>
+<script>
+  const container = document.getElementById('container-monitores');
+
+  // Observar e renderizar monitores
+  window.observarMonitores(lista => {
+    window.renderizarMonitores(lista, 'container-monitores');
+  });
+
+  function abrirModalNovoMonitor() {
+    document.getElementById('monitor-editar-id').value = '';
+    document.getElementById('monitor-editar-nome').value = '';
+    document.getElementById('monitor-editar-telefone').value = '';
+    document.getElementById('monitor-editar-observacoes').value = '';
+    document.getElementById('modal-editar-monitor').style.display = 'flex';
+  }
+</script>
+
+</body>
+</html>
