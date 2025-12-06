@@ -6,9 +6,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="css/dashboard.css" />
-
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet">
-
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -21,6 +19,11 @@
 </head>
 
 <body>
+
+  <!-- Botão Hamburger -->
+  <button class="btn-hamburger" onclick="document.querySelector('.sidebar').classList.toggle('active')">
+    ☰
+  </button>
 
   <!-- Sidebar -->
   <aside class="sidebar">
@@ -49,12 +52,10 @@
     <!-- Navbar -->
     <header class="topbar">
       <h1 id="titulo-pagina">Dashboard</h1>
-
       <div class="top-right">
         <div class="notif" onclick="abrirNotificacoes()">
           🔔 <span id="notif-count">0</span>
         </div>
-
         <div class="user-info">
           <span id="user-name">Usuário</span>
         </div>
@@ -64,32 +65,27 @@
     <!-- Container das páginas -->
     <section id="pagina-dashboard" class="pagina ativa">
       <div class="cards">
-
         <div class="card">
           <h3>Agendamentos Hoje</h3>
           <p id="ag-hoje">0</p>
         </div>
-
         <div class="card">
           <h3>Receita Mensal</h3>
           <p id="receita-mes">R$ 0,00</p>
         </div>
-
         <div class="card">
           <h3>Tarefas Pendentes</h3>
           <p id="tarefas-pendentes">0</p>
         </div>
-
       </div>
 
       <div class="panel">
         <h2>📅 Calendário</h2>
         <div id="calendar"></div>
       </div>
-
     </section>
 
-    <!-- Outras páginas (conteúdo vazio, preenchido pelos JS) -->
+    <!-- Outras páginas (conteúdo preenchido pelos JS) -->
     <section id="pagina-agendamentos" class="pagina"></section>
     <section id="pagina-financeiro" class="pagina"></section>
     <section id="pagina-itens" class="pagina"></section>
@@ -101,8 +97,8 @@
   </main>
 
   <!-- JS -->
-   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
-   <script src="js/calendar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+  <script src="js/calendar.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/monitor.js"></script>
   <script src="js/checklist.js"></script>
@@ -116,6 +112,13 @@
         window.location.href = "index.html";
       });
     }
+
+    // Atualiza nome do usuário
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('user-name').textContent = user.displayName || user.email;
+      }
+    });
   </script>
 
 </body>
