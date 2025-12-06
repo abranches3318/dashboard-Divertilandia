@@ -62,7 +62,7 @@
       </div>
     </header>
 
-    <!-- Container das páginas -->
+    <!-- SEÇÃO DASHBOARD -->
     <section id="pagina-dashboard" class="pagina ativa">
       <div class="cards">
         <div class="card">
@@ -78,21 +78,64 @@
           <p id="tarefas-pendentes">0</p>
         </div>
       </div>
-
       <div class="panel">
         <h2>📅 Calendário</h2>
         <div id="calendar"></div>
       </div>
     </section>
 
-    <!-- Outras páginas (conteúdo preenchido pelos JS) -->
-    <section id="pagina-agendamentos" class="pagina"></section>
-    <section id="pagina-financeiro" class="pagina"></section>
-    <section id="pagina-itens" class="pagina"></section>
-    <section id="pagina-pacotes" class="pagina"></section>
-    <section id="pagina-monitores" class="pagina"></section>
-    <section id="pagina-tarefas" class="pagina"></section>
-    <section id="pagina-conversas" class="pagina"></section>
+    <!-- SEÇÃO AGENDAMENTOS -->
+    <section id="pagina-agendamentos" class="pagina">
+      <h2>Agendamentos</h2>
+      <div id="agendamentos-lista"></div>
+    </section>
+
+    <!-- SEÇÃO FINANCEIRO -->
+    <section id="pagina-financeiro" class="pagina">
+      <h2>Financeiro</h2>
+      <div class="grid-3">
+        <div class="card"><small class="small">Receita</small><h3 id="fin-receita">R$0,00</h3></div>
+        <div class="card"><small class="small">Pagamentos pendentes</small><h3 id="fin-pend">0</h3></div>
+        <div class="card"><small class="small">Despesas</small><h3 id="fin-desp">R$0,00</h3></div>
+      </div>
+      <div class="card" id="fin-chart">(Gráficos em breve)</div>
+    </section>
+
+    <!-- SEÇÃO ITENS / CATÁLOGO -->
+    <section id="pagina-itens" class="pagina">
+      <h2>Itens / Catálogo</h2>
+      <div id="itens-lista"></div>
+    </section>
+
+    <!-- SEÇÃO PACOTES -->
+    <section id="pagina-pacotes" class="pagina">
+      <h2>Pacotes</h2>
+      <div id="pacotes-lista"></div>
+    </section>
+
+    <!-- SEÇÃO MONITORES -->
+    <section id="pagina-monitores" class="pagina">
+      <h2>Monitores</h2>
+      <div id="container-monitores" class="lista-monitores"></div>
+    </section>
+
+    <!-- SEÇÃO TAREFAS -->
+    <section id="pagina-tarefas" class="pagina">
+      <h2>Tarefas</h2>
+      <div id="tarefas-lista"></div>
+    </section>
+
+    <!-- SEÇÃO CONVERSAS -->
+    <section id="pagina-conversas" class="pagina">
+      <h2>Conversas (Tempo real)</h2>
+      <div id="conversas-lista"></div>
+    </section>
+
+    <!-- SEÇÃO NOTIFICAÇÕES (interna para abrirNotificacoes) -->
+    <section id="pagina-notificacoes" class="pagina">
+      <h2>Notificações</h2>
+      <div id="notificacoes-lista"></div>
+    </section>
 
   </main>
 
@@ -113,7 +156,6 @@
       });
     }
 
-    // Atualiza nome do usuário
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         document.getElementById('user-name').textContent = user.displayName || user.email;
