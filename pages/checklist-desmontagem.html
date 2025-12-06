@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Checklist de Desmontagem - Divertilândia</title>
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Checklist de Desmontagem</h1>
+    <button onclick="window.history.back()" class="btn btn-dark">⬅ Voltar</button>
+  </header>
+
+  <main class="content">
+    <section id="checklist-container">
+      <p>Carregando checklist...</p>
+    </section>
+
+    <button class="btn" onclick="salvarChecklist()">Salvar Progresso</button>
+  </main>
+
+  <script>
+    const db = firebase.firestore();
+    const checklistContainer = document.getElementById('checklist-container');
+
+    // Pega ID da OS via query string
+    const params = new URLSearchParams(window.location.search);
+    const osId = params.get('os');
+
+    let checklistData = [];
+
+    async function carregarChecklist() {
+      if (!osId) {
+        checklistContainer.innerHTML = "<p>ID da OS não informado.</p>";
+        return;
+      }
+
+      // Pega OS
+      const osSnap = await db.collection('ordem_servico').doc(osId).get();
+      if (!osSnap.exists) {
+        checklistContainer.innerHTML = "<p>Ordem de Serviço não encontrada.</p>";
+        return;
+      }
+
+      const osData = osSnap.data();
+
+      // Pega itens da OS
+      const itensSnap = await db.collection('ordem_servico').doc(osId).collection('itens').get();
+
+      checklistData = [];
+
+      let html = "";
+
+      for (const itemDoc of itensSnap.docs) {
+        const item = itemDoc.data();
+        const itemId = itemDoc.id;
+
+        // Pega peças do item
+        const pecasSnap = await db.collection('item').doc(item.item_id).collection('pecas').get();
+        const pecas = pecasSnap.docs.map(p => ({ id: p.id, nome: p.data().nome, marcado: false }));
+
+        checklistData.push({ itemId, nome: item.nome, pecas });
+
+        html += `<div class="card" style="margin-bottom:20px;">
+                  <h3>${item.nome}</h3>
+                  <div>`;
+        pecas.forEach((p, index) => {
+          html += `
+            <label>
+              <input type="checkbox" data-item="${itemId}" data-peca="${p.id}" onchange="marcarPeca(this)">
+              ${p.nome}
+            </label><br>
+          `;
+        });
+        html += "</div></div>";
+      }
+
+      checklistContainer.innerHTML = html;
+    }
+
+    function marcarPeca(checkbox) {
+      const itemId = checkbox.dataset.item;
+      const pecaId = checkbox.dataset.peca;
+      const item = checklistData.find(i => i.itemId === itemId);
+      if (!item) return;
+      const peca = item.pecas.find(p => p.id === pecaId);
+      if (!peca) return;
+      peca.marcado = checkbox.checked;
+    }
+
+    async function salvarChecklist() {
+      if (!osId) return;
+      for (const item of checklistData) {
+        const pecasStatus = {};
+        item.pecas.forEach(p => pecasStatus[p.id] = p.marcado);
+        await db.collection('ordem_servico').doc(osId)
+                .collection('itens').doc(item.itemId)
+                .set({ checklist_desmontagem: pecasStatus }, { merge: true });
+      }
+      alert("Checklist de desmontagem salvo com sucesso!");
+    }
+
+    carregarChecklist();
+  </script>
+</body>
+</html>
