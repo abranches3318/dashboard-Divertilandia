@@ -1,4 +1,4 @@
-// firebase-config.js  
+// firebase-config.js
 
 const firebaseConfig = {
   apiKey: "AIzaSyCi6kRFPaEzyPq5oVGKn6tIsNmT6QpWgBg",
@@ -10,9 +10,11 @@ const firebaseConfig = {
   measurementId: "G-9YPFN6EV44"
 };
 
-// Inicializar Firebase (Compat)
-firebase.initializeApp(firebaseConfig);
+// Evita inicialização duplicada
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
-// Ativar Firestore e Storage (para fotos e dados)
 const db = firebase.firestore();
 const storage = firebase.storage();
+
