@@ -29,6 +29,7 @@ body {
   overflow-y: auto;
   transition: 0.3s;
   z-index: 1000;
+  position: relative;
 }
 
 .sidebar .logo {
@@ -67,6 +68,24 @@ body {
 }
 
 /* ============================
+   HAMBURGER MOBILE
+============================ */
+.btn-hamburger {
+  display: none;
+  background: #4cafef;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #fff;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1100;
+}
+
+/* ============================
    CONTENT AREA
 ============================ */
 .content {
@@ -75,7 +94,8 @@ body {
   flex-direction: column;
   overflow-y: auto;
   height: 100vh;
-  transition: 0.3s;
+  transition: margin-left 0.3s;
+  padding: 0;
 }
 
 /* ============================
@@ -201,13 +221,28 @@ body {
    CALENDAR
 ============================ */
 #calendar {
-  background: #0f0f0f;
+  background: #fff;
+  color: #000;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
   height: 500px;
-  color: #ddd;
   overflow-y: auto;
+}
+
+#calendar .dia, #calendar .dia-semana {
+  color: #000;
+  cursor: pointer;
+}
+
+#calendar .tag-evento {
+  background: #4cafef;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-top: 3px;
+  display: inline-block;
 }
 
 /* ============================
@@ -310,7 +345,8 @@ label {
   background: #1a1a1a;
   padding: 25px;
   border-radius: 12px;
-  width: 450px;
+  width: 90%;
+  max-width: 450px;
   box-shadow: 0 0 25px rgba(0,0,0,0.5);
 }
 
@@ -336,6 +372,10 @@ label {
 }
 
 @media (max-width: 768px) {
+  .btn-hamburger {
+    display: block;
+  }
+
   .sidebar {
     position: fixed;
     left: -260px;
@@ -351,6 +391,11 @@ label {
   .content {
     flex: 1;
     margin-left: 0;
+    padding: 15px;
+  }
+
+  .sidebar.active ~ .content {
+    margin-left: 260px;
   }
 
   .cards {
@@ -360,6 +405,7 @@ label {
 
   #calendar {
     height: 350px;
+    padding: 15px;
   }
 
   .topbar .top-right {
@@ -393,10 +439,15 @@ label {
 
   .card {
     width: 100%;
+    font-size: 14px;
   }
 
   #calendar {
     height: 300px;
-    padding: 15px;
+    padding: 10px;
+  }
+
+  .panel h2 {
+    font-size: 18px;
   }
 }
