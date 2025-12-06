@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Ordem de Serviço - Divertilândia</title>
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Ordem de Serviço</h1>
+    <button onclick="window.history.back()" class="btn btn-dark">⬅ Voltar</button>
+  </header>
+
+  <main class="content">
+    <section>
+      <h2>Criar Nova OS</h2>
+      <label>Cliente:</label>
+      <input type="text" id="os-cliente" placeholder="Nome do cliente">
+
+      <label>Data do Evento:</label>
+      <input type="date" id="os-data">
+
+      <label>Descrição:</label>
+      <textarea id="os-descricao" placeholder="Observações..."></textarea>
+
+      <button class="btn" onclick="criarOS()">Criar Ordem de Serviço</button>
+    </section>
+
+    <section style="margin-top:30px;">
+      <h2>Ordens de Serviço</h2>
+      <div id="os-lista">Carregando OS...</div>
+    </section>
+  </main>
+
+  <script>
+    const db = firebase.firestore();
+
+    async function criarOS() {
+      const cliente = document.getElementById('os-cliente').value.trim();
+      const dataEvento = document.getElementById('os-data').value;
+      const descricao = document.getElementById('os-descricao').value.trim();
+
+      if (!cliente || !dataEvento) {
+        alert("Preencha cliente e data do evento.");
+        return;
+      }
+
+      const ref = await db.collection('ordem_servico').add({
+        cliente,
+        data_evento: dataEvento,
+        descricao,
+        criado_em: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      alert("Ordem de Serviço criada!");
+      carregarOS();
+    }
+
+    async function carregarOS() {
+      const snap = await db.collection('ordem_servico').orderBy('criado_em', 'desc').get();
+      const listaDiv = document.getElementById('os-lista');
+
+      if (snap.empty) {
+        listaDiv.innerHTML = "<p>Nenhuma OS cadastrada.</p>";
+        return;
+      }
+
+      let html = "<table class='table'><thead><tr><th>Cliente</th><th>Data</th><th>Ações</th></tr></thead><tbody>";
+
+      snap.forEach(doc => {
+        const os = doc.data();
+        const id = doc.id;
+        html += `<tr>
+          <td>${os.cliente}</td>
+          <td>${os.data_evento}</td>
+          <td>
+            <button class="btn" onclick="abrirChecklist('${id}','montagem')">Checklist Montagem</button>
+            <button class="btn btn-dark" onclick="abrirChecklist('${id}','desmontagem')">Checklist Desmontagem</button>
+            <button class="btn btn-danger" onclick="excluirOS('${id}')">Excluir</button>
+          </td>
+        </tr>`;
+      });
+
+      html += "</tbody></table>";
+      listaDiv.innerHTML = html;
+    }
+
+    function abrirChecklist(osId, tipo) {
+      if (tipo === "montagem") {
+        window.location.href = `checklist-montagem.html?os=${osId}`;
+      } else {
+        window.location.href = `checklist-desmontagem.html?os=${osId}`;
+      }
+    }
+
+    async function excluirOS(osId) {
+      if (!confirm("Tem certeza que deseja excluir esta OS?")) return;
+      await db.collection('ordem_servico').doc(osId).delete();
+      carregarOS();
+    }
+
+    carregarOS();
+  </script>
+</body>
+</html>
