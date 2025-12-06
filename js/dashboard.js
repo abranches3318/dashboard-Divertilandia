@@ -27,20 +27,49 @@ window.dashboardState = {
 // FUNÇÃO GLOBAL NAV
 // ============================
 window.nav = function (idPagina) {
+  const pageId = "pagina-" + idPagina;
+
   // Mostrar a página
   paginas.forEach(p => p.classList.remove("ativa"));
-  const pagina = document.getElementById("pagina-" + idPagina);
+  const pagina = document.getElementById(pageId);
   if (pagina) pagina.classList.add("ativa");
 
   // Destacar menu ativo
   menuLinks.forEach(li => li.classList.remove("active"));
-  const menuItem = Array.from(menuLinks).find(li => li.getAttribute("onclick")?.includes(`'${idPagina}'`));
+  const menuItem = Array.from(menuLinks).find(li =>
+    li.getAttribute("onclick")?.includes(`'${idPagina}'`)
+  );
   if (menuItem) menuItem.classList.add("active");
 
   // Atualizar título
   const titulo = document.getElementById("titulo-pagina");
-  if (titulo) titulo.textContent = pagina ? pagina.querySelector("h2")?.textContent || idPagina.charAt(0).toUpperCase() + idPagina.slice(1) : "";
+  if (titulo) {
+    if (pagina) {
+      const h2 = pagina.querySelector("h2");
+      titulo.textContent = h2 ? h2.textContent : idPagina.charAt(0).toUpperCase() + idPagina.slice(1);
+    } else {
+      titulo.textContent = "";
+    }
+  }
 };
+
+// ============================
+// RESPONSIVIDADE
+// ============================
+function ajustarSidebar() {
+  const sidebar = document.querySelector(".sidebar");
+  if (!sidebar) return;
+  if (window.innerWidth <= 768) {
+    sidebar.style.position = "absolute";
+    sidebar.style.left = "-260px";
+    sidebar.style.transition = "left 0.3s";
+  } else {
+    sidebar.style.position = "relative";
+    sidebar.style.left = "0";
+  }
+}
+window.addEventListener("resize", ajustarSidebar);
+window.addEventListener("DOMContentLoaded", ajustarSidebar);
 
 // ============================
 // INICIALIZAÇÃO
@@ -76,24 +105,21 @@ window.addEventListener("DOMContentLoaded", () => {
 // ============================
 async function carregarResumo() {
   try {
-    // AGENDAMENTOS HOJE
     const hoje = new Date();
     const inicioDia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
     const fimDia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate(), 23, 59, 59);
 
+    // AGENDAMENTOS HOJE
     const snap = await db.collection("agendamentos")
       .where("data", ">=", inicioDia)
       .where("data", "<=", fimDia)
       .get();
-
-    const agHoje = snap.size;
     const agHojeEl = document.getElementById("ag-hoje");
-    if (agHojeEl) agHojeEl.textContent = agHoje;
+    if (agHojeEl) agHojeEl.textContent = snap.size;
 
     // RECEITA MENSAL
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59);
-
     const snapMes = await db.collection("agendamentos")
       .where("data", ">=", inicioMes)
       .where("data", "<=", fimMes)
@@ -104,7 +130,6 @@ async function carregarResumo() {
       const data = doc.data();
       if (data?.entrada_paga) receita += Number(data.valor_entrada || 0);
     });
-
     const receitaEl = document.getElementById("receita-mes");
     if (receitaEl) receitaEl.textContent = "R$ " + receita.toFixed(2);
 
@@ -112,9 +137,9 @@ async function carregarResumo() {
     const tarefasSnap = await db.collection("tarefas")
       .where("status", "==", "pendente")
       .get();
-
     const tarefasEl = document.getElementById("tarefas-pendentes");
     if (tarefasEl) tarefasEl.textContent = tarefasSnap.size;
+
   } catch (err) {
     console.error("Erro ao carregar resumo:", err);
   }
@@ -130,17 +155,12 @@ async function carregarNotificacoes() {
       .limit(20)
       .get();
 
-    dashboardState.notificacoes = snap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
+    dashboardState.notificacoes = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     if (notifCountEl) notifCountEl.textContent = dashboardState.notificacoes.length;
   } catch (err) {
     console.error("Erro ao carregar notificações:", err);
   }
 }
-
 window.abrirNotificacoes = function () {
   nav("notificacoes");
 };
@@ -154,17 +174,13 @@ async function carregarCalendario() {
     if (!calendarEl) return;
 
     const snap = await db.collection("agendamentos").get();
-    const eventos = snap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
+    const eventos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     dashboardState.agendamentosCache = eventos;
 
     // Renderizar calendário (calendar.js)
-    if (window.renderCalendar) {
-      window.renderCalendar(eventos);
-    }
+    if (window.renderCalendar) window.renderCalendar(eventos);
+
   } catch (err) {
     console.error("Erro ao carregar calendário:", err);
   }
