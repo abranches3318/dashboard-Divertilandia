@@ -1,0 +1,29 @@
+/* dashboard.css - Dark Business (C) */
+:root{
+  --bg:#0d0f11; --panel:#141619; --muted:#9a9aa0; --accent:#1f6feb; --card-border:#202226;
+}
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+body{margin:0;background:var(--bg);color:#fff;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:280px;background:var(--panel);border-right:1px solid var(--card-border);padding:20px;display:flex;flex-direction:column}
+.logo{font-weight:700;font-size:20px;margin-bottom:20px}
+.menu{list-style:none;padding:0;margin:0;flex:1;overflow:auto}
+.menu-item{padding:12px;border-radius:8px;color:var(--muted);cursor:pointer;display:flex;gap:12px;align-items:center}
+.menu-item:hover{background:#131418;color:#fff}
+.menu-item.active{background:#1d2430;color:#fff}
+.logout-area{padding-top:12px}
+.logout-area button{background:#ff4d4f;border:none;padding:10px;border-radius:8px;color:#fff;cursor:pointer}
+.content{flex:1;display:flex;flex-direction:column}
+.navbar{height:68px;background:var(--panel);display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--card-border);position:sticky;top:0;z-index:5}
+.navbar-title{font-weight:600}
+.navbar-right{display:flex;align-items:center;gap:12px}
+.notif-icon{position:relative;cursor:pointer}
+.notif-badge{position:absolute;top:-8px;right:-12px;background:#ff4d4f;color:#fff;padding:2px 6px;border-radius:12px;font-size:12px;display:none}
+.user-photo{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #111}
+.page-content{padding:22px;overflow:auto;height:calc(100vh - 68px)}
+h2{margin-bottom:12px}
+.card{background:#0f1113;border:1px solid var(--card-border);padding:16px;border-radius:10px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:10px;border-bottom:1px solid var(--card-border);text-align:left}
+.small{font-size:13px;color:var(--muted)}
+.btn{background:var(--accent);border:none;color:#fff;padding:8px 10px;border-radius:8px;cursor:pointer}
