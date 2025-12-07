@@ -84,11 +84,66 @@
       </div>
     </section>
 
-    <!-- SEÇÃO AGENDAMENTOS -->
-    <section id="pagina-agendamentos" class="pagina">
-      <h2>Agendamentos</h2>
-      <div id="agendamentos-lista"></div>
-    </section>
+    <!-- ========================================= -->
+<!--              PAGINA: AGENDAMENTOS         -->
+<!-- ========================================= -->
+<section id="pagina-agendamentos" class="pagina" style="display:none">
+
+    <div class="topo-secao">
+        <h2>Agendamentos</h2>
+        <button id="btnNovoAgendamento" class="btn-primario">+ Novo Agendamento</button>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filtros-agendamentos">
+
+        <div class="campo-filtro">
+            <label for="filtroData">Data</label>
+            <input type="date" id="filtroData">
+        </div>
+
+        <div class="campo-filtro">
+            <label for="filtroCliente">Cliente</label>
+            <input type="text" id="filtroCliente" placeholder="Nome do cliente">
+        </div>
+
+        <div class="campo-filtro">
+            <label for="filtroTelefone">Telefone</label>
+            <input type="text" id="filtroTelefone" placeholder="(DDD) 9XXXX-XXXX">
+        </div>
+
+        <div class="campo-filtro">
+            <label for="filtroStatus">Status</label>
+            <select id="filtroStatus">
+                <option value="">Todos</option>
+                <option value="pendente">Pendente</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="concluido">Concluído</option>
+                <option value="cancelado">Cancelado</option>
+            </select>
+        </div>
+
+        <button id="btnFiltrarAgendamentos" class="btn-secundario">Filtrar</button>
+    </div>
+
+    <!-- LISTA DE AGENDAMENTOS -->
+    <table class="tabela-agendamentos">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Telefone</th>
+                <th>Status</th>
+                <th>Valor</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="listaAgendamentos">
+            <!-- Linhas inseridas via JS -->
+        </tbody>
+    </table>
+
+</section>
 
     <!-- SEÇÃO FINANCEIRO -->
     <section id="pagina-financeiro" class="pagina">
