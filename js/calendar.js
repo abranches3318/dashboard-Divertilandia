@@ -1,90 +1,121 @@
-// =====================================================
-// CALENDAR.JS — VERSÃO CORRIGIDA
-// =====================================================
+// ====================================================================
+// CALENDAR.JS – Controle do calendário FullCalendar + integração com DB
+// ====================================================================
 
-// Este arquivo assume que o Firebase foi inicializado no index.html/dashboard.html
-// e que "db" já existe globalmente (firebase.firestore()).
+// Importante:
+// ESTE arquivo NÃO declara "db". Ele apenas usa db já criado no dashboard.js
+// Verifica se db existe antes de tudo.
+if (!window.db) {
+    console.error("Erro: 'db' não encontrado no escopo global. Certifique-se de que dashboard.js carregou antes de calendar.js.");
+}
 
-// Inicialização do calendário
-document.addEventListener("DOMContentLoaded", function () {
+// Variável global para o calendário
+let calendar = null;
 
+// ====================================================================
+// FUNÇÃO: Inicializar calendário (somente quando abrir a página)
+// ====================================================================
+window.inicializarCalendar = async function () {
     const calendarEl = document.getElementById("calendar");
+
     if (!calendarEl) {
-        console.warn("Elemento #calendar não encontrado.");
+        console.warn("calendar.js: div #calendar não existe na página atual.");
         return;
     }
 
-    window.calendar = new FullCalendar.Calendar(calendarEl, {
+    // Evita recriar o calendário se ele já existir
+    if (calendar) {
+        calendar.render();
+        return;
+    }
+
+    // Carregar eventos do Firebase
+    const eventosFirebase = await carregarEventosDB();
+
+    // Criar o calendário
+    calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: "dayGridMonth",
         locale: "pt-br",
         height: "auto",
+        headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay"
+        },
+        events: eventosFirebase,
+        eventClick: (info) => {
+            const id = info.event.id;
+            if (!id) return;
 
-        dateClick: (info) => {
-            abrirAgendamentosFiltrado(info.dateStr);
+            Swal.fire({
+                title: "Evento",
+                html: `
+                    <b>${info.event.title}</b><br>
+                    ${info.event.start.toLocaleString()}
+                `,
+                showCancelButton: true,
+                confirmButtonText: "Editar",
+                cancelButtonText: "Fechar"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    abrirModalAgendamento(id);
+                }
+            });
         }
     });
 
-    window.calendar.render();
+    calendar.render();
+};
 
-    refreshCalendarEvents();
-});
-
-// =====================================================
-// Carregar eventos do Firestore para o FullCalendar
-// =====================================================
-
-async function refreshCalendarEvents() {
-    if (!window.calendar) return;
-
+// ====================================================================
+// FUNÇÃO: Carregar eventos do Firebase e transformar para o calendário
+// ====================================================================
+async function carregarEventosDB() {
     try {
-        window.calendar.removeAllEvents();
-
-        const snapshot = await db.collection("agendamentos").get();
-
+        const snap = await db.collection("agendamentos").get();
         const eventos = [];
 
-        snapshot.forEach(doc => {
-            const dados = doc.data();
+        snap.forEach(doc => {
+            const ag = doc.data();
 
-            // Dados esperados no padrão atual
-            if (!dados.data || !dados.cliente) return;
+            if (!ag.data) return;
 
             eventos.push({
                 id: doc.id,
-                title: dados.cliente + (dados.horario ? " - " + dados.horario : ""),
-                start: dados.data,
-                color: "#007bff"
+                title: ag.cliente || "Agendamento",
+                start: ag.data,
+                color: definirCorStatus(ag.status)
             });
         });
 
-        window.calendar.addEventSource(eventos);
+        return eventos;
 
-    } catch (error) {
-        console.error("Erro ao carregar eventos no calendário:", error);
-        Swal.fire("Erro", "Falha ao carregar eventos no calendário.", "error");
+    } catch (e) {
+        console.error("Erro ao carregar eventos do Firebase:", e);
+        return [];
     }
 }
 
-// =====================================================
-// Navegar para a página de Agendamentos filtrada
-// =====================================================
-
-function abrirAgendamentosFiltrado(dataSelecionada) {
-
-    // 1. Exibir seção Agendamentos
-    document.querySelectorAll(".pagina").forEach(p => p.style.display = "none");
-    document.getElementById("pagina-agendamentos").style.display = "block";
-
-    // 2. Setar o filtro de data
-    const inputDataFiltro = document.getElementById("filtro-ag-data");
-    if (inputDataFiltro) {
-        inputDataFiltro.value = dataSelecionada;
-    }
-
-    // 3. Executar a filtragem
-    if (typeof filtrarAgendamentos === "function") {
-        filtrarAgendamentos();
-    } else {
-        console.warn("filtrarAgendamentos() não foi encontrado.");
+// ====================================================================
+// FUNÇÃO: cor por status
+// ====================================================================
+function definirCorStatus(status) {
+    switch (status) {
+        case "pendente": return "#f4c542";
+        case "confirmado": return "#4caf50";
+        case "concluido": return "#1976d2";
+        case "cancelado": return "#e53935";
+        default: return "#9e9e9e";
     }
 }
+
+// ====================================================================
+// Atualizar calendário quando um agendamento muda
+// ====================================================================
+window.atualizarCalendar = async function () {
+    if (!calendar) return;
+    const eventos = await carregarEventosDB();
+    calendar.removeAllEvents();
+    calendar.addEventSource(eventos);
+    calendar.render();
+};
