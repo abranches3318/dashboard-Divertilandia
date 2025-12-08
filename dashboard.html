@@ -87,61 +87,6 @@
         <div id="calendar"></div>
       </div>
     </section>
-
-    <!-- Agendamentos -->
-    <section id="pagina-agendamentos" class="pagina">
-      <div class="topo-secao" style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>Agendamentos</h2>
-        <div>
-          <button id="btnNovoAgendamento" class="btn">+ Novo Agendamento</button>
-        </div>
-      </div>
-
-      <!-- Filtros -->
-      <div class="filtros-agendamentos" style="margin-top:15px; display:flex; flex-wrap:wrap; gap:12px;">
-        <div class="campo-filtro">
-          <label for="filtroData">Data</label>
-          <input type="date" id="filtroData">
-        </div>
-        <div class="campo-filtro">
-          <label for="filtroCliente">Cliente</label>
-          <input type="text" id="filtroCliente" placeholder="Nome do cliente">
-        </div>
-        <div class="campo-filtro">
-          <label for="filtroTelefone">Telefone</label>
-          <input type="text" id="filtroTelefone" placeholder="(DDD) 9XXXX-XXXX">
-        </div>
-        <div class="campo-filtro">
-          <label for="filtroStatus">Status</label>
-          <select id="filtroStatus">
-            <option value="">Todos</option>
-            <option value="pendente">Pendente</option>
-            <option value="confirmado">Confirmado</option>
-            <option value="concluido">Concluído</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
-        <div style="align-self:end;">
-          <button id="btnFiltrarAgendamentos" class="btn">Filtrar</button>
-        </div>
-      </div>
-
-      <div style="margin-top:16px; overflow-x:auto;">
-        <table class="tabela-agendamentos" style="width:100%;">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Cliente</th>
-              <th>Telefone</th>
-              <th>Status</th>
-              <th>Valor</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="listaAgendamentos"></tbody>
-        </table>
-      </div>
-    </section>
   </main>
 
   <!-- Firebase compat -->
@@ -158,12 +103,6 @@
 
   <!-- Dashboard scripts -->
   <script src="js/dashboard.js"></script>
-  <script src="js/agendamentos.js"></script>
-  <script src="js/monitor.js"></script>
-  <script src="js/checklist.js"></script>
-  <script src="js/ordemServico.js"></script>
-  <script src="js/tarefas.js"></script>
-  <script src="js/notificacoes.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
 
   <script>
@@ -194,7 +133,7 @@
       if (liAtivo) liAtivo.classList.add("active");
 
       // Atualizar calendário quando voltar para dashboard
-      if (pagina === "dashboard" && window.dashboardState?.calendario && window.dashboardState.agendamentosCache) {
+      if (pagina === "dashboard" && window.dashboardState?.calendario) {
         window.dashboardState.calendario.refetchEvents();
       }
     }
