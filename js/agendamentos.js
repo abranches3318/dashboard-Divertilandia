@@ -1,71 +1,68 @@
-// ==========================================
-//  AGENDAMENTOS.JS
-// ==========================================
-
-// Referências Firebase
-const db = firebase.firestore();
-
 // ======================================================================
-//  ABERTURA DA SEÇÃO AGENDAMENTOS PELO MENU
+//  AGENDAMENTOS.JS  (USANDO db GLOBAL DO firebase-config.js)
 // ======================================================================
+
+// Abertura da página via menu
 document.getElementById("menu-agendamentos").addEventListener("click", () => {
     mostrarPagina("pagina-agendamentos");
     carregarAgendamentos();
 });
 
-// ======================================================================
-//  BOTÃO: "+ Novo Agendamento"
-// ======================================================================
+// Botão "+ Novo Agendamento"
 document.getElementById("btnNovoAgendamento").addEventListener("click", () => {
     abrirModalNovoAgendamento();
 });
 
-// ======================================================================
-//  FILTRAR AGENDAMENTOS
-// ======================================================================
+// Botão "Filtrar"
 document.getElementById("btnFiltrarAgendamentos").addEventListener("click", () => {
     carregarAgendamentos();
 });
 
 // ======================================================================
-//  FUNÇÃO PRINCIPAL: CARREGAR AGENDAMENTOS
+//  FUNÇÃO PRINCIPAL — CARREGAR LISTA
 // ======================================================================
 async function carregarAgendamentos(filtroDataDireta = null) {
     const tbody = document.getElementById("listaAgendamentos");
     tbody.innerHTML = "";
 
     try {
-        let ref = db.collection("agendamentos");
-
         const dataFiltro = filtroDataDireta || document.getElementById("filtroData").value;
         const clienteFiltro = document.getElementById("filtroCliente").value.trim().toLowerCase();
         const telefoneFiltro = document.getElementById("filtroTelefone").value.trim();
         const statusFiltro = document.getElementById("filtroStatus").value;
 
-        let snapshot = await ref.orderBy("data").orderBy("horario").get();
+        const snapshot = await db.collection("agendamentos")
+            .orderBy("data")
+            .orderBy("horario")
+            .get();
+
         let lista = [];
 
         snapshot.forEach(doc => {
             let ag = doc.data();
             ag.id = doc.id;
 
-            let incluir = true;
+            let ok = true;
 
-            if (dataFiltro && ag.data !== dataFiltro) incluir = false;
-            if (statusFiltro && ag.status !== statusFiltro) incluir = false;
-            if (clienteFiltro && !ag.cliente?.toLowerCase().includes(clienteFiltro)) incluir = false;
-            if (telefoneFiltro && ag.telefone !== telefoneFiltro) incluir = false;
+            if (dataFiltro && ag.data !== dataFiltro) ok = false;
+            if (statusFiltro && ag.status !== statusFiltro) ok = false;
+            if (clienteFiltro && !ag.cliente?.toLowerCase().includes(clienteFiltro)) ok = false;
+            if (telefoneFiltro && ag.telefone !== telefoneFiltro) ok = false;
 
-            if (incluir) lista.push(ag);
+            if (ok) lista.push(ag);
         });
 
         lista.forEach(ag => {
-            let linha = `
+            const linha = `
                 <tr>
                     <td>${ag.data} ${ag.horario}</td>
                     <td>${ag.cliente || "---"}</td>
                     <td>${ag.telefone || "---"}</td>
-                    <td class="status-${ag.status}">${ag.status}</td>
+
+                    <td class="status-${ag.status}">
+                        ${ag.status}
+                    </td>
+
                     <td>R$ ${Number(ag.valor_final || 0).toFixed(2)}</td>
 
                     <td>
@@ -75,106 +72,81 @@ async function carregarAgendamentos(filtroDataDireta = null) {
                     </td>
                 </tr>
             `;
+
             tbody.insertAdjacentHTML("beforeend", linha);
         });
 
     } catch (e) {
-        Swal.fire("Erro", "Não foi possível carregar os agendamentos.", "error");
         console.error(e);
+        Swal.fire("Erro", "Falha ao carregar agendamentos.", "error");
     }
 }
 
 // ======================================================================
-//  FUNÇÃO CHAMADA PELO CALENDÁRIO
-//  calendar.js chamará: abrirAgendamentosNaData("2025-12-15")
+//  FUNÇÃO CHAMADA PELO FULLCALENDAR
 // ======================================================================
-window.abrirAgendamentosNaData = function (data) {
-    document.getElementById("filtroData").value = data;
+window.abrirAgendamentosNaData = function (dataISO) {
+    document.getElementById("filtroData").value = dataISO;
     mostrarPagina("pagina-agendamentos");
-    carregarAgendamentos(data);
+    carregarAgendamentos(dataISO);
 };
 
 // ======================================================================
-//  MODAL: NOVO AGENDAMENTO
+//  NOVO AGENDAMENTO
 // ======================================================================
 function abrirModalNovoAgendamento() {
     Swal.fire({
-        title: "Novo agendamento",
+        title: "Novo Agendamento",
         html: `
-            <div class="form-group">
-                <label>Data</label>
-                <input type="date" id="ag_data" class="swal2-input">
-            </div>
-
-            <div class="form-group">
-                <label>Horário</label>
-                <input type="time" id="ag_horario" class="swal2-input">
-            </div>
-
-            <div class="form-group">
-                <label>Cliente</label>
-                <input type="text" id="ag_cliente" class="swal2-input" placeholder="Nome do cliente">
-            </div>
-
-            <div class="form-group">
-                <label>Telefone</label>
-                <input type="text" id="ag_telefone" class="swal2-input" placeholder="(DDD) 9XXXX-XXXX">
-            </div>
-
-            <div class="form-group">
-                <label>Itens (JSON)</label>
-                <textarea id="ag_itens" class="swal2-textarea" placeholder='[{"id":"pula-pula","qtd":1}]'></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Valor Final</label>
-                <input type="number" id="ag_valorfinal" class="swal2-input">
-            </div>
+            <input type="date" id="ag_data" class="swal2-input">
+            <input type="time" id="ag_horario" class="swal2-input">
+            <input type="text" id="ag_cliente" class="swal2-input" placeholder="Nome">
+            <input type="text" id="ag_telefone" class="swal2-input" placeholder="Telefone">
+            <textarea id="ag_itens" class="swal2-textarea" placeholder='[{"id":"pula-pula","qtd":1}]'></textarea>
+            <input type="number" id="ag_valorfinal" class="swal2-input" placeholder="Valor Final">
         `,
         confirmButtonText: "Salvar",
         showCancelButton: true,
         preConfirm: async () => {
-            let data = document.getElementById("ag_data").value;
-            let horario = document.getElementById("ag_horario").value;
-            let cliente = document.getElementById("ag_cliente").value;
-            let telefone = document.getElementById("ag_telefone").value;
-            let itens;
-            let valorFinal = Number(document.getElementById("ag_valorfinal").value || 0);
+            const data = document.getElementById("ag_data").value;
+            const horario = document.getElementById("ag_horario").value;
+            const cliente = document.getElementById("ag_cliente").value;
+            const telefone = document.getElementById("ag_telefone").value;
+            const valorFinal = Number(document.getElementById("ag_valorfinal").value || 0);
 
+            let itens;
             try {
                 itens = JSON.parse(document.getElementById("ag_itens").value || "[]");
-            } catch (e) {
-                Swal.fire("Atenção", "Itens devem estar em formato JSON.", "warning");
+            } catch {
+                Swal.fire("Atenção", "Itens precisam estar em JSON.", "warning");
                 return false;
             }
 
             if (!data || !horario || !cliente || !telefone) {
-                Swal.fire("Atenção", "Preencha todos os campos obrigatórios.", "warning");
+                Swal.fire("Atenção", "Preencha todos os campos.", "warning");
                 return false;
             }
 
-            const novo = {
+            await db.collection("agendamentos").add({
                 data,
                 horario,
                 cliente,
                 telefone,
                 itens,
                 valor_final: valorFinal,
-                receita_recebida: valorFinal, // Solicitado
+                receita_recebida: valorFinal,
                 status: "pendente",
                 criado_em: new Date().toISOString()
-            };
+            });
 
-            await db.collection("agendamentos").add(novo);
-            Swal.fire("OK", "Agendamento criado com sucesso.", "success");
-
+            Swal.fire("OK", "Agendamento criado.", "success");
             carregarAgendamentos();
         }
     });
 }
 
 // ======================================================================
-//  EDITAR AGENDAMENTO
+//  EDITAR
 // ======================================================================
 async function editarAgendamento(id) {
     const doc = await db.collection("agendamentos").doc(id).get();
@@ -193,12 +165,12 @@ async function editarAgendamento(id) {
         confirmButtonText: "Salvar",
         showCancelButton: true,
         preConfirm: async () => {
-
             let itens;
+
             try {
                 itens = JSON.parse(document.getElementById("ed_itens").value);
-            } catch (e) {
-                Swal.fire("Erro", "Itens inválidos.", "error");
+            } catch {
+                Swal.fire("Erro", "JSON dos itens inválido.", "error");
                 return false;
             }
 
@@ -212,49 +184,43 @@ async function editarAgendamento(id) {
                 receita_recebida: Number(document.getElementById("ed_valor").value)
             });
 
-            Swal.fire("OK", "Agendamento atualizado.", "success");
+            Swal.fire("OK", "Atualizado.", "success");
             carregarAgendamentos();
         }
     });
 }
 
 // ======================================================================
-//  CANCELAR AGENDAMENTO
+//  CANCELAR
 // ======================================================================
 function cancelarAgendamento(id) {
     Swal.fire({
         title: "Cancelar Agendamento?",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Sim",
-        cancelButtonText: "Não"
-    }).then(async (res) => {
-        if (res.isConfirmed) {
-            await db.collection("agendamentos").doc(id).update({
-                status: "cancelado"
-            });
-            Swal.fire("OK", "Agendamento cancelado.", "success");
+        confirmButtonText: "Sim"
+    }).then(async (r) => {
+        if (r.isConfirmed) {
+            await db.collection("agendamentos").doc(id).update({ status: "cancelado" });
+            Swal.fire("OK", "Cancelado.", "success");
             carregarAgendamentos();
         }
     });
 }
 
 // ======================================================================
-//  CONCLUIR AGENDAMENTO
+//  CONCLUIR
 // ======================================================================
 function concluirAgendamento(id) {
     Swal.fire({
         title: "Marcar como concluído?",
         icon: "info",
         showCancelButton: true,
-        confirmButtonText: "Sim",
-        cancelButtonText: "Não"
+        confirmButtonText: "Sim"
     }).then(async (r) => {
         if (r.isConfirmed) {
-            await db.collection("agendamentos").doc(id).update({
-                status: "concluido"
-            });
-            Swal.fire("OK", "Agendamento concluído.", "success");
+            await db.collection("agendamentos").doc(id).update({ status: "concluido" });
+            Swal.fire("OK", "Concluído.", "success");
             carregarAgendamentos();
         }
     });
