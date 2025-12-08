@@ -2,39 +2,25 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>Dashboard - Locplay</title>
+  <title>Dashboard - Divertilândia</title>
 
   <!-- CSS -->
   <link rel="stylesheet" href="css/dashboard.css" />
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet">
 
-  <!-- Firebase (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
-
-  <!-- Configuração Firebase e proteção -->
-  <script src="firebase-config.js"></script>
-  <script src="protect.js"></script>
+  <!-- Favicon -->
+  <link rel="icon" href="img/favicon.ico">
 
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
   <style>
-    /* Garantir que o calendário tenha altura definida */
     #calendar {
       max-width: 100%;
       margin: 0 auto;
       height: 600px;
     }
-
-    /* Seções */
-    .pagina {
-      display: none;
-    }
-    .pagina.ativa {
-      display: block;
-    }
+    .pagina { display: none; }
+    .pagina.ativa { display: block; }
   </style>
 </head>
 
@@ -49,7 +35,6 @@
     <div class="logo">
       <img src="img/logo.png" class="logo-img" alt="Divertilândia" />
     </div>
-
     <nav>
       <ul>
         <li class="active" onclick="nav('dashboard')">📊 Dashboard</li>
@@ -80,7 +65,7 @@
       </div>
     </header>
 
-    <!-- SEÇÃO DASHBOARD -->
+    <!-- Dashboard -->
     <section id="pagina-dashboard" class="pagina ativa">
       <div class="cards">
         <div class="card">
@@ -103,7 +88,7 @@
       </div>
     </section>
 
-    <!-- PAGINA: AGENDAMENTOS -->
+    <!-- Agendamentos -->
     <section id="pagina-agendamentos" class="pagina">
       <div class="topo-secao" style="display:flex; justify-content:space-between; align-items:center;">
         <h2>Agendamentos</h2>
@@ -112,7 +97,7 @@
         </div>
       </div>
 
-      <!-- FILTROS -->
+      <!-- Filtros -->
       <div class="filtros-agendamentos" style="margin-top:15px; display:flex; flex-wrap:wrap; gap:12px;">
         <div class="campo-filtro">
           <label for="filtroData">Data</label>
@@ -141,7 +126,6 @@
         </div>
       </div>
 
-      <!-- LISTA DE AGENDAMENTOS -->
       <div style="margin-top:16px; overflow-x:auto;">
         <table class="tabela-agendamentos" style="width:100%;">
           <thead>
@@ -154,25 +138,33 @@
               <th>Ações</th>
             </tr>
           </thead>
-          <tbody id="listaAgendamentos">
-            <!-- Linhas inseridas via JS -->
-          </tbody>
+          <tbody id="listaAgendamentos"></tbody>
         </table>
       </div>
     </section>
-
-    <!-- OUTRAS SEÇÕES (financeiro, itens, pacotes, monitores, tarefas, conversas, notificações) -->
-    <!-- Mantidas iguais ao HTML anterior -->
-
   </main>
 
-  <!-- JS: FullCalendar (global) -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
-  <!-- SweetAlert2 -->
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+
+  <!-- Configuração Firebase -->
+  <script src="firebase-config.js"></script>
+
+  <!-- SweetAlert -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- Script central unificado -->
+  <!-- Dashboard scripts -->
   <script src="js/dashboard.js"></script>
+  <script src="js/agendamentos.js"></script>
+  <script src="js/monitor.js"></script>
+  <script src="js/checklist.js"></script>
+  <script src="js/ordemServico.js"></script>
+  <script src="js/tarefas.js"></script>
+  <script src="js/notificacoes.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
 
   <script>
     // Logout
@@ -189,6 +181,23 @@
         if (el) el.textContent = user.displayName || user.email;
       }
     });
+
+    // Navegação entre seções
+    function nav(pagina) {
+      document.querySelectorAll(".pagina").forEach(sec => sec.classList.remove("ativa"));
+      const el = document.getElementById("pagina-" + pagina);
+      if (el) el.classList.add("ativa");
+
+      document.querySelectorAll(".sidebar ul li").forEach(li => li.classList.remove("active"));
+      const liAtivo = Array.from(document.querySelectorAll(".sidebar ul li"))
+        .find(li => li.getAttribute("onclick")?.includes(pagina));
+      if (liAtivo) liAtivo.classList.add("active");
+
+      // Atualizar calendário quando voltar para dashboard
+      if (pagina === "dashboard" && window.dashboardState?.calendario && window.dashboardState.agendamentosCache) {
+        window.dashboardState.calendario.refetchEvents();
+      }
+    }
   </script>
 </body>
 </html>
