@@ -1,5 +1,5 @@
 // ============================
-// CALENDÁRIO - calendar.js
+// CALENDÁRIO.JS
 // ============================
 
 // Garantir compatibilidade com Firebase
@@ -12,6 +12,10 @@ window.renderCalendar = function(agendamentos = []) {
     console.error("Elemento #calendar não encontrado no HTML.");
     return;
   }
+
+  // Garantir que só renderize se a seção dashboard estiver ativa
+  const dashboardSection = document.getElementById("pagina-dashboard");
+  if (!dashboardSection || !dashboardSection.classList.contains("ativa")) return;
 
   // Converter agendamentos do Firestore para formato FullCalendar
   const eventos = agendamentos.map(a => {
@@ -45,11 +49,12 @@ window.renderCalendar = function(agendamentos = []) {
     },
     events: eventos,
     eventClick: function(info) {
-      // Ao clicar em um evento, abrir detalhes
       if (info.event.id) {
         window.abrirAgendamento(info.event.id);
       }
-    }
+    },
+    height: 'auto', // Evita que o calendário quebre o layout
+    contentHeight: 'auto'
   });
 
   calendar.render();
@@ -57,3 +62,20 @@ window.renderCalendar = function(agendamentos = []) {
   // Salvar instância para possíveis atualizações
   window.dashboardState.calendario = calendar;
 };
+
+// ============================
+// ATUALIZA CALENDÁRIO AO ABRIR DASHBOARD
+// ============================
+window.addEventListener("DOMContentLoaded", () => {
+  const observer = new MutationObserver(() => {
+    const dashboardSection = document.getElementById("pagina-dashboard");
+    if (dashboardSection && dashboardSection.classList.contains("ativa")) {
+      // Atualiza o calendário com cache de agendamentos
+      if (window.renderCalendar && window.dashboardState.agendamentosCache) {
+        window.renderCalendar(window.dashboardState.agendamentosCache);
+      }
+    }
+  });
+
+  observer.observe(document.getElementById("pagina-dashboard"), { attributes: true, attributeFilter: ['class'] });
+});
