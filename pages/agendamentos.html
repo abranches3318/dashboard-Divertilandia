@@ -3,110 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <title>Agendamentos - Divertilândia</title>
-  <link rel="stylesheet" href="css/dashboard.css" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-</head>
-<body>
-  <!-- Header -->
-  <header class="topbar">
-    <h1>Agendamentos</h1>
-    <div class="top-right">
-      <div class="notif" onclick="abrirNotificacoes()">
-        🔔 <span id="notif-count">0</span>
-      </div>
-      <div class="user-info">
-        <span id="user-name">Usuário</span>
-      </div>
-    </div>
-  </header>
 
-  <main class="content">
-    <!-- Novo Agendamento -->
-    <div class="topo-secao" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-      <h2>Agendamentos</h2>
-      <button id="btnNovoAgendamento" class="btn">+ Novo Agendamento</button>
-    </div>
+  <!-- CSS -->
+  <link rel="stylesheet" href="../css/dashboard.css">
 
-    <!-- Filtros -->
-    <div class="filtros-agendamentos" style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:15px;">
-      <div class="campo-filtro">
-        <label for="filtroData">Data</label>
-        <input type="date" id="filtroData">
-      </div>
-      <div class="campo-filtro">
-        <label for="filtroCliente">Cliente</label>
-        <input type="text" id="filtroCliente" placeholder="Nome do cliente">
-      </div>
-      <div class="campo-filtro">
-        <label for="filtroTelefone">Telefone</label>
-        <input type="text" id="filtroTelefone" placeholder="(DDD) 9XXXX-XXXX">
-      </div>
-      <div class="campo-filtro">
-        <label for="filtroStatus">Status</label>
-        <select id="filtroStatus">
-          <option value="">Todos</option>
-          <option value="pendente">Pendente</option>
-          <option value="confirmado">Confirmado</option>
-          <option value="concluido">Concluído</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-      </div>
-      <div style="align-self:end;">
-        <button id="btnFiltrarAgendamentos" class="btn">Filtrar</button>
-      </div>
-    </div>
-
-    <!-- Tabela de Agendamentos -->
-    <div style="overflow-x:auto;">
-      <table class="tabela-agendamentos" style="width:100%;">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Cliente</th>
-            <th>Telefone</th>
-            <th>Status</th>
-            <th>Pacote / Item</th>
-            <th>Valor</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="listaAgendamentos">
-          <!-- Preenchido dinamicamente pelo agendamentos.js -->
-        </tbody>
-      </table>
-    </div>
-  </main>
-
-  <!-- Firebase compat -->
+  <!-- Firebase Compat -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
-  <!-- Configuração Firebase -->
-  <script src="firebase-config.js"></script>
-
-  <!-- SweetAlert -->
+  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- Agendamentos JS -->
-  <script src="js/agendamentos.js"></script>
+  <!-- Firebase Config -->
+  <script src="../firebase-config.js"></script>
+</head>
+<body>
+
+  <header class="topbar">
+    <h1>Agendamentos</h1>
+    <div>
+      <span id="user-name">Usuário</span>
+      <button onclick="logout()" class="btn btn-dark">Sair</button>
+    </div>
+  </header>
+
+  <main class="content" style="padding:20px;">
+    <div class="filtros">
+      <input type="date" id="filtroData">
+      <input type="text" id="filtroCliente" placeholder="Cliente">
+      <input type="text" id="filtroTelefone" placeholder="Telefone">
+      <select id="filtroStatus">
+        <option value="">Todos Status</option>
+        <option value="pendente">Pendente</option>
+        <option value="confirmado">Confirmado</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+      <button class="btn btn" id="btnFiltrarAgendamentos">Filtrar</button>
+      <button class="btn btn" id="btnNovoAgendamento">➕ Novo Agendamento</button>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Cliente</th>
+          <th>Telefone</th>
+          <th>Endereço</th>
+          <th>Pacote/Item</th>
+          <th>Valor</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="listaAgendamentos">
+        <tr><td colspan="8" style="text-align:center">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </main>
 
   <script>
-    // Logout seguro
+    // Função de logout
     function logout() {
-      if (window.auth) {
-        window.auth.signOut().then(() => window.location.href="index.html");
-      } else {
-        console.error("Auth não inicializado.");
-      }
+      if (!window.auth) return;
+      window.auth.signOut()
+        .then(() => { window.location.href = '../index.html'; })
+        .catch(err => { Swal.fire('Erro', 'Não foi possível sair: ' + err.message, 'error'); });
     }
-
-    // Atualiza o nome do usuário
-    window.auth?.onAuthStateChanged(user => {
-      const el = document.getElementById('user-name');
-      if (el) el.textContent = user ? (user.displayName || user.email) : 'Usuário';
-    });
   </script>
+
+  <!-- Script Agendamentos -->
+  <script src="agendamentos.js"></script>
+
 </body>
 </html>
