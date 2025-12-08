@@ -1,5 +1,5 @@
 // ============================
-// AGENDAMENTOS - agendamentos.js
+// AGENDAMENTOS.JS
 // ============================
 
 // Firebase compat
@@ -16,8 +16,10 @@ const filtroCliente = document.getElementById("filtroCliente");
 const filtroTelefone = document.getElementById("filtroTelefone");
 const filtroStatus = document.getElementById("filtroStatus");
 
-// Cache global de agendamentos
-window.agendamentosState = {
+// ============================
+// ESTADO GLOBAL AGENDAMENTOS
+// ============================
+window.agendamentosState = window.agendamentosState || {
   todos: []
 };
 
@@ -107,8 +109,11 @@ function aplicarFiltros() {
 // NOVO AGENDAMENTO
 // ============================
 function novoAgendamento() {
-  // Aqui você pode abrir um modal ou redirecionar para página de novo agendamento
-  alert("Função para criar novo agendamento ainda não implementada.");
+  Swal.fire({
+    icon: 'info',
+    title: 'Função em desenvolvimento',
+    text: 'Criar novo agendamento ainda não foi implementado.'
+  });
 }
 
 // ============================
