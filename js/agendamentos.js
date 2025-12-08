@@ -1,122 +1,80 @@
 // ============================
-// AGENDAMENTOS.JS CORRIGIDO
 // ============================
+function atualizarCards(agendamentos) {
+const hoje = new Date().toDateString();
+const agHoje = agendamentos.filter(a => {
+const d = a.data?.toDate ? a.data.toDate() : new Date(a.data);
+return d.toDateString() === hoje;
+});
+document.getElementById('ag-hoje').textContent = agHoje.length;
 
-// Elementos
-const listaAgendamentosEl = document.getElementById("listaAgendamentos");
-const btnFiltrar = document.getElementById("btnFiltrarAgendamentos");
-const btnNovo = document.getElementById("btnNovoAgendamento");
 
-const filtroData = document.getElementById("filtroData");
-const filtroCliente = document.getElementById("filtroCliente");
-const filtroTelefone = document.getElementById("filtroTelefone");
-const filtroStatus = document.getElementById("filtroStatus");
+const mesAtual = new Date().getMonth();
+const receitaMes = agendamentos.reduce((acc, a) => {
+const d = a.data?.toDate ? a.data.toDate() : new Date(a.data);
+if (d.getMonth() === mesAtual) acc += Number(a.valor || 0);
+return acc;
+}, 0);
+document.getElementById('receita-mes').textContent = `R$ ${receitaMes.toFixed(2)}`;
 
-// ============================
-// ESTADO GLOBAL AGENDAMENTOS
-// ============================
-window.agendamentosState = window.agendamentosState || { todos: [] };
 
-// ============================
-// CARREGAR AGENDAMENTOS
-// ============================
-async function carregarAgendamentos() {
-  try {
-    const snap = await window.db.collection("agendamentos").orderBy("data", "asc").get();
-    const agendamentos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    window.agendamentosState.todos = agendamentos;
-    renderizarTabela(agendamentos);
-  } catch (err) {
-    console.error("Erro ao carregar agendamentos:", err);
-  }
+// Tarefas pendentes (opcional)
+const tarefasPendentes = agendamentos.filter(a => a.status === 'pendente').length;
+document.getElementById('tarefas-pendentes').textContent = tarefasPendentes;
 }
 
+
 // ============================
-// RENDERIZAR TABELA
+// RENDER CALENDAR
 // ============================
-function renderizarTabela(agendamentos) {
-  if (!listaAgendamentosEl) return;
-  listaAgendamentosEl.innerHTML = "";
+function renderCalendar(agendamentos = []) {
+const calendarEl = document.getElementById('calendar');
+if (!calendarEl) return;
 
-  if (agendamentos.length === 0) {
-    listaAgendamentosEl.innerHTML = `<tr><td colspan="6" style="text-align:center">Nenhum agendamento encontrado</td></tr>`;
-    return;
-  }
 
-  agendamentos.forEach(a => {
-    const data = a.data?.toDate ? a.data.toDate() : new Date(a.data);
-    const linha = document.createElement("tr");
-    linha.innerHTML = `
-      <td>${data.toLocaleDateString()}</td>
-      <td>${a.cliente || ""}</td>
-      <td>${a.telefone || ""}</td>
-      <td>${a.status || ""}</td>
-      <td>R$ ${Number(a.valor || 0).toFixed(2)}</td>
-      <td>
-        <button class="btn-secundario btn-ver" data-id="${a.id}">Ver</button>
-      </td>
-    `;
-    listaAgendamentosEl.appendChild(linha);
-  });
+const eventos = agendamentos.map(a => {
+const data = a.data?.toDate ? a.data.toDate() : new Date(a.data);
+return {
+id: a.id,
+title: a.cliente || 'Sem nome',
+start: data,
+allDay: true,
+extendedProps: {
+telefone: a.telefone || '',
+status: a.status || '',
+valor: a.valor || 0
+}
+};
+});
 
-  // Eventos dos botões "Ver"
-  listaAgendamentosEl.querySelectorAll(".btn-ver").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.getAttribute("data-id");
-      if (id) window.abrirAgendamento(id);
-    });
-  });
+
+if (window.dashboardState.calendario) window.dashboardState.calendario.destroy();
+
+
+const calendar = new FullCalendar.Calendar(calendarEl, {
+initialView: 'dayGridMonth',
+locale: 'pt-br',
+headerToolbar: {
+left: '',
+center: 'title',
+right: ''
+},
+events: eventos,
+eventClick: info => abrirAgendamento(info.event.id),
+height: 'auto'
+});
+
+
+calendar.render();
+window.dashboardState.calendario = calendar;
 }
 
-// ============================
-// FILTRAR
-// ============================
-function aplicarFiltros() {
-  let agendamentos = [...window.agendamentosState.todos];
-
-  if (filtroData?.value) {
-    const dataFiltro = new Date(filtroData.value);
-    agendamentos = agendamentos.filter(a => {
-      const d = a.data?.toDate ? a.data.toDate() : new Date(a.data);
-      return d.toDateString() === dataFiltro.toDateString();
-    });
-  }
-
-  if (filtroCliente?.value) {
-    const nome = filtroCliente.value.toLowerCase();
-    agendamentos = agendamentos.filter(a => (a.cliente || "").toLowerCase().includes(nome));
-  }
-
-  if (filtroTelefone?.value) {
-    const tel = filtroTelefone.value.replace(/\D/g, "");
-    agendamentos = agendamentos.filter(a => (a.telefone || "").replace(/\D/g, "").includes(tel));
-  }
-
-  if (filtroStatus?.value) {
-    agendamentos = agendamentos.filter(a => (a.status || "") === filtroStatus.value);
-  }
-
-  renderizarTabela(agendamentos);
-}
-
-// ============================
-// NOVO AGENDAMENTO
-// ============================
-function novoAgendamento() {
-  Swal.fire({
-    icon: 'info',
-    title: 'Função em desenvolvimento',
-    text: 'Criar novo agendamento ainda não foi implementado.'
-  });
-}
 
 // ============================
 // EVENTOS
 // ============================
-if (btnFiltrar) btnFiltrar.addEventListener("click", aplicarFiltros);
-if (btnNovo) btnNovo.addEventListener("click", novoAgendamento);
+if (btnFiltrar) btnFiltrar.addEventListener('click', aplicarFiltros);
+if (btnNovo) btnNovo.addEventListener('click', novoAgendamento);
 
-// ============================
-// INICIALIZAÇÃO
-// ============================
-window.addEventListener("DOMContentLoaded", carregarAgendamentos);
+
+window.addEventListener('DOMContentLoaded', carregarAgendamentos);
