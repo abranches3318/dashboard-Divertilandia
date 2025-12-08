@@ -1,227 +1,276 @@
 // ======================================================================
-//  AGENDAMENTOS.JS  (USANDO db GLOBAL DO firebase-config.js)
+// AGENDAMENTOS.JS – Controle completo da lista + filtros + modal
 // ======================================================================
 
-// Abertura da página via menu
-document.getElementById("menu-agendamentos").addEventListener("click", () => {
-    mostrarPagina("pagina-agendamentos");
+// Verifica se o Firebase já está disponível
+if (!window.db) {
+    console.error("Erro: db não encontrado. Verifique se dashboard.js carregou antes.");
+}
+
+// ======================================================================
+// ELEMENTOS DA PÁGINA
+// ======================================================================
+let listaAgendamentos;
+let filtroData;
+let filtroCliente;
+let filtroTelefone;
+let filtroStatus;
+let btnFiltrar;
+let btnNovo;
+
+// ======================================================================
+// INICIALIZAÇÃO DA PÁGINA
+// ======================================================================
+document.addEventListener("DOMContentLoaded", () => {
+    // Seleção dos elementos SOMENTE quando estiverem presentes
+    listaAgendamentos = document.getElementById("listaAgendamentos");
+    filtroData = document.getElementById("filtroData");
+    filtroCliente = document.getElementById("filtroCliente");
+    filtroTelefone = document.getElementById("filtroTelefone");
+    filtroStatus = document.getElementById("filtroStatus");
+    btnFiltrar = document.getElementById("btnFiltrarAgendamentos");
+    btnNovo = document.getElementById("btnNovoAgendamento");
+
+    // Se algum não existir, não quebra o arquivo
+    if (!listaAgendamentos) return;
+
+    btnFiltrar.addEventListener("click", aplicarFiltros);
+    btnNovo.addEventListener("click", abrirModalNovoAgendamento);
+
     carregarAgendamentos();
 });
 
-// Botão "+ Novo Agendamento"
-document.getElementById("btnNovoAgendamento").addEventListener("click", () => {
-    abrirModalNovoAgendamento();
-});
-
-// Botão "Filtrar"
-document.getElementById("btnFiltrarAgendamentos").addEventListener("click", () => {
-    carregarAgendamentos();
-});
-
 // ======================================================================
-//  FUNÇÃO PRINCIPAL — CARREGAR LISTA
+// CARREGAR AGENDAMENTOS DO FIREBASE
 // ======================================================================
-async function carregarAgendamentos(filtroDataDireta = null) {
-    const tbody = document.getElementById("listaAgendamentos");
-    tbody.innerHTML = "";
-
+async function carregarAgendamentos() {
     try {
-        const dataFiltro = filtroDataDireta || document.getElementById("filtroData").value;
-        const clienteFiltro = document.getElementById("filtroCliente").value.trim().toLowerCase();
-        const telefoneFiltro = document.getElementById("filtroTelefone").value.trim();
-        const statusFiltro = document.getElementById("filtroStatus").value;
-
-        const snapshot = await db.collection("agendamentos")
-            .orderBy("data")
-            .orderBy("horario")
+        const snap = await db.collection("agendamentos")
+            .orderBy("data", "asc")
             .get();
 
-        let lista = [];
+        const lista = [];
 
-        snapshot.forEach(doc => {
-            let ag = doc.data();
-            ag.id = doc.id;
-
-            let ok = true;
-
-            if (dataFiltro && ag.data !== dataFiltro) ok = false;
-            if (statusFiltro && ag.status !== statusFiltro) ok = false;
-            if (clienteFiltro && !ag.cliente?.toLowerCase().includes(clienteFiltro)) ok = false;
-            if (telefoneFiltro && ag.telefone !== telefoneFiltro) ok = false;
-
-            if (ok) lista.push(ag);
+        snap.forEach(doc => {
+            lista.push({
+                id: doc.id,
+                ...doc.data()
+            });
         });
 
-        lista.forEach(ag => {
-            const linha = `
-                <tr>
-                    <td>${ag.data} ${ag.horario}</td>
-                    <td>${ag.cliente || "---"}</td>
-                    <td>${ag.telefone || "---"}</td>
-
-                    <td class="status-${ag.status}">
-                        ${ag.status}
-                    </td>
-
-                    <td>R$ ${Number(ag.valor_final || 0).toFixed(2)}</td>
-
-                    <td>
-                        <button class="btnAcao" onclick="editarAgendamento('${ag.id}')">Editar</button>
-                        <button class="btnAcao" onclick="cancelarAgendamento('${ag.id}')">Cancelar</button>
-                        <button class="btnAcao" onclick="concluirAgendamento('${ag.id}')">Concluir</button>
-                    </td>
-                </tr>
-            `;
-
-            tbody.insertAdjacentHTML("beforeend", linha);
-        });
+        renderizarLista(lista);
 
     } catch (e) {
-        console.error(e);
-        Swal.fire("Erro", "Falha ao carregar agendamentos.", "error");
+        console.error("Erro ao carregar agendamentos:", e);
+        Swal.fire("Erro", "Não foi possível carregar os agendamentos.", "error");
     }
 }
 
 // ======================================================================
-//  FUNÇÃO CHAMADA PELO FULLCALENDAR
+// RENDERIZAR LISTA NO HTML
 // ======================================================================
-window.abrirAgendamentosNaData = function (dataISO) {
-    document.getElementById("filtroData").value = dataISO;
-    mostrarPagina("pagina-agendamentos");
-    carregarAgendamentos(dataISO);
-};
+function renderizarLista(lista) {
+    listaAgendamentos.innerHTML = "";
+
+    if (lista.length === 0) {
+        listaAgendamentos.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align:center; padding:20px;">
+                    Nenhum agendamento encontrado.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    lista.forEach(ag => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${formatarData(ag.data)}</td>
+            <td>${ag.cliente || "-"}</td>
+            <td>${ag.telefone || "-"}</td>
+            <td>${formatarStatus(ag.status)}</td>
+            <td>${formatarValor(ag.valor)}</td>
+            <td>
+                <button class="btn-secundario" onclick="editarAgendamento('${ag.id}')">Editar</button>
+            </td>
+        `;
+
+        listaAgendamentos.appendChild(tr);
+    });
+}
 
 // ======================================================================
-//  NOVO AGENDAMENTO
+// FILTROS
+// ======================================================================
+async function aplicarFiltros() {
+    try {
+        let ref = db.collection("agendamentos");
+
+        if (filtroStatus.value) {
+            ref = ref.where("status", "==", filtroStatus.value);
+        }
+
+        const snap = await ref.get();
+        let lista = [];
+
+        snap.forEach(doc => {
+            lista.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+
+        // Aplicar filtros locais
+        if (filtroData.value) {
+            lista = lista.filter(x => x.data?.startsWith(filtroData.value));
+        }
+
+        if (filtroCliente.value) {
+            lista = lista.filter(x =>
+                (x.cliente || "").toLowerCase().includes(filtroCliente.value.toLowerCase())
+            );
+        }
+
+        if (filtroTelefone.value) {
+            lista = lista.filter(x =>
+                (x.telefone || "").toLowerCase().includes(filtroTelefone.value.toLowerCase())
+            );
+        }
+
+        renderizarLista(lista);
+
+    } catch (e) {
+        console.error("Erro ao filtrar agendamentos:", e);
+        Swal.fire("Erro", "Falha ao aplicar filtros.", "error");
+    }
+}
+
+// ======================================================================
+// FUNÇÕES DE FORMATAÇÃO
+// ======================================================================
+function formatarData(dataISO) {
+    if (!dataISO) return "-";
+    const d = new Date(dataISO);
+    return d.toLocaleDateString("pt-BR");
+}
+
+function formatarStatus(s) {
+    if (!s) return "-";
+    const map = {
+        pendente: "Pendente",
+        confirmado: "Confirmado",
+        concluido: "Concluído",
+        cancelado: "Cancelado"
+    };
+    return map[s] || s;
+}
+
+function formatarValor(v) {
+    if (!v) return "-";
+    return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+// ======================================================================
+// BOTÃO: NOVO AGENDAMENTO
 // ======================================================================
 function abrirModalNovoAgendamento() {
     Swal.fire({
         title: "Novo Agendamento",
         html: `
-            <input type="date" id="ag_data" class="swal2-input">
-            <input type="time" id="ag_horario" class="swal2-input">
-            <input type="text" id="ag_cliente" class="swal2-input" placeholder="Nome">
-            <input type="text" id="ag_telefone" class="swal2-input" placeholder="Telefone">
-            <textarea id="ag_itens" class="swal2-textarea" placeholder='[{"id":"pula-pula","qtd":1}]'></textarea>
-            <input type="number" id="ag_valorfinal" class="swal2-input" placeholder="Valor Final">
+            <input id="novoData" type="datetime-local" class="swal2-input">
+            <input id="novoCliente" type="text" class="swal2-input" placeholder="Cliente">
+            <input id="novoTelefone" type="text" class="swal2-input" placeholder="Telefone">
+            <input id="novoValor" type="number" class="swal2-input" placeholder="Valor (R$)">
+            <select id="novoStatus" class="swal2-input">
+                <option value="pendente">Pendente</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="concluido">Concluído</option>
+                <option value="cancelado">Cancelado</option>
+            </select>
         `,
         confirmButtonText: "Salvar",
-        showCancelButton: true,
-        preConfirm: async () => {
-            const data = document.getElementById("ag_data").value;
-            const horario = document.getElementById("ag_horario").value;
-            const cliente = document.getElementById("ag_cliente").value;
-            const telefone = document.getElementById("ag_telefone").value;
-            const valorFinal = Number(document.getElementById("ag_valorfinal").value || 0);
+        showCancelButton: true
+    }).then(async (result) => {
+        if (!result.isConfirmed) return;
 
-            let itens;
-            try {
-                itens = JSON.parse(document.getElementById("ag_itens").value || "[]");
-            } catch {
-                Swal.fire("Atenção", "Itens precisam estar em JSON.", "warning");
-                return false;
-            }
+        const novo = {
+            data: document.getElementById("novoData").value,
+            cliente: document.getElementById("novoCliente").value,
+            telefone: document.getElementById("novoTelefone").value,
+            valor: Number(document.getElementById("novoValor").value),
+            status: document.getElementById("novoStatus").value,
+            criadoEm: new Date().toISOString()
+        };
 
-            if (!data || !horario || !cliente || !telefone) {
-                Swal.fire("Atenção", "Preencha todos os campos.", "warning");
-                return false;
-            }
+        if (!novo.data || !novo.cliente) {
+            Swal.fire("Atenção", "Data e cliente são obrigatórios.", "warning");
+            return;
+        }
 
-            await db.collection("agendamentos").add({
-                data,
-                horario,
-                cliente,
-                telefone,
-                itens,
-                valor_final: valorFinal,
-                receita_recebida: valorFinal,
-                status: "pendente",
-                criado_em: new Date().toISOString()
-            });
-
-            Swal.fire("OK", "Agendamento criado.", "success");
+        try {
+            await db.collection("agendamentos").add(novo);
+            Swal.fire("Sucesso", "Agendamento criado.", "success");
             carregarAgendamentos();
+            if (window.atualizarCalendar) atualizarCalendar();
+        } catch (e) {
+            console.error(e);
+            Swal.fire("Erro", "Falha ao salvar.", "error");
         }
     });
 }
 
 // ======================================================================
-//  EDITAR
+// EDITAR AGENDAMENTO
 // ======================================================================
 async function editarAgendamento(id) {
-    const doc = await db.collection("agendamentos").doc(id).get();
-    const ag = doc.data();
+    try {
+        const doc = await db.collection("agendamentos").doc(id).get();
+        if (!doc.exists) return;
 
-    Swal.fire({
-        title: "Editar Agendamento",
-        html: `
-            <input type="date" id="ed_data" class="swal2-input" value="${ag.data}">
-            <input type="time" id="ed_horario" class="swal2-input" value="${ag.horario}">
-            <input type="text" id="ed_cliente" class="swal2-input" value="${ag.cliente}">
-            <input type="text" id="ed_telefone" class="swal2-input" value="${ag.telefone}">
-            <textarea id="ed_itens" class="swal2-textarea">${JSON.stringify(ag.itens || [])}</textarea>
-            <input type="number" id="ed_valor" class="swal2-input" value="${ag.valor_final || 0}">
-        `,
-        confirmButtonText: "Salvar",
-        showCancelButton: true,
-        preConfirm: async () => {
-            let itens;
+        const ag = doc.data();
+
+        Swal.fire({
+            title: "Editar Agendamento",
+            html: `
+                <input id="editData" type="datetime-local" class="swal2-input" value="${ag.data || ""}">
+                <input id="editCliente" type="text" class="swal2-input" value="${ag.cliente || ""}">
+                <input id="editTelefone" type="text" class="swal2-input" value="${ag.telefone || ""}">
+                <input id="editValor" type="number" class="swal2-input" value="${ag.valor || ""}">
+                <select id="editStatus" class="swal2-input">
+                    <option value="pendente" ${ag.status === "pendente" ? "selected" : ""}>Pendente</option>
+                    <option value="confirmado" ${ag.status === "confirmado" ? "selected" : ""}>Confirmado</option>
+                    <option value="concluido" ${ag.status === "concluido" ? "selected" : ""}>Concluído</option>
+                    <option value="cancelado" ${ag.status === "cancelado" ? "selected" : ""}>Cancelado</option>
+                </select>
+            `,
+            confirmButtonText: "Salvar",
+            showCancelButton: true
+        }).then(async (result) => {
+            if (!result.isConfirmed) return;
 
             try {
-                itens = JSON.parse(document.getElementById("ed_itens").value);
-            } catch {
-                Swal.fire("Erro", "JSON dos itens inválido.", "error");
-                return false;
+                await db.collection("agendamentos").doc(id).update({
+                    data: document.getElementById("editData").value,
+                    cliente: document.getElementById("editCliente").value,
+                    telefone: document.getElementById("editTelefone").value,
+                    valor: Number(document.getElementById("editValor").value),
+                    status: document.getElementById("editStatus").value,
+                    atualizadoEm: new Date().toISOString()
+                });
+
+                Swal.fire("Sucesso", "Agendamento atualizado.", "success");
+                carregarAgendamentos();
+                if (window.atualizarCalendar) atualizarCalendar();
+            } catch (e) {
+                console.error(e);
+                Swal.fire("Erro", "Falha ao salvar alterações.", "error");
             }
+        });
 
-            await db.collection("agendamentos").doc(id).update({
-                data: document.getElementById("ed_data").value,
-                horario: document.getElementById("ed_horario").value,
-                cliente: document.getElementById("ed_cliente").value,
-                telefone: document.getElementById("ed_telefone").value,
-                itens,
-                valor_final: Number(document.getElementById("ed_valor").value),
-                receita_recebida: Number(document.getElementById("ed_valor").value)
-            });
-
-            Swal.fire("OK", "Atualizado.", "success");
-            carregarAgendamentos();
-        }
-    });
-}
-
-// ======================================================================
-//  CANCELAR
-// ======================================================================
-function cancelarAgendamento(id) {
-    Swal.fire({
-        title: "Cancelar Agendamento?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sim"
-    }).then(async (r) => {
-        if (r.isConfirmed) {
-            await db.collection("agendamentos").doc(id).update({ status: "cancelado" });
-            Swal.fire("OK", "Cancelado.", "success");
-            carregarAgendamentos();
-        }
-    });
-}
-
-// ======================================================================
-//  CONCLUIR
-// ======================================================================
-function concluirAgendamento(id) {
-    Swal.fire({
-        title: "Marcar como concluído?",
-        icon: "info",
-        showCancelButton: true,
-        confirmButtonText: "Sim"
-    }).then(async (r) => {
-        if (r.isConfirmed) {
-            await db.collection("agendamentos").doc(id).update({ status: "concluido" });
-            Swal.fire("OK", "Concluído.", "success");
-            carregarAgendamentos();
-        }
-    });
+    } catch (e) {
+        console.error("Erro ao editar agendamento:", e);
+        Swal.fire("Erro", "Não foi possível carregar este agendamento.", "error");
+    }
 }
