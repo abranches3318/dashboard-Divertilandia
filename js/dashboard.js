@@ -1,10 +1,24 @@
 // ============================
-// DASHBOARD.JS
+// DASHBOARD.JS - CALENDÁRIO
 // ============================
 
 window.addEventListener("DOMContentLoaded", async () => {
+  // ----------------------------
+  // FIREBASE COMPAT
+  // ----------------------------
   const auth = window.auth;
   const db = window.db;
+
+  if (!auth || !db) {
+    console.error("Firebase não inicializado corretamente.");
+    return;
+  }
+
+  // ----------------------------
+  // ELEMENTOS
+  // ----------------------------
+  const calendarEl = document.getElementById("calendar");
+  const agHojeEl = document.getElementById("ag-hoje");
 
   // ----------------------------
   // ESTADO GLOBAL
@@ -15,51 +29,34 @@ window.addEventListener("DOMContentLoaded", async () => {
   };
 
   // ----------------------------
-  // ELEMENTOS
+  // FUNÇÕES
   // ----------------------------
-  const calendarEl = document.getElementById("calendar");
-  const agHojeEl = document.getElementById("ag-hoje");
-  const receitaMesEl = document.getElementById("receita-mes");
-  const tarefasPendentesEl = document.getElementById("tarefas-pendentes");
 
-  // ----------------------------
-  // CARREGAR AGENDAMENTOS
-  // ----------------------------
+  // Carrega agendamentos do Firestore
   async function carregarAgendamentos() {
     try {
       const snap = await db.collection("agendamentos").orderBy("data", "asc").get();
       const agendamentos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       window.dashboardState.agendamentos = agendamentos;
 
-      atualizarEstatisticas(agendamentos);
+      atualizarResumo(agendamentos);
       renderizarCalendario(agendamentos);
     } catch (err) {
       console.error("Erro ao carregar agendamentos:", err);
     }
   }
 
-  // ----------------------------
-  // ESTATÍSTICAS
-  // ----------------------------
-  function atualizarEstatisticas(agendamentos) {
+  // Atualiza cards resumo
+  function atualizarResumo(agendamentos) {
     const hoje = new Date().toDateString();
     const agHoje = agendamentos.filter(a => {
       const d = a.data?.toDate ? a.data.toDate() : new Date(a.data);
       return d.toDateString() === hoje;
     }).length;
-
-    agHojeEl.textContent = agHoje;
-
-    const receita = agendamentos.reduce((sum, a) => sum + (Number(a.valor || 0)), 0);
-    receitaMesEl.textContent = `R$ ${receita.toFixed(2)}`;
-
-    const tarefasPend = agendamentos.filter(a => a.status === "pendente").length;
-    tarefasPendentesEl.textContent = tarefasPend;
+    if (agHojeEl) agHojeEl.textContent = agHoje;
   }
 
-  // ----------------------------
-  // CALENDÁRIO
-  // ----------------------------
+  // Renderiza calendário FullCalendar
   function renderizarCalendario(agendamentos) {
     if (!calendarEl) return;
 
@@ -70,11 +67,18 @@ window.addEventListener("DOMContentLoaded", async () => {
         title: a.cliente || "Sem nome",
         start: data,
         allDay: true,
-        extendedProps: { status: a.status, telefone: a.telefone, valor: a.valor }
+        extendedProps: {
+          status: a.status,
+          telefone: a.telefone,
+          valor: a.valor
+        }
       };
     });
 
-    if (window.dashboardState.calendario) window.dashboardState.calendario.destroy();
+    // Destrói calendário antigo
+    if (window.dashboardState.calendario) {
+      window.dashboardState.calendario.destroy();
+    }
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'dayGridMonth',
@@ -92,12 +96,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       },
       events: eventos,
       dateClick: info => {
-        // Redireciona para agendamentos.html com data selecionada
-        window.location.href = `agendamentos.html?data=${info.dateStr}`;
+        // Abrir página de novo agendamento passando a data
+        const dataISO = info.dateStr;
+        window.location.href = 'agendamentos.html?data=' + dataISO;
       },
       eventClick: info => {
-        // Redireciona para agendamentos.html para ver agendamento específico
-        window.location.href = `agendamentos.html?id=${info.event.id}`;
+        // Abrir página de edição/visualização do agendamento
+        const id = info.event.id;
+        window.location.href = `agendamentos.html?id=${id}`;
       },
       height: 600
     });
@@ -112,10 +118,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   auth.onAuthStateChanged(user => {
     const el = document.getElementById('user-name');
     if (el) el.textContent = user ? (user.displayName || user.email) : 'Usuário';
+    if (!user) window.location.href = '../index.html';
   });
 
   // ----------------------------
-  // CARREGAR INICIAL
+  // INICIALIZAÇÃO
   // ----------------------------
   carregarAgendamentos();
 
