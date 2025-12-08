@@ -78,6 +78,7 @@
           <p id="tarefas-pendentes">0</p>
         </div>
       </div>
+
       <div class="panel">
         <h2>📅 Calendário</h2>
         <div id="calendar"></div>
@@ -85,67 +86,67 @@
     </section>
 
     <!-- ========================================= -->
-<!--              PAGINA: AGENDAMENTOS         -->
-<!-- ========================================= -->
-<section id="pagina-agendamentos" class="pagina" style="display:none">
+    <!--              PAGINA: AGENDAMENTOS         -->
+    <!-- ========================================= -->
+    <section id="pagina-agendamentos" class="pagina" style="display:none">
 
-    <div class="topo-secao">
-        <h2>Agendamentos</h2>
-        <button id="btnNovoAgendamento" class="btn-primario">+ Novo Agendamento</button>
-    </div>
-
-    <!-- FILTROS -->
-    <div class="filtros-agendamentos">
-
-        <div class="campo-filtro">
-            <label for="filtroData">Data</label>
-            <input type="date" id="filtroData">
+        <div class="topo-secao">
+            <h2>Agendamentos</h2>
+            <button id="btnNovoAgendamento" class="btn-primario">+ Novo Agendamento</button>
         </div>
 
-        <div class="campo-filtro">
-            <label for="filtroCliente">Cliente</label>
-            <input type="text" id="filtroCliente" placeholder="Nome do cliente">
+        <!-- FILTROS -->
+        <div class="filtros-agendamentos">
+
+            <div class="campo-filtro">
+                <label for="filtroData">Data</label>
+                <input type="date" id="filtroData">
+            </div>
+
+            <div class="campo-filtro">
+                <label for="filtroCliente">Cliente</label>
+                <input type="text" id="filtroCliente" placeholder="Nome do cliente">
+            </div>
+
+            <div class="campo-filtro">
+                <label for="filtroTelefone">Telefone</label>
+                <input type="text" id="filtroTelefone" placeholder="(DDD) 9XXXX-XXXX">
+            </div>
+
+            <div class="campo-filtro">
+                <label for="filtroStatus">Status</label>
+                <select id="filtroStatus">
+                    <option value="">Todos</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="confirmado">Confirmado</option>
+                    <option value="concluido">Concluído</option>
+                    <option value="cancelado">Cancelado</option>
+                </select>
+            </div>
+
+            <button id="btnFiltrarAgendamentos" class="btn-secundario">Filtrar</button>
         </div>
 
-        <div class="campo-filtro">
-            <label for="filtroTelefone">Telefone</label>
-            <input type="text" id="filtroTelefone" placeholder="(DDD) 9XXXX-XXXX">
-        </div>
+        <!-- LISTA DE AGENDAMENTOS -->
+        <table class="tabela-agendamentos">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Telefone</th>
+                    <th>Status</th>
+                    <th>Valor</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="listaAgendamentos">
+                <!-- Linhas inseridas via JS -->
+            </tbody>
+        </table>
 
-        <div class="campo-filtro">
-            <label for="filtroStatus">Status</label>
-            <select id="filtroStatus">
-                <option value="">Todos</option>
-                <option value="pendente">Pendente</option>
-                <option value="confirmado">Confirmado</option>
-                <option value="concluido">Concluído</option>
-                <option value="cancelado">Cancelado</option>
-            </select>
-        </div>
+    </section>
 
-        <button id="btnFiltrarAgendamentos" class="btn-secundario">Filtrar</button>
-    </div>
-
-    <!-- LISTA DE AGENDAMENTOS -->
-    <table class="tabela-agendamentos">
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>Cliente</th>
-                <th>Telefone</th>
-                <th>Status</th>
-                <th>Valor</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="listaAgendamentos">
-            <!-- Linhas inseridas via JS -->
-        </tbody>
-    </table>
-
-</section>
-
-    <!-- SEÇÃO FINANCEIRO -->
+    <!-- FINANCEIRO -->
     <section id="pagina-financeiro" class="pagina">
       <h2>Financeiro</h2>
       <div class="grid-3">
@@ -156,37 +157,37 @@
       <div class="card" id="fin-chart">(Gráficos em breve)</div>
     </section>
 
-    <!-- SEÇÃO ITENS / CATÁLOGO -->
+    <!-- ITENS -->
     <section id="pagina-itens" class="pagina">
       <h2>Itens / Catálogo</h2>
       <div id="itens-lista"></div>
     </section>
 
-    <!-- SEÇÃO PACOTES -->
+    <!-- PACOTES -->
     <section id="pagina-pacotes" class="pagina">
       <h2>Pacotes</h2>
       <div id="pacotes-lista"></div>
     </section>
 
-    <!-- SEÇÃO MONITORES -->
+    <!-- MONITORES -->
     <section id="pagina-monitores" class="pagina">
       <h2>Monitores</h2>
       <div id="container-monitores" class="lista-monitores"></div>
     </section>
 
-    <!-- SEÇÃO TAREFAS -->
+    <!-- TAREFAS -->
     <section id="pagina-tarefas" class="pagina">
       <h2>Tarefas</h2>
       <div id="tarefas-lista"></div>
     </section>
 
-    <!-- SEÇÃO CONVERSAS -->
+    <!-- CONVERSAS -->
     <section id="pagina-conversas" class="pagina">
       <h2>Conversas (Tempo real)</h2>
       <div id="conversas-lista"></div>
     </section>
 
-    <!-- SEÇÃO NOTIFICAÇÕES (interna para abrirNotificacoes) -->
+    <!-- NOTIFICAÇÕES -->
     <section id="pagina-notificacoes" class="pagina">
       <h2>Notificações</h2>
       <div id="notificacoes-lista"></div>
@@ -196,9 +197,13 @@
 
   <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+
+  <!-- Ordem correta -->
   <script src="js/calendar.js"></script>
   <script src="js/agendamentos.js"></script>
   <script src="js/dashboard.js"></script>
+
+  <!-- Demais módulos -->
   <script src="js/monitor.js"></script>
   <script src="js/checklist.js"></script>
   <script src="js/ordemServico.js"></script>
