@@ -1,10 +1,6 @@
 // ============================
-// AGENDAMENTOS.JS
+// AGENDAMENTOS.JS CORRIGIDO
 // ============================
-
-// Firebase compat
-const db = window.db;
-const auth = window.auth;
 
 // Elementos
 const listaAgendamentosEl = document.getElementById("listaAgendamentos");
@@ -19,16 +15,14 @@ const filtroStatus = document.getElementById("filtroStatus");
 // ============================
 // ESTADO GLOBAL AGENDAMENTOS
 // ============================
-window.agendamentosState = window.agendamentosState || {
-  todos: []
-};
+window.agendamentosState = window.agendamentosState || { todos: [] };
 
 // ============================
 // CARREGAR AGENDAMENTOS
 // ============================
 async function carregarAgendamentos() {
   try {
-    const snap = await db.collection("agendamentos").orderBy("data", "asc").get();
+    const snap = await window.db.collection("agendamentos").orderBy("data", "asc").get();
     const agendamentos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     window.agendamentosState.todos = agendamentos;
     renderizarTabela(agendamentos);
