@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Agendamentos - Divertilândia</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/dashboard.css" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="img/favicon.ico">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <style>
+    .pagina { display: none; }
+    .pagina.ativa { display: block; }
+    .filtros-agendamentos input,
+    .filtros-agendamentos select { padding: 6px; }
+    .tabela-agendamentos th, .tabela-agendamentos td { padding: 8px; text-align:left; }
+    .btn { cursor:pointer; padding:6px 12px; }
+    .btn-secundario { cursor:pointer; padding:4px 8px; }
+  </style>
+</head>
+
+<body>
+  <!-- Botão Hamburger -->
+  <button class="btn-hamburger" onclick="document.querySelector('.sidebar')?.classList.toggle('active')">
+    ☰
+  </button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <img src="img/logo.png" class="logo-img" alt="Divertilândia" />
+    </div>
+    <nav>
+      <ul>
+        <li onclick="nav('dashboard')">📊 Dashboard</li>
+        <li class="active" onclick="nav('agendamentos')">📅 Agendamentos</li>
+        <li onclick="nav('financeiro')">💰 Financeiro</li>
+        <li onclick="nav('itens')">🎈 Itens / Catálogo</li>
+        <li onclick="nav('pacotes')">🎁 Pacotes</li>
+        <li onclick="nav('monitores')">🧑‍🏫 Monitores</li>
+        <li onclick="nav('tarefas')">📝 Tarefas</li>
+        <li onclick="nav('conversas')">💬 Conversas (tempo real)</li>
+        <li onclick="logout()">🚪 Sair</li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Conteúdo -->
+  <main class="content">
+    <header class="topbar">
+      <h1 id="titulo-pagina">Agendamentos</h1>
+      <div class="top-right">
+        <div class="user-info">
+          <span id="user-name">Usuário</span>
+        </div>
+      </div>
+    </header>
+
+    <section id="pagina-agendamentos" class="pagina ativa">
+      <div class="topo-secao" style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Agendamentos</h2>
+        <button id="btnNovoAgendamento" class="btn">+ Novo Agendamento</button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filtros-agendamentos" style="margin-top:15px; display:flex; flex-wrap:wrap; gap:12px;">
+        <div class="campo-filtro">
+          <label for="filtroData">Data</label>
+          <input type="date" id="filtroData">
+        </div>
+        <div class="campo-filtro">
+          <label for="filtroCliente">Cliente</label>
+          <input type="text" id="filtroCliente" placeholder="Nome do cliente">
+        </div>
+        <div class="campo-filtro">
+          <label for="filtroTelefone">Telefone</label>
+          <input type="text" id="filtroTelefone" placeholder="(DDD) 9XXXX-XXXX">
+        </div>
+        <div class="campo-filtro">
+          <label for="filtroStatus">Status</label>
+          <select id="filtroStatus">
+            <option value="">Todos</option>
+            <option value="pendente">Pendente</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="concluido">Concluído</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+        <div style="align-self:end;">
+          <button id="btnFiltrarAgendamentos" class="btn">Filtrar</button>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; overflow-x:auto;">
+        <table class="tabela-agendamentos" style="width:100%;">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Cliente</th>
+              <th>Telefone</th>
+              <th>Pacote/Item</th>
+              <th>Status</th>
+              <th>Valor</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="listaAgendamentos"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+
+  <!-- Configuração Firebase -->
+  <script src="firebase-config.js"></script>
+
+  <!-- SweetAlert -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Agendamentos JS -->
+  <script src="js/agendamentos.js"></script>
+
+  <script>
+    // Logout
+    function logout() {
+      window.auth.signOut().then(() => {
+        window.location.href = "index.html";
+      });
+    }
+
+    // Atualiza o nome do usuário no header
+    window.auth?.onAuthStateChanged(user => {
+      if (user) {
+        const el = document.getElementById('user-name');
+        if (el) el.textContent = user.displayName || user.email;
+      }
+    });
+  </script>
+</body>
+</html>
