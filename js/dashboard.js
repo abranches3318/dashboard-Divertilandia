@@ -1,6 +1,8 @@
 // ============================
-// FIREBASE (compat, global)
+// DASHBOARD.JS
 // ============================
+
+// Firebase compat (já inicializado no firebase-config.js)
 window.auth = window.auth || firebase.auth();
 window.db = window.db || firebase.firestore();
 window.storage = window.storage || firebase.storage();
@@ -24,37 +26,33 @@ window.dashboardState = {
 };
 
 // ============================
-// FUNÇÃO GLOBAL NAV
+// FUNÇÃO DE NAVEGAÇÃO
 // ============================
 window.nav = function (idPagina) {
   const pageId = "pagina-" + idPagina;
 
-  // Mostrar a página
+  // Mostrar apenas a página ativa
   paginas.forEach(p => p.classList.remove("ativa"));
   const pagina = document.getElementById(pageId);
   if (pagina) pagina.classList.add("ativa");
 
-  // Destacar menu ativo
+  // Atualizar menu ativo
   menuLinks.forEach(li => li.classList.remove("active"));
   const menuItem = Array.from(menuLinks).find(li =>
     li.getAttribute("onclick")?.includes(`'${idPagina}'`)
   );
   if (menuItem) menuItem.classList.add("active");
 
-  // Atualizar título
+  // Atualizar título da página
   const titulo = document.getElementById("titulo-pagina");
   if (titulo) {
-    if (pagina) {
-      const h2 = pagina.querySelector("h2");
-      titulo.textContent = h2 ? h2.textContent : idPagina.charAt(0).toUpperCase() + idPagina.slice(1);
-    } else {
-      titulo.textContent = "";
-    }
+    titulo.textContent = pagina?.querySelector("h2")?.textContent || 
+      idPagina.charAt(0).toUpperCase() + idPagina.slice(1);
   }
 };
 
 // ============================
-// RESPONSIVIDADE
+// RESPONSIVIDADE SIDEBAR
 // ============================
 function ajustarSidebar() {
   const sidebar = document.querySelector(".sidebar");
@@ -101,7 +99,7 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================
-// RESUMO (CARDS)
+// CARREGAR RESUMO (CARDS)
 // ============================
 async function carregarResumo() {
   try {
@@ -114,8 +112,7 @@ async function carregarResumo() {
       .where("data", ">=", inicioDia)
       .where("data", "<=", fimDia)
       .get();
-    const agHojeEl = document.getElementById("ag-hoje");
-    if (agHojeEl) agHojeEl.textContent = snap.size;
+    document.getElementById("ag-hoje").textContent = snap.size;
 
     // RECEITA MENSAL
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
@@ -130,15 +127,13 @@ async function carregarResumo() {
       const data = doc.data();
       if (data?.entrada_paga) receita += Number(data.valor_entrada || 0);
     });
-    const receitaEl = document.getElementById("receita-mes");
-    if (receitaEl) receitaEl.textContent = "R$ " + receita.toFixed(2);
+    document.getElementById("receita-mes").textContent = "R$ " + receita.toFixed(2);
 
     // TAREFAS PENDENTES
     const tarefasSnap = await db.collection("tarefas")
       .where("status", "==", "pendente")
       .get();
-    const tarefasEl = document.getElementById("tarefas-pendentes");
-    if (tarefasEl) tarefasEl.textContent = tarefasSnap.size;
+    document.getElementById("tarefas-pendentes").textContent = tarefasSnap.size;
 
   } catch (err) {
     console.error("Erro ao carregar resumo:", err);
@@ -146,7 +141,7 @@ async function carregarResumo() {
 }
 
 // ============================
-// NOTIFICAÇÕES
+// CARREGAR NOTIFICAÇÕES
 // ============================
 async function carregarNotificacoes() {
   try {
@@ -166,7 +161,7 @@ window.abrirNotificacoes = function () {
 };
 
 // ============================
-// CALENDÁRIO
+// CARREGAR CALENDÁRIO
 // ============================
 async function carregarCalendario() {
   try {
@@ -187,7 +182,7 @@ async function carregarCalendario() {
 }
 
 // ============================
-// ABRIR DETALHES DO AGENDAMENTO
+// ABRIR DETALHES AGENDAMENTO
 // ============================
 window.abrirAgendamento = function (id) {
   window.location.href = `paginas/ver-agendamento.html?id=${id}`;
