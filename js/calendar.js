@@ -1,9 +1,9 @@
 // ============================
-// CALENDÁRIO.JS
+// CALENDARIO.JS CORRIGIDO
 // ============================
 
-// Garantir compatibilidade com Firebase
-const db = window.db;
+// Garantir que o estado do dashboard exista
+window.dashboardState = window.dashboardState || { calendario: null, agendamentosCache: [] };
 
 // Função global para renderizar o calendário
 window.renderCalendar = function(agendamentos = []) {
@@ -53,7 +53,7 @@ window.renderCalendar = function(agendamentos = []) {
         window.abrirAgendamento(info.event.id);
       }
     },
-    height: 'auto', // Evita que o calendário quebre o layout
+    height: 'auto',
     contentHeight: 'auto'
   });
 
@@ -64,18 +64,29 @@ window.renderCalendar = function(agendamentos = []) {
 };
 
 // ============================
-// ATUALIZA CALENDÁRIO AO ABRIR DASHBOARD
+// CARREGA AGENDAMENTOS NO CALENDÁRIO
 // ============================
+async function atualizarCalendario() {
+  try {
+    const snap = await window.db.collection("agendamentos").orderBy("data", "asc").get();
+    const agendamentos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    window.dashboardState.agendamentosCache = agendamentos;
+    window.renderCalendar(agendamentos);
+  } catch (err) {
+    console.error("Erro ao carregar agendamentos para o calendário:", err);
+  }
+}
+
+// Atualiza ao abrir a dashboard
 window.addEventListener("DOMContentLoaded", () => {
+  const dashboardSection = document.getElementById("pagina-dashboard");
+  if (!dashboardSection) return;
+
   const observer = new MutationObserver(() => {
-    const dashboardSection = document.getElementById("pagina-dashboard");
-    if (dashboardSection && dashboardSection.classList.contains("ativa")) {
-      // Atualiza o calendário com cache de agendamentos
-      if (window.renderCalendar && window.dashboardState.agendamentosCache) {
-        window.renderCalendar(window.dashboardState.agendamentosCache);
-      }
+    if (dashboardSection.classList.contains("ativa")) {
+      atualizarCalendario();
     }
   });
 
-  observer.observe(document.getElementById("pagina-dashboard"), { attributes: true, attributeFilter: ['class'] });
+  observer.observe(dashboardSection, { attributes: true, attributeFilter: ['class'] });
 });
