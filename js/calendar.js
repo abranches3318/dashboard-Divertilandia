@@ -1,75 +1,42 @@
-// calendar.js
-// FullCalendar + Firestore (compat) + clique em toda a célula
+// =====================================================
+// CALENDAR.JS — VERSÃO CORRIGIDA
+// =====================================================
 
-// =============================
-// FIREBASE (compat)
-// =============================
-const db = firebase.firestore();
+// Este arquivo assume que o Firebase foi inicializado no index.html/dashboard.html
+// e que "db" já existe globalmente (firebase.firestore()).
 
-// =============================
-// GLOBAL: função usada pelo monitor e dashboard
-// =============================
-window.recarregarCalendario = function () {
-    if (window.calendar) {
-        refreshCalendarEvents();
-    }
-};
-
-// =============================
-// INICIALIZAR FULLCALENDAR
-// =============================
-function initCalendar() {
+// Inicialização do calendário
+document.addEventListener("DOMContentLoaded", function () {
 
     const calendarEl = document.getElementById("calendar");
+    if (!calendarEl) {
+        console.warn("Elemento #calendar não encontrado.");
+        return;
+    }
 
     window.calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: "dayGridMonth",
         locale: "pt-br",
         height: "auto",
-        selectable: true,
-        editable: false,
-        dayMaxEventRows: true,
 
-        headerToolbar: {
-            left: "prev,next today",
-            center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay"
-        },
-
-        // =============================
-        // EVENTO: clique em eventos do dia
-        // =============================
-        eventClick: function (info) {
-            const dateStr = info.event.startStr.substring(0, 10);
-            if (typeof window.openAgendamentosByDate === "function") {
-                window.openAgendamentosByDate(dateStr);
-            }
-        },
-
-        // =============================
-        // EVENTO: quando navega entre meses/visualizações
-        // =============================
-        datesSet: function () {
-            refreshCalendarEvents();
-            setTimeout(bindDayCellClicks, 300);   // reforça clique na célula
+        dateClick: (info) => {
+            abrirAgendamentosFiltrado(info.dateStr);
         }
     });
 
-    calendar.render();
+    window.calendar.render();
 
-    // Carregamento inicial
     refreshCalendarEvents();
-    setTimeout(bindDayCellClicks, 300);
-}
+});
 
-// =============================
-// CARREGAR EVENTOS DO FIRESTORE
-// =============================
+// =====================================================
+// Carregar eventos do Firestore para o FullCalendar
+// =====================================================
+
 async function refreshCalendarEvents() {
     if (!window.calendar) return;
 
     try {
-        // Limpa eventos anteriores
         window.calendar.removeAllEvents();
 
         const snapshot = await db.collection("agendamentos").get();
@@ -79,11 +46,12 @@ async function refreshCalendarEvents() {
         snapshot.forEach(doc => {
             const dados = doc.data();
 
-            if (!dados.data || !dados.nomeCliente) return;
+            // Dados esperados no padrão atual
+            if (!dados.data || !dados.cliente) return;
 
             eventos.push({
                 id: doc.id,
-                title: dados.nomeCliente + (dados.horario ? " - " + dados.horario : ""),
+                title: dados.cliente + (dados.horario ? " - " + dados.horario : ""),
                 start: dados.data,
                 color: "#007bff"
             });
@@ -92,33 +60,31 @@ async function refreshCalendarEvents() {
         window.calendar.addEventSource(eventos);
 
     } catch (error) {
-        console.error("Erro ao buscar agendamentos:", error);
-        Swal.fire("Erro", "Falha ao carregar agendamentos do calendário.", "error");
+        console.error("Erro ao carregar eventos no calendário:", error);
+        Swal.fire("Erro", "Falha ao carregar eventos no calendário.", "error");
     }
 }
 
-// =============================
-// CLIQUE EM TODA A CÉLULA
-// =============================
-function bindDayCellClicks() {
-    const cells = document.querySelectorAll(".fc-daygrid-day");
+// =====================================================
+// Navegar para a página de Agendamentos filtrada
+// =====================================================
 
-    cells.forEach(cell => {
-        cell.addEventListener("click", (e) => {
-            const dateStr = cell.getAttribute("data-date");
-            if (!dateStr) return;
+function abrirAgendamentosFiltrado(dataSelecionada) {
 
-            // Bloqueia conflito quando clicar num evento
-            if (e.target.closest(".fc-event")) return;
+    // 1. Exibir seção Agendamentos
+    document.querySelectorAll(".pagina").forEach(p => p.style.display = "none");
+    document.getElementById("pagina-agendamentos").style.display = "block";
 
-            if (typeof window.openAgendamentosByDate === "function") {
-                window.openAgendamentosByDate(dateStr);
-            }
-        });
-    });
+    // 2. Setar o filtro de data
+    const inputDataFiltro = document.getElementById("filtro-ag-data");
+    if (inputDataFiltro) {
+        inputDataFiltro.value = dataSelecionada;
+    }
+
+    // 3. Executar a filtragem
+    if (typeof filtrarAgendamentos === "function") {
+        filtrarAgendamentos();
+    } else {
+        console.warn("filtrarAgendamentos() não foi encontrado.");
+    }
 }
-
-// =============================
-// INICIAR
-// =============================
-document.addEventListener("DOMContentLoaded", initCalendar);
