@@ -1,121 +1,206 @@
-// ====================================================================
-// CALENDAR.JS – Controle do calendário FullCalendar + integração com DB
-// ====================================================================
+// calendar.js – compatível com dashboard.html
 
-// Importante:
-// ESTE arquivo NÃO declara "db". Ele apenas usa db já criado no dashboard.js
-// Verifica se db existe antes de tudo.
-if (!window.db) {
-    console.error("Erro: 'db' não encontrado no escopo global. Certifique-se de que dashboard.js carregou antes de calendar.js.");
+// Usa o Firestore já inicializado previamente (firebase.firestore())
+const firestore = firebase.firestore();
+
+// ------------------------
+// ELEMENTOS
+// ------------------------
+const calendarContainer = document.getElementById("calendar");
+const novoEventoBtn = document.getElementById("novoEventoBtn");
+const modalNovoEvento = document.getElementById("modalNovoEvento");
+
+const eventoData = document.getElementById("eventoData");
+const eventoHorario = document.getElementById("eventoHorario");
+const eventoCliente = document.getElementById("eventoCliente");
+const eventoDescricao = document.getElementById("eventoDescricao");
+const salvarEventoBtn = document.getElementById("salvarEventoBtn");
+
+// Proteção caso elementos não existam
+if (!calendarContainer) {
+    console.error("ERRO: Elemento #calendar não encontrado no HTML.");
+}
+if (!novoEventoBtn) {
+    console.error("ERRO: Elemento #novoEventoBtn não encontrado no HTML.");
 }
 
-// Variável global para o calendário
-let calendar = null;
 
-// ====================================================================
-// FUNÇÃO: Inicializar calendário (somente quando abrir a página)
-// ====================================================================
-window.inicializarCalendar = async function () {
-    const calendarEl = document.getElementById("calendar");
+// ------------------------
+// ESTADO DO CALENDÁRIO
+// ------------------------
+let currentDate = new Date();
+let selectedDate = null;
 
-    if (!calendarEl) {
-        console.warn("calendar.js: div #calendar não existe na página atual.");
-        return;
+
+// ------------------------
+// FUNÇÃO PRINCIPAL: RENDERIZAR CALENDÁRIO
+// ------------------------
+function renderCalendar() {
+    const month = currentDate.getMonth();
+    const year = currentDate.getFullYear();
+
+    calendarContainer.innerHTML = "";
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDay = new Date(year, month + 1, 0).getDate();
+
+    const header = document.createElement("h3");
+    header.textContent = `${getMonthName(month)} ${year}`;
+    header.classList.add("calendar-title");
+
+    const daysContainer = document.createElement("div");
+    daysContainer.classList.add("calendar-grid");
+
+    // Dias vazios até o primeiro dia
+    for (let i = 0; i < firstDay; i++) {
+        const emptyCell = document.createElement("div");
+        emptyCell.classList.add("empty-cell");
+        daysContainer.appendChild(emptyCell);
     }
 
-    // Evita recriar o calendário se ele já existir
-    if (calendar) {
-        calendar.render();
-        return;
-    }
+    // Dias do mês
+    for (let day = 1; day <= lastDay; day++) {
+        const cell = document.createElement("div");
+        cell.classList.add("calendar-day");
+        cell.textContent = day;
 
-    // Carregar eventos do Firebase
-    const eventosFirebase = await carregarEventosDB();
+        const dateString = formatDate(year, month + 1, day);
 
-    // Criar o calendário
-    calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: "dayGridMonth",
-        locale: "pt-br",
-        height: "auto",
-        headerToolbar: {
-            left: "prev,next today",
-            center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay"
-        },
-        events: eventosFirebase,
-        eventClick: (info) => {
-            const id = info.event.id;
-            if (!id) return;
-
-            Swal.fire({
-                title: "Evento",
-                html: `
-                    <b>${info.event.title}</b><br>
-                    ${info.event.start.toLocaleString()}
-                `,
-                showCancelButton: true,
-                confirmButtonText: "Editar",
-                cancelButtonText: "Fechar"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    abrirModalAgendamento(id);
-                }
-            });
-        }
-    });
-
-    calendar.render();
-};
-
-// ====================================================================
-// FUNÇÃO: Carregar eventos do Firebase e transformar para o calendário
-// ====================================================================
-async function carregarEventosDB() {
-    try {
-        const snap = await db.collection("agendamentos").get();
-        const eventos = [];
-
-        snap.forEach(doc => {
-            const ag = doc.data();
-
-            if (!ag.data) return;
-
-            eventos.push({
-                id: doc.id,
-                title: ag.cliente || "Agendamento",
-                start: ag.data,
-                color: definirCorStatus(ag.status)
-            });
+        // Ao clicar em um dia: abrir lista de eventos desse dia
+        cell.addEventListener("click", () => {
+            selectedDate = dateString;
+            abrirListaEventos(dateString);
         });
 
-        return eventos;
-
-    } catch (e) {
-        console.error("Erro ao carregar eventos do Firebase:", e);
-        return [];
+        daysContainer.appendChild(cell);
     }
+
+    calendarContainer.appendChild(header);
+    calendarContainer.appendChild(daysContainer);
 }
 
-// ====================================================================
-// FUNÇÃO: cor por status
-// ====================================================================
-function definirCorStatus(status) {
-    switch (status) {
-        case "pendente": return "#f4c542";
-        case "confirmado": return "#4caf50";
-        case "concluido": return "#1976d2";
-        case "cancelado": return "#e53935";
-        default: return "#9e9e9e";
-    }
+
+// ------------------------
+// LISTA DE EVENTOS POR DATA
+// ------------------------
+function abrirListaEventos(date) {
+    firestore.collection("agendamentos")
+        .where("data", "==", date)
+        .orderBy("horario", "asc")
+        .get()
+        .then(snapshot => {
+
+            if (snapshot.empty) {
+                Swal.fire("Sem eventos", `Nenhum evento encontrado para ${date}`, "info");
+                return;
+            }
+
+            let html = `<strong>Eventos em ${date}:</strong><br><br>`;
+
+            snapshot.forEach(doc => {
+                const ev = doc.data();
+                html += `
+                    <div style="margin-bottom:10px; border-bottom:1px solid #ccc; padding-bottom:6px;">
+                        <strong>${ev.horario}</strong> - ${ev.cliente}<br>
+                        ${ev.descricao}
+                    </div>
+                `;
+            });
+
+            Swal.fire({
+                title: "Eventos",
+                html: html,
+                width: 500
+            });
+        })
+        .catch(err => {
+            console.error("Erro ao buscar eventos:", err);
+            Swal.fire("Erro", "Falha ao carregar eventos.", "error");
+        });
 }
 
-// ====================================================================
-// Atualizar calendário quando um agendamento muda
-// ====================================================================
-window.atualizarCalendar = async function () {
-    if (!calendar) return;
-    const eventos = await carregarEventosDB();
-    calendar.removeAllEvents();
-    calendar.addEventSource(eventos);
-    calendar.render();
-};
+
+// ------------------------
+// MODAL
+// ------------------------
+function abrirModal() {
+    modalNovoEvento.style.display = "block";
+}
+
+function fecharModal() {
+    modalNovoEvento.style.display = "none";
+}
+
+
+// ------------------------
+// SALVAR EVENTO
+// ------------------------
+if (salvarEventoBtn) {
+    salvarEventoBtn.addEventListener("click", async () => {
+
+        const dataValue = eventoData.value;
+        const horaValue = eventoHorario.value;
+        const clienteValue = eventoCliente.value.trim();
+        const descValue = eventoDescricao.value.trim();
+
+        if (!dataValue || !horaValue || !clienteValue) {
+            Swal.fire("Atenção", "Preencha os campos obrigatórios.", "warning");
+            return;
+        }
+
+        try {
+            await firestore.collection("agendamentos").add({
+                data: dataValue,
+                horario: horaValue,
+                cliente: clienteValue,
+                descricao: descValue || "",
+                criadoEm: new Date().toISOString()
+            });
+
+            Swal.fire("Sucesso", "Evento criado com sucesso!", "success");
+
+            fecharModal();
+            renderCalendar(); // atualiza
+
+        } catch (err) {
+            console.error("Erro ao salvar evento:", err);
+            Swal.fire("Erro", "Falha ao salvar evento.", "error");
+        }
+    });
+}
+
+
+// ------------------------
+// BOTÃO NOVO EVENTO
+// ------------------------
+if (novoEventoBtn) {
+    novoEventoBtn.addEventListener("click", () => {
+        abrirModal();
+    });
+}
+
+
+// ------------------------
+// FUNÇÕES AUXILIARES
+// ------------------------
+function getMonthName(m) {
+    const nomes = [
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+    return nomes[m];
+}
+
+function formatDate(y, m, d) {
+    return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
+
+// ------------------------
+// INICIALIZAÇÃO
+// ------------------------
+document.addEventListener("DOMContentLoaded", () => {
+    renderCalendar();
+});
+
+// -----------------------------------------------------------------
