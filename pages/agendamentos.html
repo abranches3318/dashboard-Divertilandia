@@ -1,27 +1,34 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <title>Agendamentos - Divertilândia</title>
-  <link rel="stylesheet" href="css/dashboard.css" />
-  <link rel="icon" href="img/favicon.ico">
+  <meta charset="UTF-8"/>
+  <title>Agendamentos</title>
+  <link rel="stylesheet" href="css/dashboard.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
+
 <body>
-  <header class="topbar">
-    <h1>Agendamentos</h1>
-  </header>
 
-  <main class="content">
-    <div style="padding:20px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div><h2>Agendamentos</h2></div>
-        <div><button id="btnNovoAgendamento" class="btn">+ Novo Agendamento</button></div>
-      </div>
+<button class="btn-hamburger" onclick="window.location='dashboard.html'">⬅</button>
 
-      <div class="filtros-agendamentos" style="margin-top:15px;">
-        <input type="date" id="filtroData">
-        <input type="text" id="filtroCliente" placeholder="Cliente">
-        <input type="text" id="filtroTelefone" placeholder="Telefone">
+<header class="topbar">
+  <h1>Agendamentos</h1>
+</header>
+
+<main class="content">
+
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2>Lista de Agendamentos</h2>
+    <button class="btn" id="btnNovoAg">+ Novo</button>
+  </div>
+
+  <div class="panel">
+    <h2>Filtros</h2>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <div><label>Data</label><input type="date" id="filtroData"></div>
+      <div><label>Cliente</label><input type="text" id="filtroCliente"></div>
+      <div><label>Telefone</label><input type="text" id="filtroTelefone"></div>
+      <div><label>Status</label>
         <select id="filtroStatus">
           <option value="">Todos</option>
           <option value="pendente">Pendente</option>
@@ -29,25 +36,34 @@
           <option value="concluido">Concluído</option>
           <option value="cancelado">Cancelado</option>
         </select>
-        <button id="btnFiltrarAgendamentos" class="btn">Filtrar</button>
       </div>
-
-      <div style="margin-top:12px; overflow-x:auto;">
-        <table class="tabela-agendamentos" style="width:100%;">
-          <thead><tr><th>Data</th><th>Cliente</th><th>Telefone</th><th>Status</th><th>Valor</th><th>Ações</th></tr></thead>
-          <tbody id="listaAgendamentos"></tbody>
-        </table>
-      </div>
+      <button class="btn" id="btnFiltrar">Filtrar</button>
     </div>
-  </main>
+  </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js"></script>
+  <div class="panel">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Data</th><th>Cliente</th><th>Telefone</th><th>Status</th><th>Valor</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="listaAgendamentos"></tbody>
+    </table>
+  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="js/agendamentos.js"></script>
+</main>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="js/agendamentos.js"></script>
+
 </body>
 </html>
