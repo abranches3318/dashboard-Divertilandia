@@ -1,17 +1,22 @@
 // ===========================
-// NAVEGAÇÃO MULTIPÁGINAS
+// NAVEGAÇÃO MULTIPÁGINAS (CORRIGIDA PARA GITHUB PAGES)
 // ===========================
 function nav(page) {
+  const base = "/dashboard-Divertilandia/";
+
   const pages = {
-    dashboard: "dashboard.html",
-    agendamentos: "pages/agendamentos.html",
-    financeiro: "pages/financeiro.html",
-    catalogo: "pages/catalogo.html",
-    monitores: "pages/monitores.html",
-    tarefas: "pages/tarefas.html",
-    conversas: "pages/conversas.html",
-    notificacoes: "pages/notificacoes.html"
+    dashboard: base + "dashboard.html",
+    agendamentos: base + "pages/agendamentos.html",
+    financeiro: base + "pages/financeiro.html",
+    catalogo: base + "pages/catalogo.html",
+    monitores: base + "pages/monitores.html",
+    tarefas: base + "pages/tarefas.html",
+    conversas: base + "pages/conversas.html",
+    notificacoes: base + "pages/notificacoes.html"
   };
+
+  window.location.href = pages[page] || pages.dashboard;
+}
 
   if (page === "dashboard") {
     window.location.href = "dashboard.html";
