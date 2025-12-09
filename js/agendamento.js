@@ -1,59 +1,165 @@
+// ===============================================
+// AGENDAMENTOS.JS – versão estável e compatível
+// ===============================================
+
+// Firebase (vem de firebase-config.js)
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Elementos
+const lista = document.getElementById("listaAgendamentos");
+const btnFiltrar = document.getElementById("btnFiltrar");
+const btnNovo = document.getElementById("btnNovoAg");
+
+const fData = document.getElementById("filtroData");
+const fCliente = document.getElementById("filtroCliente");
+const fTelefone = document.getElementById("filtroTelefone");
+const fStatus = document.getElementById("filtroStatus");
+
+// Estado em memória
+let AGENDAMENTOS = [];
+
+// -----------------------------------------------
+// 1. Carregar todos os agendamentos
+// -----------------------------------------------
 async function carregarAgendamentos() {
-  let snap = await db.collection("agendamentos").orderBy("data", "asc").get();
-  let lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  renderizar(lista);
+  try {
+    const snap = await db.collection("agendamentos").orderBy("data", "asc").get();
+    AGENDAMENTOS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTabela(AGENDAMENTOS);
+  } catch (e) {
+    console.error("Erro ao carregar:", e);
+    Swal.fire("Erro", "Não foi possível carregar os agendamentos.", "error");
+  }
 }
 
-function renderizar(lista) {
-  const tbody = document.getElementById("listaAgendamentos");
-  tbody.innerHTML = "";
+// -----------------------------------------------
+// 2. Renderizar tabela
+// -----------------------------------------------
+function renderTabela(listaAg) {
+  lista.innerHTML = "";
 
-  if (lista.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Nenhum agendamento encontrado</td></tr>`;
+  if (listaAg.length === 0) {
+    lista.innerHTML = `
+      <tr><td colspan="6" style="text-align:center">Nenhum agendamento encontrado</td></tr>
+    `;
     return;
   }
 
-  lista.forEach(a => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${a.data}</td>
-        <td>${a.cliente}</td>
-        <td>${a.telefone}</td>
-        <td>${a.status}</td>
-        <td>R$ ${Number(a.valor || 0).toFixed(2)}</td>
-        <td><button class="btn" onclick="editar('${a.id}')">Abrir</button></td>
-      </tr>
+  listaAg.forEach(a => {
+    const data = a.data?.toDate ? a.data.toDate() : new Date(a.data);
+
+    const linha = document.createElement("tr");
+    linha.innerHTML = `
+      <td>${data.toLocaleDateString()}</td>
+      <td>${a.cliente || "-"}</td>
+      <td>${a.telefone || "-"}</td>
+      <td>${a.status || "-"}</td>
+      <td>R$ ${Number(a.valor || 0).toFixed(2)}</td>
+      <td>
+        <button class="btn btn-dark" data-id="${a.id}">Ver</button>
+      </td>
     `;
+
+    linha.querySelector("button").addEventListener("click", () => abrirAgendamento(a.id));
+
+    lista.appendChild(linha);
   });
 }
 
-async function aplicarFiltro() {
-  let ref = db.collection("agendamentos");
+// -----------------------------------------------
+// 3. Aplicar filtros
+// -----------------------------------------------
+function aplicarFiltros() {
+  let filtrados = [...AGENDAMENTOS];
 
-  const data = document.getElementById("filtroData").value;
-  const nome = document.getElementById("filtroCliente").value.toLowerCase();
-  const tel = document.getElementById("filtroTelefone").value.replace(/\D/g, "");
-  const status = document.getElementById("filtroStatus").value;
+  if (fData.value) {
+    const d = new Date(fData.value).toDateString();
+    filtrados = filtrados.filter(a => {
+      const ad = a.data?.toDate ? a.data.toDate() : new Date(a.data);
+      return ad.toDateString() === d;
+    });
+  }
 
-  let snap = await ref.get();
-  let lista = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  if (fCliente.value) {
+    const nome = fCliente.value.toLowerCase();
+    filtrados = filtrados.filter(a => (a.cliente || "").toLowerCase().includes(nome));
+  }
 
-  if (data) lista = lista.filter(a => a.data === data);
-  if (nome) lista = lista.filter(a => (a.cliente || "").toLowerCase().includes(nome));
-  if (tel) lista = lista.filter(a => (a.telefone || "").replace(/\D/g,"").includes(tel));
-  if (status) lista = lista.filter(a => a.status === status);
+  if (fTelefone.value) {
+    const tel = fTelefone.value.replace(/\D/g, "");
+    filtrados = filtrados.filter(a =>
+      (a.telefone || "").replace(/\D/g, "").includes(tel)
+    );
+  }
 
-  renderizar(lista);
+  if (fStatus.value) {
+    filtrados = filtrados.filter(a => a.status === fStatus.value);
+  }
+
+  renderTabela(filtrados);
 }
 
-function editar(id) {
-  window.location.href = "agendamento-editar.html?id=" + id;
+// -----------------------------------------------
+// 4. Novo agendamento
+// -----------------------------------------------
+async function novoAgendamento() {
+  const { value: dados } = await Swal.fire({
+    title: "Novo Agendamento",
+    html: `
+      <input id="ag-nome" class="swal2-input" placeholder="Cliente">
+      <input id="ag-tel" class="swal2-input" placeholder="Telefone">
+      <input id="ag-valor" class="swal2-input" placeholder="Valor">
+      <input type="date" id="ag-data" class="swal2-input">
+    `,
+    preConfirm: () => ({
+      cliente: document.getElementById("ag-nome").value,
+      telefone: document.getElementById("ag-tel").value,
+      valor: Number(document.getElementById("ag-valor").value || 0),
+      data: new Date(document.getElementById("ag-data").value),
+      status: "pendente"
+    }),
+    showCancelButton: true
+  });
+
+  if (!dados) return;
+
+  try {
+    await db.collection("agendamentos").add(dados);
+    Swal.fire("Pronto!", "Agendamento criado com sucesso!", "success");
+    carregarAgendamentos();
+  } catch (err) {
+    console.error(err);
+    Swal.fire("Erro", "Não foi possível salvar o agendamento.", "error");
+  }
 }
 
-document.getElementById("btnFiltrar").onclick = aplicarFiltro;
+// -----------------------------------------------
+// 5. Abrir agendamento
+// -----------------------------------------------
+async function abrirAgendamento(id) {
+  const doc = await db.collection("agendamentos").doc(id).get();
+  if (!doc.exists) return Swal.fire("Erro", "Agendamento não encontrado", "error");
 
-document.getElementById("btnNovoAg").onclick = () => {
-  window.location.href = "agendamento-editar.html?novo=1";
-};
+  const a = doc.data();
+  const data = a.data?.toDate ? a.data.toDate() : new Date(a.data);
 
-window.addEventListener("DOMContentLoaded", carregarAgendamentos);
+  Swal.fire({
+    title: a.cliente,
+    html: `
+      <p>Telefone: ${a.telefone || "-"}</p>
+      <p>Valor: R$ ${Number(a.valor || 0).toFixed(2)}</p>
+      <p>Data: ${data.toLocaleDateString()}</p>
+      <p>Status: ${a.status}</p>
+    `
+  });
+}
+
+// -----------------------------------------------
+// 6. Eventos
+// -----------------------------------------------
+btnFiltrar?.addEventListener("click", aplicarFiltros);
+btnNovo?.addEventListener("click", novoAgendamento);
+
+// Inicializar
+carregarAgendamentos();
