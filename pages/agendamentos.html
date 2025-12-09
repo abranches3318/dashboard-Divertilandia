@@ -5,22 +5,16 @@
   <title>Agendamentos</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <!-- CSS Global -->
-  <link rel="stylesheet" href="../css/dashboard.css">
+  <!-- CSS Global (usar caminho absoluto para GitHub Pages) -->
+  <link rel="stylesheet" href="/dashboard-Divertilandia/css/dashboard.css">
 </head>
 
 <body>
 
-<!-- ============================
-     SIDEBAR
-============================ -->
-<button class="btn-hamburger" onclick="document.querySelector('.sidebar').classList.toggle('active')">☰</button>
+<button class="btn-hamburger" onclick="document.querySelector('.sidebar')?.classList.toggle('active')">☰</button>
 
 <aside class="sidebar">
-  <div class="logo">
-    <img src="../img/logo.png" class="logo-img" alt="Logo">
-  </div>
-
+  <div class="logo"><img src="/dashboard-Divertilandia/img/logo.png" class="logo-img" alt="Logo"></div>
   <nav>
     <ul>
       <li onclick="nav('dashboard')">📊 Dashboard</li>
@@ -36,11 +30,7 @@
   </nav>
 </aside>
 
-<!-- ============================
-     CONTEÚDO
-============================ -->
 <main class="content">
-
   <header class="topbar">
     <h1>Agendamentos</h1>
     <div class="top-right">
@@ -48,38 +38,18 @@
     </div>
   </header>
 
-  <!-- ============================
-       TÍTULO + BOTÃO NOVO
-  ============================ -->
   <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
     <h2>Lista de Agendamentos</h2>
     <button class="btn" id="btnNovoAg" style="font-size:16px; padding:12px 25px;">+ Novo Agendamento</button>
   </div>
 
-  <!-- ============================
-       FILTROS
-  ============================ -->
   <div class="panel">
     <h2>Filtros</h2>
-
     <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-end;">
-      <div>
-        <label>Data</label>
-        <input type="date" id="filtroData">
-      </div>
-
-      <div>
-        <label>Cliente</label>
-        <input type="text" id="filtroCliente" placeholder="Nome do cliente">
-      </div>
-
-      <div>
-        <label>Telefone</label>
-        <input type="text" id="filtroTelefone" placeholder="(00) 00000-0000">
-      </div>
-
-      <div>
-        <label>Status</label>
+      <div><label>Data</label><input type="date" id="filtroData"></div>
+      <div><label>Cliente</label><input type="text" id="filtroCliente" placeholder="Nome do cliente"></div>
+      <div><label>Telefone</label><input type="text" id="filtroTelefone" placeholder="(00) 00000-0000"></div>
+      <div><label>Status</label>
         <select id="filtroStatus">
           <option value="">Todos</option>
           <option value="pendente">Pendente</option>
@@ -88,49 +58,69 @@
           <option value="cancelado">Cancelado</option>
         </select>
       </div>
-
       <button class="btn" id="btnFiltrar" style="height:48px;">Filtrar</button>
     </div>
   </div>
 
-  <!-- ============================
-       TABELA
-  ============================ -->
   <div class="panel">
     <table class="table">
       <thead>
         <tr>
-          <th>Data</th>
-          <th>Cliente</th>
-          <th>Telefone</th>
-          <th>Status</th>
-          <th>Valor</th>
-          <th></th>
+          <th>Data</th><th>Cliente</th><th>Telefone</th><th>Status</th><th>Valor</th><th></th>
         </tr>
       </thead>
       <tbody id="listaAgendamentos"></tbody>
     </table>
   </div>
-
 </main>
 
-<!-- ============================
-     FIREBASE
-============================ -->
+<!-- FIREBASE (compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
-<script src="../firebase-config.js"></script>
+
+<!-- firebase-config (usar caminho absoluto para github pages) -->
+<script src="/dashboard-Divertilandia/firebase-config.js"></script>
 
 <!-- SweetAlert -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- ============================
-     JS PRINCIPAL DE AGENDAMENTOS
-============================ -->
-<script src="../js/nav.js"></script>
-<script src="../js/agendamentos.js"></script>
+<!-- NAV fallback: cria função nav mínima caso nav.js não carregue (evita crash imediato). -->
+<script>
+  // BASE path do seu site no GitHub Pages — ajuste se diferente
+  const BASE = '/dashboard-Divertilandia/';
+
+  if (!window.nav) {
+    window.nav = function(page) {
+      // páginas mapeadas
+      const pages = {
+        dashboard: BASE + 'dashboard.html',
+        agendamentos: BASE + 'pages/agendamentos.html',
+        financeiro: BASE + 'pages/financeiro.html',
+        catalogo: BASE + 'pages/catalogo.html',
+        monitores: BASE + 'pages/monitores.html',
+        tarefas: BASE + 'pages/tarefas.html',
+        conversas: BASE + 'pages/conversas.html',
+        notificacoes: BASE + 'pages/notificacoes.html'
+      };
+      window.location.href = pages[page] || (BASE + 'dashboard.html');
+    };
+    console.warn('Fallback nav() ativo — verifique se /js/nav.js está sendo servido corretamente (404 se não).');
+  }
+
+  // Fallback logout caso auth não disponível ainda
+  if (!window.logout) {
+    window.logout = function() {
+      if (window.auth && auth.signOut) { auth.signOut().then(()=> location.href = BASE + 'index.html'); return; }
+      location.href = BASE + 'index.html';
+    };
+  }
+</script>
+
+<!-- CARREGAR SCRIPTS PRINCIPAIS (caminhos absolutos para evitar 404 por posições diferentes) -->
+<script src="/dashboard-Divertilandia/js/nav.js"></script>
+<script src="/dashboard-Divertilandia/js/agendamentos.js"></script>
 
 </body>
 </html>
