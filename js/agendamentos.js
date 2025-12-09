@@ -459,7 +459,7 @@ if (selectItem) {
 }
 
 // recalcular valor final se desconto ou preco alterar
-[inputPreco, inputDesconto].forEach(el => {
+[[inputPreco, inputDesconto].forEach(el => {
   if (!el) return;
   el.addEventListener('input', () => {
     const preco = Number(inputPreco.value || 0);
