@@ -1,22 +1,51 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <title>Agendamentos</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- CSS Global -->
-  <link rel="stylesheet" href="/dashboard-Divertilandia/css/dashboard.css">
+  <link rel="stylesheet" href="/dashboard-Divertilandia/css/dashboard.css" />
+
+  <style>
+    /* Ajustes visuais específicos do módulo */
+
+    /* Modal maior */
+    #modalAgendamento .modal-content {
+      max-width: 900px !important;
+      width: 90%;
+    }
+
+    /* Duas colunas */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      width: 100%;
+    }
+
+    /* Monitores ocupa linha inteira */
+    .col-full {
+      grid-column: span 2;
+    }
+
+    .chk-line {
+      margin-bottom: 6px;
+    }
+  </style>
 </head>
 
 <body>
 
-<!-- Botão Mobile -->
-<button class="btn-hamburger" onclick="document.querySelector('.sidebar')?.classList.toggle('active')">☰</button>
+<!-- BOTÃO MOBILE -->
+<button class="btn-hamburger" onclick="document.querySelector('.sidebar').classList.toggle('active')">☰</button>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="logo"><img src="/dashboard-Divertilandia/img/logo.png" class="logo-img" alt="Logo"></div>
+  <div class="logo">
+    <img src="/dashboard-Divertilandia/img/logo.png" class="logo-img" alt="Logo" />
+  </div>
   <nav>
     <ul>
       <li onclick="nav('dashboard')">📊 Dashboard</li>
@@ -42,10 +71,10 @@
     </div>
   </header>
 
-  <!-- TÍTULO + BOTÃO -->
-  <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
+  <!-- Cabeçalho + botão novo -->
+  <div class="panel" style="display: flex; justify-content: space-between; align-items: center;">
     <h2>Lista de Agendamentos</h2>
-    <button class="btn" id="btnNovoAg" style="font-size:16px; padding:12px 25px;">+ Novo Agendamento</button>
+    <button class="btn" id="btnNovoAg" style="font-size:16px; padding:12px 26px;">+ Novo Agendamento</button>
   </div>
 
   <!-- FILTROS -->
@@ -53,10 +82,23 @@
     <h2>Filtros</h2>
 
     <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-end;">
-      <div><label>Data</label><input type="date" id="filtroData"></div>
-      <div><label>Cliente</label><input type="text" id="filtroCliente" placeholder="Nome do cliente"></div>
-      <div><label>Telefone</label><input type="text" id="filtroTelefone" placeholder="(00) 00000-0000"></div>
-      <div><label>Status</label>
+      <div>
+        <label>Data</label>
+        <input type="date" id="filtroData" />
+      </div>
+
+      <div>
+        <label>Cliente</label>
+        <input type="text" id="filtroCliente" placeholder="Nome do cliente" />
+      </div>
+
+      <div>
+        <label>Telefone</label>
+        <input type="text" id="filtroTelefone" placeholder="(00) 00000-0000" />
+      </div>
+
+      <div>
+        <label>Status</label>
         <select id="filtroStatus">
           <option value="">Todos</option>
           <option value="pendente">Pendente</option>
@@ -65,11 +107,12 @@
           <option value="cancelado">Cancelado</option>
         </select>
       </div>
+
       <button class="btn" id="btnFiltrar" style="height:48px;">Filtrar</button>
     </div>
   </div>
 
-  <!-- LISTA DE AGENDAMENTOS -->
+  <!-- TABELA -->
   <div class="panel" id="painelTabela" style="display:none;">
     <table class="table">
       <thead>
@@ -88,79 +131,77 @@
 
 </main>
 
-<!-- MODAL — NOVO / EDITAR -->
-<div id="modalAgendamento" class="modal">
-  <div class="modal-content" style="max-width:850px;">
+<!-- =======================
+     MODAL AGENDAMENTO
+=========================== -->
+<div class="modal" id="modalAgendamento">
+  <div class="modal-content">
 
     <h2 id="modalTitulo">Novo Agendamento</h2>
 
-    <input type="hidden" id="ag-id">
+    <input type="hidden" id="ag-id" />
 
-    <!-- GRID DE CAMPOS -->
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:15px;">
+    <div class="form-grid">
 
       <div>
         <label>Cliente</label>
-        <input type="text" id="ag-cliente" placeholder="Nome do cliente">
+        <input type="text" id="ag-cliente" placeholder="Nome completo" />
       </div>
 
       <div>
         <label>Telefone</label>
-        <input type="text" id="ag-telefone" placeholder="(00) 00000-0000">
+        <input type="text" id="ag-telefone" placeholder="(00) 00000-0000" />
       </div>
 
       <div>
-        <label>Data do Evento</label>
-        <input type="date" id="ag-data">
+        <label>Data</label>
+        <input type="date" id="ag-data" />
       </div>
 
       <div>
         <label>Horário de Início</label>
-        <input type="time" id="ag-hora-inicio">
+        <input type="time" id="ag-hora-inicio" />
       </div>
 
       <div>
-        <label>Horário de Término</label>
-        <input type="time" id="ag-hora-fim">
+        <label>Horário de Fim (+4h autom.)</label>
+        <input type="time" id="ag-hora-fim" />
       </div>
 
       <div>
         <label>Pacote / Item</label>
-        <select id="ag-item">
-          <option value="">Selecione...</option>
-        </select>
+        <select id="ag-item"></select>
       </div>
 
       <div>
         <label>Preço</label>
-        <input type="number" id="ag-preco" placeholder="R$ 0,00">
+        <input type="number" id="ag-preco" placeholder="0,00" />
       </div>
 
       <div>
         <label>Desconto</label>
-        <input type="number" id="ag-desconto" placeholder="R$ 0,00">
+        <input type="number" id="ag-desconto" placeholder="0,00" />
       </div>
 
       <div>
-        <label>Entrada</label>
-        <input type="number" id="ag-entrada" placeholder="R$ 0,00">
+        <label>Entrada (pagamento)</label>
+        <input type="number" id="ag-entrada" placeholder="0,00" />
       </div>
 
       <div>
         <label>Valor Final</label>
-        <input type="number" id="ag-valor-final" placeholder="R$ 0,00">
+        <input type="number" id="ag-valor-final" placeholder="0,00" />
+      </div>
+
+      <!-- MONITORES (coluna cheia) -->
+      <div class="col-full">
+        <label>Monitores</label>
+        <div id="ag-monitores"></div>
       </div>
 
     </div>
 
-    <!-- MONITORES -->
-    <div style="margin-top:20px;">
-      <label>Monitores</label>
-      <div id="ag-monitores" style="display:flex; flex-wrap:wrap; gap:15px;">
-        <!-- Checkboxes são carregados pelo JS -->
-      </div>
-    </div>
-
+    <!-- BOTÕES -->
     <div style="margin-top:25px; display:flex; justify-content:flex-end; gap:15px;">
       <button class="btn btn-dark" id="btnCancelar">Cancelar</button>
       <button class="btn" id="btnSalvarAg">Salvar</button>
@@ -175,15 +216,16 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
+<!-- CONFIG -->
 <script src="/dashboard-Divertilandia/firebase-config.js"></script>
 
-<!-- SweetAlert -->
+<!-- SWEETALERT -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- NAV -->
 <script src="/dashboard-Divertilandia/js/nav.js"></script>
 
-<!-- JS PRINCIPAL DO MÓDULO -->
+<!-- AGENDAMENTOS.JS -->
 <script src="/dashboard-Divertilandia/js/agendamentos.js"></script>
 
 </body>
