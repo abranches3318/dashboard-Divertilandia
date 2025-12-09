@@ -4,13 +4,13 @@
 function nav(page) {
   const pages = {
     dashboard: "dashboard.html",
-    agendamentos: "agendamentos.html",
-    financeiro: "financeiro.html",
-    catalogo: "catalogo.html",
-    monitores: "monitores.html",
-    tarefas: "tarefas.html",
-    conversas: "conversas.html",
-    notificacoes: "notificacoes.html"
+    agendamentos: "pages/agendamentos.html",
+    financeiro: "pages/financeiro.html",
+    catalogo: "pages/catalogo.html",
+    monitores: "pages/monitores.html",
+    tarefas: "pages/tarefas.html",
+    conversas: "pages/conversas.html",
+    notificacoes: "pages/notificacoes.html"
   };
 
   if (page === "dashboard") {
