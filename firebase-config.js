@@ -10,11 +10,11 @@ const firebaseConfig = {
   measurementId: "G-9YPFN6EV44"
 };
 
-// Evita inicialização duplicada
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
+// Inicialização
+firebase.initializeApp(firebaseConfig);
 
-const db = firebase.firestore();
-const storage = firebase.storage();
+// Exportar globais sem criar conflitos
+window.auth = firebase.auth();
+window.db = firebase.firestore();
+window.storage = firebase.storage();
 
