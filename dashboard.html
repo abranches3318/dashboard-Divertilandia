@@ -4,30 +4,35 @@
   <meta charset="UTF-8" />
   <title>Dashboard - Divertilândia</title>
 
-  <!-- CSS -->
+  <!-- CSS principal (use seu css existente) -->
   <link rel="stylesheet" href="css/dashboard.css" />
+
+  <!-- FullCalendar CSS (visual) -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet">
 
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Favicon -->
   <link rel="icon" href="img/favicon.ico">
 
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
   <style>
-    /* pequenas garantias de layout para evitar que o calendário quebre */
-    #calendar { max-width: 100%; margin: 0 auto; height: 560px; }
-    .pagina { display: none; }
-    .pagina.ativa { display: block; }
-    /* garantir que elementos que não existirem não quebrem scripts */
+    /* Pequenas salvaguardas para evitar que o calendário quebre layout */
+    #calendar { max-width:100%; margin:0 auto; height:600px; }
+    .pagina { display:none; }
+    .pagina.ativa { display:block; }
+    /* Garantir que caracteres do FullCalendar apareçam em PT */
+    .fc-toolbar-title { font-weight:700; }
   </style>
 </head>
 
 <body>
 
-  <!-- Botão Hamburger -->
+  <!-- Botão Hamburger (mobile) -->
   <button class="btn-hamburger" onclick="document.querySelector('.sidebar')?.classList.toggle('active')">
     ☰
   </button>
 
-  <!-- Sidebar -->
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="logo">
       <img src="img/logo.png" class="logo-img" alt="Divertilândia" />
@@ -35,10 +40,11 @@
 
     <nav>
       <ul>
+        <!-- Navegação multi-páginas: abre outras páginas HTML separadas -->
         <li class="active" onclick="nav('dashboard')">📊 Dashboard</li>
         <li onclick="nav('agendamentos')">📅 Agendamentos</li>
         <li onclick="nav('financeiro')">💰 Financeiro</li>
-        <li onclick="nav('itens')">🎈 Itens / Catálogo</li>
+        <li onclick="nav('itens')">🎈 Catálogo</li>
         <li onclick="nav('pacotes')">🎁 Pacotes</li>
         <li onclick="nav('monitores')">🧑‍🏫 Monitores</li>
         <li onclick="nav('tarefas')">📝 Tarefas</li>
@@ -48,13 +54,14 @@
     </nav>
   </aside>
 
-  <!-- Conteúdo -->
+  <!-- CONTEÚDO PRINCIPAL -->
   <main class="content">
-    <!-- Navbar -->
+
+    <!-- TOPBAR -->
     <header class="topbar">
       <h1 id="titulo-pagina">Dashboard</h1>
       <div class="top-right">
-        <div class="notif" onclick="abrirNotificacoes()">
+        <div class="notif" onclick="nav('notificacoes')">
           🔔 <span id="notif-count">0</span>
         </div>
         <div class="user-info">
@@ -63,18 +70,18 @@
       </div>
     </header>
 
-    <!-- SEÇÃO DASHBOARD -->
+    <!-- PÁGINA: DASHBOARD -->
     <section id="pagina-dashboard" class="pagina ativa">
       <div class="cards">
-        <div class="card" onclick="abrirListaAgendamentosHoje()">
+        <div class="card" id="card-agendamentos-hoje" style="cursor:pointer;">
           <h3>Agendamentos Hoje</h3>
           <p id="ag-hoje">0</p>
         </div>
-        <div class="card">
+        <div class="card" id="card-receita-mes" style="cursor:pointer;">
           <h3>Receita Mensal</h3>
           <p id="receita-mes">R$ 0,00</p>
         </div>
-        <div class="card">
+        <div class="card" id="card-tarefas-pendentes" style="cursor:pointer;">
           <h3>Tarefas Pendentes</h3>
           <p id="tarefas-pendentes">0</p>
         </div>
@@ -86,7 +93,7 @@
       </div>
     </section>
 
-    <!-- PAGINA AGENDAMENTOS (opcional: você pode também usar agendamentos.html separado) -->
+    <!-- PÁGINA: AGENDAMENTOS (conteúdo mínimo, cliente usará página separada) -->
     <section id="pagina-agendamentos" class="pagina">
       <div class="topo-secao" style="display:flex; justify-content:space-between; align-items:center;">
         <h2>Agendamentos</h2>
@@ -96,20 +103,10 @@
       </div>
 
       <div class="filtros-agendamentos" style="margin-top:15px; display:flex; flex-wrap:wrap; gap:12px;">
-        <div class="campo-filtro">
-          <label for="filtroData">Data</label>
-          <input type="date" id="filtroData">
-        </div>
-        <div class="campo-filtro">
-          <label for="filtroCliente">Cliente</label>
-          <input type="text" id="filtroCliente" placeholder="Nome do cliente">
-        </div>
-        <div class="campo-filtro">
-          <label for="filtroTelefone">Telefone</label>
-          <input type="text" id="filtroTelefone" placeholder="(DDD) 9XXXX-XXXX">
-        </div>
-        <div class="campo-filtro">
-          <label for="filtroStatus">Status</label>
+        <div class="campo-filtro"><label for="filtroData">Data</label><input type="date" id="filtroData"></div>
+        <div class="campo-filtro"><label for="filtroCliente">Cliente</label><input type="text" id="filtroCliente" placeholder="Nome do cliente"></div>
+        <div class="campo-filtro"><label for="filtroTelefone">Telefone</label><input type="text" id="filtroTelefone" placeholder="(DDD) 9XXXX-XXXX"></div>
+        <div class="campo-filtro"><label for="filtroStatus">Status</label>
           <select id="filtroStatus">
             <option value="">Todos</option>
             <option value="pendente">Pendente</option>
@@ -118,21 +115,14 @@
             <option value="cancelado">Cancelado</option>
           </select>
         </div>
-        <div style="align-self:end;">
-          <button id="btnFiltrarAgendamentos" class="btn">Filtrar</button>
-        </div>
+        <div style="align-self:end;"><button id="btnFiltrarAgendamentos" class="btn">Filtrar</button></div>
       </div>
 
       <div style="margin-top:16px; overflow-x:auto;">
         <table class="tabela-agendamentos" style="width:100%;">
           <thead>
             <tr>
-              <th>Data</th>
-              <th>Cliente</th>
-              <th>Telefone</th>
-              <th>Status</th>
-              <th>Valor</th>
-              <th>Ações</th>
+              <th>Data</th><th>Cliente</th><th>Telefone</th><th>Status</th><th>Valor</th><th>Ações</th>
             </tr>
           </thead>
           <tbody id="listaAgendamentos"></tbody>
@@ -142,31 +132,43 @@
 
   </main>
 
-  <!-- Firebase compat (must be before scripts that use firebase) -->
+  <!-- =========================
+       SCRIPTS (ordem importante)
+       1) Firebase compat
+       2) firebase-config.js (único lugar que inicializa app / define db)
+       3) SweetAlert2
+       4) dashboard.js (logic minimal / UI hooks)
+       5) FullCalendar (visual + runtime)
+       6) calendar.js (calendar behavior)
+       7) agendamentos.js (list/filter/create)
+       8) demais módulos
+  ========================= -->
+
+  <!-- Firebase (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
-  <!-- Your firebase-config (keeps const db) -->
+  <!-- Sua configuração do Firebase (deve inicializar o app e definir window.db / window.auth se desejar) -->
   <script src="firebase-config.js"></script>
 
-  <!-- FullCalendar (global) -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
-
-  <!-- SweetAlert -->
+  <!-- SweetAlert2 (usado em vários módulos) -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- Calendar module (defines window.renderCalendar) -->
-  <script src="js/calendar.js"></script>
-
-  <!-- Dashboard core (auth state, counts, carregarAgendamentos -> calls window.renderCalendar) -->
+  <!-- dashboard.js: hooks UI + chamadas para preencher cards. Deve existir em js/dashboard.js -->
   <script src="js/dashboard.js"></script>
 
-  <!-- Agendamentos UI/logic (works with embedded section or separate page) -->
+  <!-- FullCalendar runtime (global bundle) -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+
+  <!-- calendar.js (implementa integração FullCalendar => agendamentos). Deve existir em js/calendar.js -->
+  <script src="js/calendar.js"></script>
+
+  <!-- agendamentos.js (lista, filtros, criar). Deve existir em js/agendamentos.js -->
   <script src="js/agendamentos.js"></script>
 
-  <!-- Outros módulos (carregue por último) -->
+  <!-- outros módulos opcionais -->
   <script src="js/monitor.js"></script>
   <script src="js/checklist.js"></script>
   <script src="js/ordemServico.js"></script>
@@ -174,43 +176,69 @@
   <script src="js/notificacoes.js"></script>
 
   <script>
-    // Logout — usa window.auth (setado por dashboard.js)
-    function logout() {
-      if (window.auth && typeof window.auth.signOut === 'function') {
-        window.auth.signOut().then(() => window.location.href = "index.html");
-      } else {
-        // fallback: usar firebase.auth diretamente
-        if (firebase && firebase.auth) {
-          firebase.auth().signOut().then(() => window.location.href = "index.html");
-        } else {
-          window.location.href = "index.html";
+    // Navegação multi-páginas: abre arquivos HTML separados (multipages).
+    // Ajuste os nomes de arquivo se seus arquivos estiverem em outra pasta.
+    function nav(dest) {
+      const map = {
+        dashboard: 'dashboard.html',
+        agendamentos: 'agendamentos.html',
+        financeiro: 'financeiro.html',
+        itens: 'itens.html',
+        pacotes: 'pacotes.html',
+        monitores: 'monitores.html',
+        tarefas: 'tarefas.html',
+        conversas: 'conversas.html',
+        notificacoes: 'notificacoes.html'
+      };
+      const file = map[dest];
+      // se for dashboard, ficar na mesma página; caso contrário navegar
+      if (!file || dest === 'dashboard') {
+        // apenas alterna visualmente se houver múltiplas seções na mesma página
+        document.querySelectorAll('.pagina').forEach(p=>p.classList.remove('ativa'));
+        const el = document.getElementById('pagina-' + (dest || 'dashboard'));
+        if (el) el.classList.add('ativa');
+        // atualizar títulos
+        const titulo = document.getElementById('titulo-pagina');
+        if (titulo && el) {
+          const h2 = el.querySelector('h2');
+          titulo.textContent = h2 ? h2.textContent : 'Dashboard';
         }
+        return;
+      }
+      // navega para a página separada (multipages)
+      window.location.href = file;
+    }
+
+    // Logout seguro: usa firebase.auth() diretamente para evitar problemas de scoping.
+    function logout() {
+      if (window.firebase && firebase.auth) {
+        firebase.auth().signOut().then(()=> {
+          window.location.href = 'index.html';
+        }).catch(err => {
+          console.error('Erro ao deslogar:', err);
+          Swal.fire('Erro', 'Não foi possível deslogar.', 'error');
+        });
+      } else {
+        // fallback
+        window.location.href = 'index.html';
       }
     }
 
-    // Navegação entre seções (simples)
-    function nav(pagina) {
-      document.querySelectorAll(".pagina").forEach(sec => sec.classList.remove("ativa"));
-      const el = document.getElementById("pagina-" + pagina);
-      if (el) el.classList.add("ativa");
+    // Atualiza user-name e oferece cliques nos cards
+    (function attachUiHandlers() {
+      // Atualiza user display quando auth estiver pronto
+      if (window.firebase && firebase.auth) {
+        firebase.auth().onAuthStateChanged(user => {
+          const el = document.getElementById('user-name');
+          if (el) el.textContent = user ? (user.displayName || user.email) : 'Usuário';
+        });
+      }
 
-      document.querySelectorAll(".sidebar ul li").forEach(li => li.classList.remove("active"));
-      const liAtivo = Array.from(document.querySelectorAll(".sidebar ul li"))
-        .find(li => li.getAttribute("onclick")?.includes(`'${pagina}'`) || li.getAttribute("onclick")?.includes(`${pagina}`));
-      if (liAtivo) liAtivo.classList.add("active");
-    }
-
-    // abrir agendamentos de hoje pelo card
-    function abrirListaAgendamentosHoje() {
-      const hoje = new Date().toISOString().slice(0,10);
-      const f = document.getElementById('filtroData'); if (f) f.value = hoje;
-      nav('agendamentos');
-      // dispara filtro (se o módulo já estiver carregado)
-      if (typeof aplicarFiltros === 'function') aplicarFiltros();
-    }
-
-    // abrir notificações
-    function abrirNotificacoes(){ nav('notificacoes'); }
+      // Cards clicáveis
+      document.getElementById('card-agendamentos-hoje')?.addEventListener('click', ()=> nav('agendamentos'));
+      document.getElementById('card-tarefas-pendentes')?.addEventListener('click', ()=> nav('tarefas'));
+      document.getElementById('card-receita-mes')?.addEventListener('click', ()=> nav('financeiro'));
+    })();
   </script>
 
 </body>
