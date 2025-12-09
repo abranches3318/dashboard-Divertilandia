@@ -1,79 +1,53 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Agendamentos - Divertilândia</title>
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="icon" href="img/favicon.ico">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Agendamentos</h1>
+  </header>
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="../css/dashboard.css">
+  <main class="content">
+    <div style="padding:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div><h2>Agendamentos</h2></div>
+        <div><button id="btnNovoAgendamento" class="btn">+ Novo Agendamento</button></div>
+      </div>
 
-  <!-- Firebase Compat -->
+      <div class="filtros-agendamentos" style="margin-top:15px;">
+        <input type="date" id="filtroData">
+        <input type="text" id="filtroCliente" placeholder="Cliente">
+        <input type="text" id="filtroTelefone" placeholder="Telefone">
+        <select id="filtroStatus">
+          <option value="">Todos</option>
+          <option value="pendente">Pendente</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="concluido">Concluído</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+        <button id="btnFiltrarAgendamentos" class="btn">Filtrar</button>
+      </div>
+
+      <div style="margin-top:12px; overflow-x:auto;">
+        <table class="tabela-agendamentos" style="width:100%;">
+          <thead><tr><th>Data</th><th>Cliente</th><th>Telefone</th><th>Status</th><th>Valor</th><th>Ações</th></tr></thead>
+          <tbody id="listaAgendamentos"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
 
-  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <!-- Firebase Config -->
-  <script src="../firebase-config.js"></script>
-</head>
-<body>
-
-  <header class="topbar">
-    <h1>Agendamentos</h1>
-    <div>
-      <span id="user-name">Usuário</span>
-      <button onclick="logout()" class="btn btn-dark">Sair</button>
-    </div>
-  </header>
-
-  <main class="content" style="padding:20px;">
-    <div class="filtros">
-      <input type="date" id="filtroData">
-      <input type="text" id="filtroCliente" placeholder="Cliente">
-      <input type="text" id="filtroTelefone" placeholder="Telefone">
-      <select id="filtroStatus">
-        <option value="">Todos Status</option>
-        <option value="pendente">Pendente</option>
-        <option value="confirmado">Confirmado</option>
-        <option value="cancelado">Cancelado</option>
-      </select>
-      <button class="btn btn" id="btnFiltrarAgendamentos">Filtrar</button>
-      <button class="btn btn" id="btnNovoAgendamento">➕ Novo Agendamento</button>
-    </div>
-
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Cliente</th>
-          <th>Telefone</th>
-          <th>Endereço</th>
-          <th>Pacote/Item</th>
-          <th>Valor</th>
-          <th>Status</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="listaAgendamentos">
-        <tr><td colspan="8" style="text-align:center">Carregando...</td></tr>
-      </tbody>
-    </table>
-  </main>
-
-  <script>
-    // Função de logout
-    function logout() {
-      if (!window.auth) return;
-      window.auth.signOut()
-        .then(() => { window.location.href = '../index.html'; })
-        .catch(err => { Swal.fire('Erro', 'Não foi possível sair: ' + err.message, 'error'); });
-    }
-  </script>
-
-  <!-- Script Agendamentos -->
-  <script src="agendamentos.js"></script>
-
+  <script src="js/agendamentos.js"></script>
 </body>
 </html>
