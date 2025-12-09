@@ -1,70 +1,104 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-  <meta charset="UTF-8"/>
-  <title>Agendamentos</title>
-  <link rel="stylesheet" href="css/dashboard.css">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="UTF-8" />
+    <title>Agendamentos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- CSS principal -->
+    <link rel="stylesheet" href="css/dashboard.css">
 </head>
 
 <body>
 
-<button class="btn-hamburger" onclick="window.location='dashboard.html'">⬅</button>
+    <!-- BOTÃO VOLTAR -->
+    <button class="btn-hamburger" onclick="window.location='dashboard.html'">⬅</button>
 
-<header class="topbar">
-  <h1>Agendamentos</h1>
-</header>
+    <!-- HEADER -->
+    <header class="topbar">
+        <h1>Agendamentos</h1>
+    </header>
 
-<main class="content">
+    <!-- CONTEÚDO -->
+    <main class="content">
 
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h2>Lista de Agendamentos</h2>
-    <button class="btn" id="btnNovoAg">+ Novo</button>
-  </div>
+        <!-- Cabeçalho + Botão Novo -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Lista de Agendamentos</h2>
+            <button class="btn" id="btnNovoAg">+ Novo</button>
+        </div>
 
-  <div class="panel">
-    <h2>Filtros</h2>
-    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-      <div><label>Data</label><input type="date" id="filtroData"></div>
-      <div><label>Cliente</label><input type="text" id="filtroCliente"></div>
-      <div><label>Telefone</label><input type="text" id="filtroTelefone"></div>
-      <div><label>Status</label>
-        <select id="filtroStatus">
-          <option value="">Todos</option>
-          <option value="pendente">Pendente</option>
-          <option value="confirmado">Confirmado</option>
-          <option value="concluido">Concluído</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-      </div>
-      <button class="btn" id="btnFiltrar">Filtrar</button>
-    </div>
-  </div>
+        <!-- FILTROS -->
+        <div class="panel">
+            <h2>Filtros</h2>
 
-  <div class="panel">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Data</th><th>Cliente</th><th>Telefone</th><th>Status</th><th>Valor</th><th></th>
-        </tr>
-      </thead>
-      <tbody id="listaAgendamentos"></tbody>
-    </table>
-  </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
 
-</main>
+                <div>
+                    <label>Data</label>
+                    <input type="date" id="filtroData">
+                </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
-<script src="firebase-config.js"></script>
+                <div>
+                    <label>Cliente</label>
+                    <input type="text" id="filtroCliente" placeholder="Nome do cliente">
+                </div>
 
-<!-- SweetAlert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <div>
+                    <label>Telefone</label>
+                    <input type="text" id="filtroTelefone" placeholder="(DDD) 90000-0000">
+                </div>
 
-<script src="js/agendamentos.js"></script>
+                <div>
+                    <label>Status</label>
+                    <select id="filtroStatus">
+                        <option value="">Todos</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="confirmado">Confirmado</option>
+                        <option value="concluido">Concluído</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+
+                <button class="btn" id="btnFiltrar">Filtrar</button>
+            </div>
+        </div>
+
+        <!-- TABELA -->
+        <div class="panel">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>Telefone</th>
+                        <th>Status</th>
+                        <th>Valor</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="listaAgendamentos"></tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <!-- Firebase compat -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+
+    <!-- Config Firebase -->
+    <script src="firebase-config.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Script da página -->
+    <script src="js/agendamentos.js"></script>
 
 </body>
+
 </html>
