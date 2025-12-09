@@ -8,23 +8,20 @@
   <link rel="stylesheet" href="css/dashboard.css" />
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet">
 
-  <!-- Favicon -->
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="icon" href="img/favicon.ico">
 
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-
   <style>
-    #calendar {
-      max-width: 100%;
-      margin: 0 auto;
-      height: 600px;
-    }
+    /* pequenas garantias de layout para evitar que o calendário quebre */
+    #calendar { max-width: 100%; margin: 0 auto; height: 560px; }
     .pagina { display: none; }
     .pagina.ativa { display: block; }
+    /* garantir que elementos que não existirem não quebrem scripts */
   </style>
 </head>
 
 <body>
+
   <!-- Botão Hamburger -->
   <button class="btn-hamburger" onclick="document.querySelector('.sidebar')?.classList.toggle('active')">
     ☰
@@ -35,6 +32,7 @@
     <div class="logo">
       <img src="img/logo.png" class="logo-img" alt="Divertilândia" />
     </div>
+
     <nav>
       <ul>
         <li class="active" onclick="nav('dashboard')">📊 Dashboard</li>
@@ -52,6 +50,7 @@
 
   <!-- Conteúdo -->
   <main class="content">
+    <!-- Navbar -->
     <header class="topbar">
       <h1 id="titulo-pagina">Dashboard</h1>
       <div class="top-right">
@@ -64,10 +63,10 @@
       </div>
     </header>
 
-    <!-- Dashboard -->
+    <!-- SEÇÃO DASHBOARD -->
     <section id="pagina-dashboard" class="pagina ativa">
       <div class="cards">
-        <div class="card">
+        <div class="card" onclick="abrirListaAgendamentosHoje()">
           <h3>Agendamentos Hoje</h3>
           <p id="ag-hoje">0</p>
         </div>
@@ -87,7 +86,7 @@
       </div>
     </section>
 
-    <!-- Agendamentos -->
+    <!-- PAGINA AGENDAMENTOS (opcional: você pode também usar agendamentos.html separado) -->
     <section id="pagina-agendamentos" class="pagina">
       <div class="topo-secao" style="display:flex; justify-content:space-between; align-items:center;">
         <h2>Agendamentos</h2>
@@ -96,7 +95,6 @@
         </div>
       </div>
 
-      <!-- Filtros -->
       <div class="filtros-agendamentos" style="margin-top:15px; display:flex; flex-wrap:wrap; gap:12px;">
         <div class="campo-filtro">
           <label for="filtroData">Data</label>
@@ -141,38 +139,56 @@
         </table>
       </div>
     </section>
+
   </main>
 
-  <!-- Firebase compat -->
+  <!-- Firebase compat (must be before scripts that use firebase) -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
-  <!-- Configuração Firebase -->
+  <!-- Your firebase-config (keeps const db) -->
   <script src="firebase-config.js"></script>
 
-  <!-- FullCalendar deve vir antes de dashboard.js -->
+  <!-- FullCalendar (global) -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
 
   <!-- SweetAlert -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- Scripts da dashboard e agendamentos -->
+  <!-- Calendar module (defines window.renderCalendar) -->
+  <script src="js/calendar.js"></script>
+
+  <!-- Dashboard core (auth state, counts, carregarAgendamentos -> calls window.renderCalendar) -->
   <script src="js/dashboard.js"></script>
+
+  <!-- Agendamentos UI/logic (works with embedded section or separate page) -->
   <script src="js/agendamentos.js"></script>
 
+  <!-- Outros módulos (carregue por último) -->
+  <script src="js/monitor.js"></script>
+  <script src="js/checklist.js"></script>
+  <script src="js/ordemServico.js"></script>
+  <script src="js/tarefas.js"></script>
+  <script src="js/notificacoes.js"></script>
+
   <script>
-    // Logout seguro
+    // Logout — usa window.auth (setado por dashboard.js)
     function logout() {
-      if (window.auth) {
-        window.auth.signOut().then(() => window.location.href="index.html");
+      if (window.auth && typeof window.auth.signOut === 'function') {
+        window.auth.signOut().then(() => window.location.href = "index.html");
       } else {
-        console.error("Auth não inicializado.");
+        // fallback: usar firebase.auth diretamente
+        if (firebase && firebase.auth) {
+          firebase.auth().signOut().then(() => window.location.href = "index.html");
+        } else {
+          window.location.href = "index.html";
+        }
       }
     }
 
-    // Navegação entre seções
+    // Navegação entre seções (simples)
     function nav(pagina) {
       document.querySelectorAll(".pagina").forEach(sec => sec.classList.remove("ativa"));
       const el = document.getElementById("pagina-" + pagina);
@@ -180,20 +196,22 @@
 
       document.querySelectorAll(".sidebar ul li").forEach(li => li.classList.remove("active"));
       const liAtivo = Array.from(document.querySelectorAll(".sidebar ul li"))
-        .find(li => li.getAttribute("onclick")?.includes(pagina));
+        .find(li => li.getAttribute("onclick")?.includes(`'${pagina}'`) || li.getAttribute("onclick")?.includes(`${pagina}`));
       if (liAtivo) liAtivo.classList.add("active");
-
-      // Atualizar calendário quando voltar para dashboard
-      if (pagina === "dashboard" && window.dashboardState?.calendario) {
-        window.dashboardState.calendario.refetchEvents();
-      }
     }
 
-    // Atualiza o nome do usuário no header
-    window.auth?.onAuthStateChanged(user => {
-      const el = document.getElementById('user-name');
-      if (el) el.textContent = user ? (user.displayName || user.email) : 'Usuário';
-    });
+    // abrir agendamentos de hoje pelo card
+    function abrirListaAgendamentosHoje() {
+      const hoje = new Date().toISOString().slice(0,10);
+      const f = document.getElementById('filtroData'); if (f) f.value = hoje;
+      nav('agendamentos');
+      // dispara filtro (se o módulo já estiver carregado)
+      if (typeof aplicarFiltros === 'function') aplicarFiltros();
+    }
+
+    // abrir notificações
+    function abrirNotificacoes(){ nav('notificacoes'); }
   </script>
+
 </body>
 </html>
