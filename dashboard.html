@@ -4,242 +4,90 @@
   <meta charset="UTF-8" />
   <title>Dashboard - Divertilândia</title>
 
-  <!-- CSS principal (use seu css existente) -->
-  <link rel="stylesheet" href="css/dashboard.css" />
-
-  <!-- FullCalendar CSS (visual) -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet">
-
-  <!-- Favicon -->
+  <link rel="stylesheet" href="css/dashboard.css">
   <link rel="icon" href="img/favicon.ico">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-
-  <style>
-    /* Pequenas salvaguardas para evitar que o calendário quebre layout */
-    #calendar { max-width:100%; margin:0 auto; height:600px; }
-    .pagina { display:none; }
-    .pagina.ativa { display:block; }
-    /* Garantir que caracteres do FullCalendar apareçam em PT */
-    .fc-toolbar-title { font-weight:700; }
-  </style>
+  <!-- FullCalendar CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet">
 </head>
 
 <body>
 
-  <!-- Botão Hamburger (mobile) -->
-  <button class="btn-hamburger" onclick="document.querySelector('.sidebar')?.classList.toggle('active')">
-    ☰
-  </button>
+<button class="btn-hamburger">☰</button>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="logo">
-      <img src="img/logo.png" class="logo-img" alt="Divertilândia" />
+<aside class="sidebar">
+  <div class="logo">
+    <img src="img/logo.png" class="logo-img">
+  </div>
+
+  <nav>
+    <ul>
+      <li class="active" onclick="nav('dashboard')">📊 Dashboard</li>
+      <li onclick="nav('agendamentos')">📅 Agendamentos</li>
+      <li onclick="nav('financeiro')">💰 Financeiro</li>
+      <li onclick="nav('catalogo')">🎈 Catálogo</li>
+      <li onclick="nav('monitores')">🧑‍🏫 Monitores</li>
+      <li onclick="nav('tarefas')">📝 Tarefas</li>
+      <li onclick="nav('conversas')">💬 Conversas</li>
+      <li onclick="logout()">🚪 Sair</li>
+    </ul>
+  </nav>
+</aside>
+
+<main class="content">
+  <header class="topbar">
+    <h1 id="titulo-pagina">Dashboard</h1>
+
+    <div class="top-right">
+      <div class="notif" onclick="nav('notificacoes')">
+        🔔 <span id="notif-count">0</span>
+      </div>
+      <div class="user-info" id="user-info">Usuário</div>
+    </div>
+  </header>
+
+  <!-- Dashboard Home -->
+  <section id="pagina-dashboard" class="pagina ativa">
+
+    <div class="cards">
+      <div class="card" id="card-ag-hoje">
+        <h3>Agendamentos Hoje</h3>
+        <p id="ag-hoje">0</p>
+      </div>
+
+      <div class="card" id="card-tarefas">
+        <h3>Tarefas Pendentes</h3>
+        <p id="tarefas-pendentes">0</p>
+      </div>
+
+      <div class="card" id="card-conversas">
+        <h3>Conversas Agora</h3>
+        <p id="conversas-ativas">0</p>
+      </div>
     </div>
 
-    <nav>
-      <ul>
-        <!-- Navegação multi-páginas: abre outras páginas HTML separadas -->
-        <li class="active" onclick="nav('dashboard')">📊 Dashboard</li>
-        <li onclick="nav('agendamentos')">📅 Agendamentos</li>
-        <li onclick="nav('financeiro')">💰 Financeiro</li>
-        <li onclick="nav('itens')">🎈 Catálogo</li>
-        <li onclick="nav('pacotes')">🎁 Pacotes</li>
-        <li onclick="nav('monitores')">🧑‍🏫 Monitores</li>
-        <li onclick="nav('tarefas')">📝 Tarefas</li>
-        <li onclick="nav('conversas')">💬 Conversas (tempo real)</li>
-        <li onclick="logout()">🚪 Sair</li>
-      </ul>
-    </nav>
-  </aside>
+    <div class="panel">
+      <h2>📅 Calendário</h2>
+      <div id="calendar"></div>
+    </div>
+  </section>
 
-  <!-- CONTEÚDO PRINCIPAL -->
-  <main class="content">
+</main>
 
-    <!-- TOPBAR -->
-    <header class="topbar">
-      <h1 id="titulo-pagina">Dashboard</h1>
-      <div class="top-right">
-        <div class="notif" onclick="nav('notificacoes')">
-          🔔 <span id="notif-count">0</span>
-        </div>
-        <div class="user-info">
-          <span id="user-name">Usuário</span>
-        </div>
-      </div>
-    </header>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 
-    <!-- PÁGINA: DASHBOARD -->
-    <section id="pagina-dashboard" class="pagina ativa">
-      <div class="cards">
-        <div class="card" id="card-agendamentos-hoje" style="cursor:pointer;">
-          <h3>Agendamentos Hoje</h3>
-          <p id="ag-hoje">0</p>
-        </div>
-        <div class="card" id="card-receita-mes" style="cursor:pointer;">
-          <h3>Receita Mensal</h3>
-          <p id="receita-mes">R$ 0,00</p>
-        </div>
-        <div class="card" id="card-tarefas-pendentes" style="cursor:pointer;">
-          <h3>Tarefas Pendentes</h3>
-          <p id="tarefas-pendentes">0</p>
-        </div>
-      </div>
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-      <div class="panel">
-        <h2>📅 Calendário</h2>
-        <div id="calendar"></div>
-      </div>
-    </section>
-
-    <!-- PÁGINA: AGENDAMENTOS (conteúdo mínimo, cliente usará página separada) -->
-    <section id="pagina-agendamentos" class="pagina">
-      <div class="topo-secao" style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>Agendamentos</h2>
-        <div>
-          <button id="btnNovoAgendamento" class="btn">+ Novo Agendamento</button>
-        </div>
-      </div>
-
-      <div class="filtros-agendamentos" style="margin-top:15px; display:flex; flex-wrap:wrap; gap:12px;">
-        <div class="campo-filtro"><label for="filtroData">Data</label><input type="date" id="filtroData"></div>
-        <div class="campo-filtro"><label for="filtroCliente">Cliente</label><input type="text" id="filtroCliente" placeholder="Nome do cliente"></div>
-        <div class="campo-filtro"><label for="filtroTelefone">Telefone</label><input type="text" id="filtroTelefone" placeholder="(DDD) 9XXXX-XXXX"></div>
-        <div class="campo-filtro"><label for="filtroStatus">Status</label>
-          <select id="filtroStatus">
-            <option value="">Todos</option>
-            <option value="pendente">Pendente</option>
-            <option value="confirmado">Confirmado</option>
-            <option value="concluido">Concluído</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
-        <div style="align-self:end;"><button id="btnFiltrarAgendamentos" class="btn">Filtrar</button></div>
-      </div>
-
-      <div style="margin-top:16px; overflow-x:auto;">
-        <table class="tabela-agendamentos" style="width:100%;">
-          <thead>
-            <tr>
-              <th>Data</th><th>Cliente</th><th>Telefone</th><th>Status</th><th>Valor</th><th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="listaAgendamentos"></tbody>
-        </table>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- =========================
-       SCRIPTS (ordem importante)
-       1) Firebase compat
-       2) firebase-config.js (único lugar que inicializa app / define db)
-       3) SweetAlert2
-       4) dashboard.js (logic minimal / UI hooks)
-       5) FullCalendar (visual + runtime)
-       6) calendar.js (calendar behavior)
-       7) agendamentos.js (list/filter/create)
-       8) demais módulos
-  ========================= -->
-
-  <!-- Firebase (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
-
-  <!-- Sua configuração do Firebase (deve inicializar o app e definir window.db / window.auth se desejar) -->
-  <script src="firebase-config.js"></script>
-
-  <!-- SweetAlert2 (usado em vários módulos) -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <!-- dashboard.js: hooks UI + chamadas para preencher cards. Deve existir em js/dashboard.js -->
-  <script src="js/dashboard.js"></script>
-
-  <!-- FullCalendar runtime (global bundle) -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
-
-  <!-- calendar.js (implementa integração FullCalendar => agendamentos). Deve existir em js/calendar.js -->
-  <script src="js/calendar.js"></script>
-
-  <!-- agendamentos.js (lista, filtros, criar). Deve existir em js/agendamentos.js -->
-  <script src="js/agendamentos.js"></script>
-
-  <!-- outros módulos opcionais -->
-  <script src="js/monitor.js"></script>
-  <script src="js/checklist.js"></script>
-  <script src="js/ordemServico.js"></script>
-  <script src="js/tarefas.js"></script>
-  <script src="js/notificacoes.js"></script>
-
-  <script>
-    // Navegação multi-páginas: abre arquivos HTML separados (multipages).
-    // Ajuste os nomes de arquivo se seus arquivos estiverem em outra pasta.
-    function nav(dest) {
-      const map = {
-        dashboard: 'dashboard.html',
-        agendamentos: 'pages/agendamentos.html',
-        financeiro: 'pages/financeiro.html',
-        itens: 'pages/itens.html',
-        pacotes: 'pages/pacotes.html',
-        monitores: 'pages/monitores.html',
-        tarefas: 'pages/tarefas.html',
-        conversas: 'pages/conversas.html',
-        notificacoes: 'pages/notificacoes.html'
-      };
-      const file = map[dest];
-      // se for dashboard, ficar na mesma página; caso contrário navegar
-      if (!file || dest === 'dashboard') {
-        // apenas alterna visualmente se houver múltiplas seções na mesma página
-        document.querySelectorAll('.pagina').forEach(p=>p.classList.remove('ativa'));
-        const el = document.getElementById('pagina-' + (dest || 'dashboard'));
-        if (el) el.classList.add('ativa');
-        // atualizar títulos
-        const titulo = document.getElementById('titulo-pagina');
-        if (titulo && el) {
-          const h2 = el.querySelector('h2');
-          titulo.textContent = h2 ? h2.textContent : 'Dashboard';
-        }
-        return;
-      }
-      // navega para a página separada (multipages)
-      window.location.href = file;
-    }
-
-    // Logout seguro: usa firebase.auth() diretamente para evitar problemas de scoping.
-    function logout() {
-      if (window.firebase && firebase.auth) {
-        firebase.auth().signOut().then(()=> {
-          window.location.href = 'index.html';
-        }).catch(err => {
-          console.error('Erro ao deslogar:', err);
-          Swal.fire('Erro', 'Não foi possível deslogar.', 'error');
-        });
-      } else {
-        // fallback
-        window.location.href = 'index.html';
-      }
-    }
-
-    // Atualiza user-name e oferece cliques nos cards
-    (function attachUiHandlers() {
-      // Atualiza user display quando auth estiver pronto
-      if (window.firebase && firebase.auth) {
-        firebase.auth().onAuthStateChanged(user => {
-          const el = document.getElementById('user-name');
-          if (el) el.textContent = user ? (user.displayName || user.email) : 'Usuário';
-        });
-      }
-
-      // Cards clicáveis
-      document.getElementById('card-agendamentos-hoje')?.addEventListener('click', ()=> nav('agendamentos'));
-      document.getElementById('card-tarefas-pendentes')?.addEventListener('click', ()=> nav('tarefas'));
-      document.getElementById('card-receita-mes')?.addEventListener('click', ()=> nav('financeiro'));
-    })();
-  </script>
+<!-- Scripts -->
+<script src="js/dashboard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+<script src="js/calendar.js"></script>
 
 </body>
 </html>
