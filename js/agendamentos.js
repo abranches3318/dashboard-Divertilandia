@@ -1,6 +1,4 @@
-// ==============================================
-// AGENDAMENTOS.JS — versão otimizada e corrigida
-// ==============================================
+
 
 // Base do repositório (GitHub Pages)
 const BASE = "/dashboard-Divertilandia/";
