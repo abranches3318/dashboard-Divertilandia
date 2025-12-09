@@ -1,5 +1,3 @@
-
-
 // Base do repositório (GitHub Pages)
 const BASE = "/dashboard-Divertilandia/";
 
