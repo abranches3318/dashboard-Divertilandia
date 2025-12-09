@@ -1,7 +1,12 @@
-// Base do repositório (GitHub Pages)
-const BASE = "/dashboard-Divertilandia/";
+// ==============================================
+// AGENDAMENTOS.JS — versão otimizada e corrigida
+// ==============================================
 
-// Firebase compat (db/auth já criados em firebase-config.js)
+// Base do repositório (GitHub Pages)
+// (nome exclusivo para evitar conflitos globais)
+const AG_BASE = "/dashboard-Divertilandia/";
+
+// Firebase compat
 const db = firebase.firestore();
 const auth = firebase.auth();
 
@@ -74,7 +79,7 @@ function calcularHoraFim(horaInicio) {
     d.setHours(h, m, 0, 0);
     d.setHours(d.getHours() + 4);
 
-    return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 // =====================
@@ -129,7 +134,7 @@ function renderTabela(lista) {
 }
 
 // =====================
-// CANCELAR
+// CANCELAR AGENDAMENTO
 // =====================
 async function cancelarAgendamento(id) {
     const res = await Swal.fire({
@@ -144,7 +149,7 @@ async function cancelarAgendamento(id) {
 
     await db.collection("agendamentos").doc(id).update({ status: "cancelado" });
 
-    Swal.fire("OK", "Agendamento cancelado.", "success");
+    Swal.fire("OK", "Agendamento cancelado!", "success");
     carregarAgendamentos();
 }
 
@@ -229,31 +234,30 @@ function aplicarFiltros() {
 }
 
 // =====================
-// MODAL
+// MODAL — NOVO
 // =====================
 function abrirModalNovo() {
     modalTitulo.textContent = "Novo Agendamento";
 
-    inputId.value = "";
-    inputCliente.value = "";
-    inputTelefone.value = "";
-    inputData.value = "";
-    inputHoraInicio.value = "";
-    inputHoraFim.value = "";
-    selectItem.value = "";
-    inputPreco.value = "";
-    inputDesconto.value = "";
-    inputEntrada.value = "";
-    inputValorFinal.value = "";
+    [
+        inputId, inputCliente, inputTelefone, inputData,
+        inputHoraInicio, inputHoraFim, inputPreco,
+        inputDesconto, inputEntrada, inputValorFinal
+    ].forEach(el => el.value = "");
 
-    // limpar monitores
+    selectItem.value = "";
+
     document.querySelectorAll(".chk-monitor").forEach(cb => cb.checked = false);
 
     modal.classList.add("active");
 }
 
+// =====================
+// MODAL — EDITAR
+// =====================
 async function abrirModalEditar(id) {
     modalTitulo.textContent = "Editar Agendamento";
+
     const doc = await db.collection("agendamentos").doc(id).get();
     if (!doc.exists) return;
 
@@ -271,7 +275,6 @@ async function abrirModalEditar(id) {
     inputEntrada.value = a.entrada || "";
     inputValorFinal.value = a.valor_final || "";
 
-    // marcar monitores
     document.querySelectorAll(".chk-monitor").forEach(cb => {
         cb.checked = (a.monitores || []).includes(cb.value);
     });
@@ -296,12 +299,12 @@ async function salvarAgendamento() {
         horario: inputHoraInicio.value,
         hora_fim: inputHoraFim.value || calcularHoraFim(inputHoraInicio.value),
         pacoteId: selectItem.value || null,
-        preco: Number(inputPreco.value),
-        desconto: Number(inputDesconto.value),
-        entrada: Number(inputEntrada.value),
-        valor_final: Number(inputValorFinal.value),
+        preco: Number(inputPreco.value || 0),
+        desconto: Number(inputDesconto.value || 0),
+        entrada: Number(inputEntrada.value || 0),
+        valor_final: Number(inputValorFinal.value || 0),
         monitores: Array.from(document.querySelectorAll(".chk-monitor:checked")).map(cb => cb.value),
-        status: Number(inputEntrada.value) > 0 ? "confirmado" : "pendente",
+        status: Number(inputEntrada.value || 0) > 0 ? "confirmado" : "pendente",
         atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -338,7 +341,6 @@ async function init() {
     await carregarMonitores();
     await carregarAgendamentos();
 
-    // suporte para calendário ?date=YYYY-MM-DD
     const params = new URLSearchParams(location.search);
     if (params.get("date")) {
         filtroData.value = params.get("date");
@@ -348,7 +350,7 @@ async function init() {
 
 document.addEventListener("DOMContentLoaded", init);
 
-// permitir uso externo
+// EXPORTAR
 window.agendamentosModule = {
     reload: carregarAgendamentos,
     novo: abrirModalNovo
