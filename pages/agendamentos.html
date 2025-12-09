@@ -2,24 +2,21 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Agendamentos – Divertilândia</title>
+  <title>Agendamentos</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <!-- CSS global -->
+  <!-- CSS Global -->
   <link rel="stylesheet" href="/dashboard-Divertilandia/css/dashboard.css">
 </head>
 
 <body>
 
-<!-- botão mobile -->
+<!-- Botão Mobile -->
 <button class="btn-hamburger" onclick="document.querySelector('.sidebar')?.classList.toggle('active')">☰</button>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="logo">
-    <img src="/dashboard-Divertilandia/img/logo.png" class="logo-img" alt="Logo">
-  </div>
-
+  <div class="logo"><img src="/dashboard-Divertilandia/img/logo.png" class="logo-img" alt="Logo"></div>
   <nav>
     <ul>
       <li onclick="nav('dashboard')">📊 Dashboard</li>
@@ -35,48 +32,31 @@
   </nav>
 </aside>
 
-<!-- CONTEÚDO PRINCIPAL -->
+<!-- CONTEÚDO -->
 <main class="content">
 
   <header class="topbar">
     <h1>Agendamentos</h1>
-
     <div class="top-right">
       <div id="user-info" class="user-info">Carregando...</div>
     </div>
   </header>
 
-  <!-- Cabeçalho + botão novo -->
+  <!-- TÍTULO + BOTÃO -->
   <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
     <h2>Lista de Agendamentos</h2>
-    <button class="btn" id="btnNovoAg" style="font-size:16px; padding:12px 25px;">
-      + Novo Agendamento
-    </button>
+    <button class="btn" id="btnNovoAg" style="font-size:16px; padding:12px 25px;">+ Novo Agendamento</button>
   </div>
 
-  <!-- Filtros -->
+  <!-- FILTROS -->
   <div class="panel">
     <h2>Filtros</h2>
 
-    <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-end;">
-
-      <div>
-        <label>Data</label>
-        <input type="date" id="filtroData">
-      </div>
-
-      <div>
-        <label>Cliente</label>
-        <input type="text" id="filtroCliente" placeholder="Nome do cliente">
-      </div>
-
-      <div>
-        <label>Telefone</label>
-        <input type="text" id="filtroTelefone" placeholder="(00) 00000-0000">
-      </div>
-
-      <div>
-        <label>Status</label>
+    <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-end;">
+      <div><label>Data</label><input type="date" id="filtroData"></div>
+      <div><label>Cliente</label><input type="text" id="filtroCliente" placeholder="Nome do cliente"></div>
+      <div><label>Telefone</label><input type="text" id="filtroTelefone" placeholder="(00) 00000-0000"></div>
+      <div><label>Status</label>
         <select id="filtroStatus">
           <option value="">Todos</option>
           <option value="pendente">Pendente</option>
@@ -85,14 +65,12 @@
           <option value="cancelado">Cancelado</option>
         </select>
       </div>
-
       <button class="btn" id="btnFiltrar" style="height:48px;">Filtrar</button>
-
     </div>
   </div>
 
-  <!-- LISTAGEM -->
-  <div class="panel">
+  <!-- LISTA DE AGENDAMENTOS -->
+  <div class="panel" id="painelTabela" style="display:none;">
     <table class="table">
       <thead>
         <tr>
@@ -110,22 +88,103 @@
 
 </main>
 
-<!-- Firebase compat scripts -->
+<!-- MODAL — NOVO / EDITAR -->
+<div id="modalAgendamento" class="modal">
+  <div class="modal-content" style="max-width:850px;">
+
+    <h2 id="modalTitulo">Novo Agendamento</h2>
+
+    <input type="hidden" id="ag-id">
+
+    <!-- GRID DE CAMPOS -->
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:15px;">
+
+      <div>
+        <label>Cliente</label>
+        <input type="text" id="ag-cliente" placeholder="Nome do cliente">
+      </div>
+
+      <div>
+        <label>Telefone</label>
+        <input type="text" id="ag-telefone" placeholder="(00) 00000-0000">
+      </div>
+
+      <div>
+        <label>Data do Evento</label>
+        <input type="date" id="ag-data">
+      </div>
+
+      <div>
+        <label>Horário de Início</label>
+        <input type="time" id="ag-hora-inicio">
+      </div>
+
+      <div>
+        <label>Horário de Término</label>
+        <input type="time" id="ag-hora-fim">
+      </div>
+
+      <div>
+        <label>Pacote / Item</label>
+        <select id="ag-item">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Preço</label>
+        <input type="number" id="ag-preco" placeholder="R$ 0,00">
+      </div>
+
+      <div>
+        <label>Desconto</label>
+        <input type="number" id="ag-desconto" placeholder="R$ 0,00">
+      </div>
+
+      <div>
+        <label>Entrada</label>
+        <input type="number" id="ag-entrada" placeholder="R$ 0,00">
+      </div>
+
+      <div>
+        <label>Valor Final</label>
+        <input type="number" id="ag-valor-final" placeholder="R$ 0,00">
+      </div>
+
+    </div>
+
+    <!-- MONITORES -->
+    <div style="margin-top:20px;">
+      <label>Monitores</label>
+      <div id="ag-monitores" style="display:flex; flex-wrap:wrap; gap:15px;">
+        <!-- Checkboxes são carregados pelo JS -->
+      </div>
+    </div>
+
+    <div style="margin-top:25px; display:flex; justify-content:flex-end; gap:15px;">
+      <button class="btn btn-dark" id="btnCancelar">Cancelar</button>
+      <button class="btn" id="btnSalvarAg">Salvar</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
-<!-- Config Firebase -->
 <script src="/dashboard-Divertilandia/firebase-config.js"></script>
 
 <!-- SweetAlert -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- JS principal -->
+<!-- NAV -->
 <script src="/dashboard-Divertilandia/js/nav.js"></script>
+
+<!-- JS PRINCIPAL DO MÓDULO -->
 <script src="/dashboard-Divertilandia/js/agendamentos.js"></script>
 
 </body>
-</html>
 </html>
