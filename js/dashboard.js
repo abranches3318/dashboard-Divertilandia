@@ -1,5 +1,5 @@
 // ===========================
-// NAVEGAÇÃO MULTIPÁGINAS (CORRIGIDA PARA GITHUB PAGES)
+// NAVEGAÇÃO MULTIPÁGINAS (GITHUB PAGES CORRIGIDO)
 // ===========================
 function nav(page) {
   const base = "/dashboard-Divertilandia/";
@@ -15,14 +15,8 @@ function nav(page) {
     notificacoes: base + "pages/notificacoes.html"
   };
 
+  // redireciona para página ou para dashboard caso não exista
   window.location.href = pages[page] || pages.dashboard;
-}
-
-  if (page === "dashboard") {
-    window.location.href = "dashboard.html";
-  } else {
-    window.location.href = pages[page];
-  }
 }
 
 // ===========================
@@ -30,7 +24,7 @@ function nav(page) {
 // ===========================
 function logout() {
   auth.signOut().then(() => {
-    window.location.href = "index.html";
+    window.location.href = "/dashboard-Divertilandia/index.html";
   });
 }
 
@@ -40,32 +34,34 @@ function logout() {
 auth.onAuthStateChanged(user => {
   if (!user) return;
 
-  document.getElementById("user-info").textContent =
-    user.displayName || user.email;
+  const info = document.getElementById("user-info");
+  if (info) {
+    info.textContent = user.displayName || user.email;
+  }
 });
 
 // ===========================
 // CONTADORES DO DASHBOARD
 // ===========================
 async function carregarResumo() {
-  // ---------------- AGENDAMENTOS HOJE ----------------
   const hoje = new Date();
-  hoje.setHours(0,0,0,0);
+  const hojeStr = hoje.toISOString().substring(0, 10);
 
+  // AGENDAMENTOS HOJE
   const snapAg = await db.collection("agendamentos")
-    .where("data", "==", hoje.toISOString().substring(0, 10))
+    .where("data", "==", hojeStr)
     .get();
 
   document.getElementById("ag-hoje").textContent = snapAg.size;
 
-  // ---------------- TAREFAS ----------------
+  // TAREFAS PENDENTES
   const snapT = await db.collection("tarefas")
     .where("status", "==", "pendente")
     .get();
 
   document.getElementById("tarefas-pendentes").textContent = snapT.size;
 
-  // ---------------- CONVERSAS ----------------
+  // CONVERSAS ATIVAS
   const snapC = await db.collection("conversas")
     .where("status", "==", "ativo")
     .get();
@@ -73,6 +69,4 @@ async function carregarResumo() {
   document.getElementById("conversas-ativas").textContent = snapC.size;
 }
 
-window.addEventListener("DOMContentLoaded", () => {
-  carregarResumo();
-});
+window.addEventListener("DOMContentLoaded", carregarResumo);
