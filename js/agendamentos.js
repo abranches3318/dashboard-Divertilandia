@@ -1,16 +1,19 @@
 // ==============================================
-// agendamentos.js — versão corrigida
-// Somente problemas ajustados: tabela oculta, item/pacote,
-// carregamento de itens, select funcionando, modal habilitado.
+// agendamentos.js — versão final com comprovantes,
+// observação, restante a pagar, máscara moeda, tabela oculta
 // ==============================================
 
 const AG_BASE = "/dashboard-Divertilandia/";
 
-// firebase compat (já carregado no HTML)
+// firebase compat (deve estar carregado via <script> no HTML)
 const db = window.db || (firebase && firebase.firestore ? firebase.firestore() : null);
 const auth = window.auth || (firebase && firebase.auth ? firebase.auth() : null);
+const storage = window.storage || (firebase && firebase.storage ? firebase.storage() : null);
 
-// DOM
+if (!db) console.error("agendamentos.js: Firestore (db) não encontrado. Verifique firebase-config.js");
+if (!storage) console.warn("agendamentos.js: Firebase Storage não encontrado. Upload de comprovantes ficará desabilitado.");
+
+// ---------- DOM ----------
 const painelTabela = document.getElementById("painelTabela");
 const listaEl = document.getElementById("listaAgendamentos");
 
@@ -25,6 +28,7 @@ const filtroStatus = document.getElementById("filtroStatus");
 const modal = document.getElementById("modalAgendamento");
 const modalTitulo = document.getElementById("modalTitulo");
 
+// modal fields
 const inputId = document.getElementById("ag-id");
 const inputCliente = document.getElementById("ag-cliente");
 const inputTelefone = document.getElementById("ag-telefone");
@@ -44,13 +48,19 @@ const inputPreco = document.getElementById("ag-preco");
 const inputDesconto = document.getElementById("ag-desconto");
 const inputEntrada = document.getElementById("ag-entrada");
 const inputValorFinal = document.getElementById("ag-valor-final");
+const inputRestante = document.getElementById("ag-restante"); // novo
+
+const inputObservacao = document.getElementById("ag-observacao"); // novo
+
+const inputComprovantes = document.getElementById("ag-comprovantes"); // novo file input
+const listaComprovantesEl = document.getElementById("lista-comprovantes"); // novo preview container
 
 const containerMonitores = document.getElementById("ag-monitores");
 
 const btnCancelar = document.getElementById("btnCancelar");
 const btnSalvar = document.getElementById("btnSalvarAg");
 
-// estado local
+// ---------- STATE ----------
 const STATE = {
   todos: [],
   pacotes: [],
@@ -58,7 +68,7 @@ const STATE = {
   monitores: []
 };
 
-// ------------- HELPERS -------------
+// ---------- HELPERS / FORMATAÇÃO ----------
 function parseDateField(v) {
   if (!v) return null;
   if (v.toDate) return v.toDate();
@@ -79,7 +89,6 @@ function calcularHoraFim(horaInicio) {
   return `${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
 }
 
-// telefone mask
 function maskTelefone(value) {
   const d = (value || "").replace(/\D/g, "").slice(0, 11);
   if (d.length <= 2) return "(" + d;
@@ -88,19 +97,15 @@ function maskTelefone(value) {
   return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
 }
 
-// currency helpers
+// currency parse/format
 function parseCurrencyToNumber(str) {
   if (str == null) return 0;
   if (typeof str === "number") return Number(str);
   let s = String(str).trim();
   s = s.replace(/R\$\s?/, "");
-  if (s.indexOf(",") > -1 && s.indexOf(".") > -1) {
-    s = s.replace(/\./g, "").replace(",", ".");
-  } else if (s.indexOf(",") > -1) {
-    s = s.replace(",", ".");
-  } else {
-    s = s.replace(/,/g, "");
-  }
+  if (s.indexOf(",") > -1 && s.indexOf(".") > -1) s = s.replace(/\./g, "").replace(",", ".");
+  else if (s.indexOf(",") > -1) s = s.replace(",", ".");
+  else s = s.replace(/,/g, "");
   s = s.replace(/[^\d.\-]/g, "");
   const n = Number(s);
   return isNaN(n) ? 0 : Math.max(0, n);
@@ -115,38 +120,38 @@ function safeNumFromInputEl(el) {
 }
 function setCurrencyInput(el, n) {
   if (!el) return;
-  if (!n) { el.value = ""; return; }
+  if (n === "" || n == null) { el.value = ""; return; }
   el.value = formatNumberToCurrencyString(Number(n));
 }
 
-// ------------------------------------------------------
-// ------------- RENDER TABELA (corrigido) --------------
-// ------------------------------------------------------
+// ---------- TABELA ----------
+// renderTabela: mostra painel apenas se lista tiver elementos.
+// se vazio: oculta painelTabela e mostra SweetAlert com opção criar novo.
 function renderTabela(lista) {
   if (!listaEl || !painelTabela) return;
-
   listaEl.innerHTML = "";
 
   if (!Array.isArray(lista) || lista.length === 0) {
-
-    painelTabela.classList.add("table-hidden");
-    painelTabela.classList.remove("table-visible");
-
-    Swal.fire({
-      title: "Nenhum agendamento encontrado",
-      text: "Deseja criar um novo agendamento?",
-      icon: "info",
-      showCancelButton: true,
-      confirmButtonText: "Criar novo",
-      cancelButtonText: "Fechar"
-    }).then(res => {
-      if (res.isConfirmed) abrirModalNovo();
-    });
+    painelTabela.style.display = "none";
+    // don't spam alert if user just opened page and no action yet:
+    // only show alert when user actively pressed Filtrar (we track a flag)
+    if (window._ag_show_no_results_alert) {
+      window._ag_show_no_results_alert = false; // reset
+      Swal.fire({
+        title: "Nenhum agendamento encontrado",
+        text: "Deseja criar um novo agendamento?",
+        icon: "info",
+        showCancelButton: true,
+        confirmButtonText: "Criar novo",
+        cancelButtonText: "Fechar"
+      }).then(res => {
+        if (res.isConfirmed) abrirModalNovo(filtroData && filtroData.value ? new Date(filtroData.value + "T00:00:00") : null);
+      });
+    }
     return;
   }
 
-  painelTabela.classList.remove("table-hidden");
-  painelTabela.classList.add("table-visible");
+  painelTabela.style.display = "block";
 
   lista.forEach(a => {
     const dt = parseDateField(a.data);
@@ -178,17 +183,16 @@ function renderTabela(lista) {
     listaEl.appendChild(tr);
   });
 
+  // attach handlers
   listaEl.querySelectorAll(".btn-editar").forEach(btn => {
-    btn.addEventListener("click", onEditarClick);
+    btn.onclick = onEditarClick;
   });
   listaEl.querySelectorAll(".btn-excluir").forEach(btn => {
-    btn.addEventListener("click", onExcluirClick);
+    btn.onclick = onExcluirClick;
   });
 }
 
-// ------------------------------------------------------
-// ------------- EVENTOS TABELA -------------------------
-// ------------------------------------------------------
+// ---------- TABELA BUTTONS ----------
 function onEditarClick(e) {
   const id = e.currentTarget.getAttribute("data-id");
   if (!id) return;
@@ -200,16 +204,14 @@ function onExcluirClick(e) {
   cancelarAgendamento(id);
 }
 
-// ------------------------------------------------------
-// ------------- CANCELAR --------------------------------
-// ------------------------------------------------------
+// ---------- CANCELAR ----------
 async function cancelarAgendamento(id) {
   const res = await Swal.fire({
     title: "Cancelar agendamento?",
-    text: "O agendamento será marcado como cancelado.",
+    text: "O agendamento será marcado como cancelado (não será removido).",
     icon: "warning",
     showCancelButton: true,
-    confirmButtonText: "Sim"
+    confirmButtonText: "Sim, cancelar"
   });
   if (!res.isConfirmed) return;
   try {
@@ -217,22 +219,18 @@ async function cancelarAgendamento(id) {
     Swal.fire("OK", "Agendamento cancelado.", "success");
     await carregarAgendamentos();
   } catch (err) {
-    console.error(err);
+    console.error("cancelarAgendamento:", err);
     Swal.fire("Erro", "Não foi possível cancelar.", "error");
   }
 }
 
-// ------------------------------------------------------
-// ------------- CARREGAR PACOTES + ITENS ---------------
-// TOTALMENTE CORRIGIDO: itens agora carregam corretamente
-// ------------------------------------------------------
+// ---------- CARREGAR PACOTES + ITENS ----------
 async function carregarPacotesEItens() {
   if (!db || !selectItem) return;
   selectItem.innerHTML = `<option value="">Selecionar...</option>`;
 
   try {
-    const pacSnap = await db.collection("pacotes").get();
-    const itSnap = await db.collection("item").get(); // coleção correta
+    const [pacSnap, itSnap] = await Promise.all([db.collection("pacotes").get(), db.collection("item").get()]);
 
     STATE.pacotes = pacSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     STATE.itens = itSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -241,8 +239,8 @@ async function carregarPacotesEItens() {
     STATE.pacotes.forEach(p => {
       const opt = document.createElement("option");
       opt.value = `pacote_${p.id}`;
-      opt.dataset.valor = Number(p.preço ?? p.preco ?? 0);
-      opt.textContent = `${p.nome || p.id} (pacote) - R$ ${(opt.dataset.valor).toString().replace(".", ",")}`;
+      opt.dataset.valor = Number(p.preço ?? p.preco ?? p.valor ?? 0);
+      opt.textContent = `${p.nome || p.title || p.id} (pacote) - R$ ${Number(p.preço ?? p.preco ?? p.valor ?? 0).toFixed(2)}`;
       selectItem.appendChild(opt);
     });
 
@@ -250,21 +248,16 @@ async function carregarPacotesEItens() {
     STATE.itens.forEach(i => {
       const opt = document.createElement("option");
       opt.value = `item_${i.id}`;
-      opt.dataset.valor = Number(i.preço ?? i.preco ?? 0);
-      opt.textContent = `${i.nome || i.id} (item) - R$ ${(opt.dataset.valor).toString().replace(".", ",")}`;
+      opt.dataset.valor = Number(i.preço ?? i.preco ?? i.valor ?? 0);
+      opt.textContent = `${i.nome || i.title || i.id} (item) - R$ ${Number(i.preço ?? i.preco ?? i.valor ?? 0).toFixed(2)}`;
       selectItem.appendChild(opt);
     });
-
-    selectItem.removeAttribute("disabled");
-
   } catch (err) {
     console.error("carregarPacotesEItens:", err);
   }
 }
 
-// ------------------------------------------------------
-// ------------- CARREGAR MONITORES ---------------------
-// ------------------------------------------------------
+// ---------- CARREGAR MONITORES ----------
 async function carregarMonitores() {
   if (!db || !containerMonitores) return;
   try {
@@ -275,7 +268,7 @@ async function carregarMonitores() {
     STATE.monitores.forEach(m => {
       const div = document.createElement("div");
       div.className = "chk-line";
-      div.innerHTML = `<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" class="chk-monitor" value="${m.id}"> ${m.nome || m.id}</label>`;
+      div.innerHTML = `<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" class="chk-monitor" value="${m.id}"> ${m.nome || m.name || m.id}</label>`;
       containerMonitores.appendChild(div);
     });
   } catch (err) {
@@ -283,33 +276,32 @@ async function carregarMonitores() {
   }
 }
 
-// ------------------------------------------------------
-// ------------- CARREGAR AGENDAMENTOS ------------------
-// ------------------------------------------------------
+// ---------- CARREGAR AGENDAMENTOS ----------
 async function carregarAgendamentos() {
   if (!db) return;
   try {
+    // start hidden (page load)
     if (painelTabela) painelTabela.style.display = "none";
 
     const snap = await db.collection("agendamentos")
-      .orderBy("data")
-      .orderBy("horario")
+      .orderBy("data", "asc")
+      .orderBy("horario", "asc")
       .get();
 
     STATE.todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    renderTabela(STATE.todos);
+    // do not show table automatically; user must filter OR if there are items and no filters yet we may show:
+    // Here we keep table hidden until filter or until init decides to render
+    renderTabela([]); // keep hidden on initial load
   } catch (err) {
     console.error("carregarAgendamentos:", err);
     Swal.fire("Erro", "Não foi possível carregar agendamentos.", "error");
   }
 }
 
-// ------------------------------------------------------
-// ------------- FILTRAR -------------------------------
-// ------------------------------------------------------
+// ---------- FILTRAR ----------
+window._ag_show_no_results_alert = false; // flag: when user triggers filter, allow alert
 function aplicarFiltros() {
-  let lista = [...STATE.todos];
+  let lista = Array.isArray(STATE.todos) ? [...STATE.todos] : [];
 
   if (filtroData && filtroData.value) {
     lista = lista.filter(a => toYMD(parseDateField(a.data)) === filtroData.value);
@@ -326,53 +318,45 @@ function aplicarFiltros() {
     lista = lista.filter(a => (a.status || "") === filtroStatus.value);
   }
 
+  // mark that user intentionally filtered (so we show SweetAlert when empty)
+  window._ag_show_no_results_alert = true;
   renderTabela(lista);
 }
 
-// ------------------------------------------------------
-// ------------- MODAL (NOVO) ---------------------------
-// ------------------------------------------------------
-async function abrirModalNovo(dateInitial = null) {
+// ---------- MODAL: abrir / editar / fechar ----------
+function abrirModalNovo(dateInitial = null) {
   if (modalTitulo) modalTitulo.textContent = "Novo Agendamento";
   if (inputId) inputId.value = "";
 
-  // garantir carregamento dos itens/pacotes ANTES
-  await carregarPacotesEItens();
-
+  // clear fields
   [
     inputCliente, inputTelefone, inputEndRua, inputEndNumero, inputEndBairro, inputEndCidade,
-    inputData, inputHoraInicio, inputHoraFim, inputPreco, inputDesconto, inputEntrada, inputValorFinal
+    inputData, inputHoraInicio, inputHoraFim, selectItem, inputPreco, inputDesconto, inputEntrada, inputValorFinal, inputRestante, inputObservacao
   ].forEach(el => { if (el) el.value = ""; });
 
-  if (selectItem) selectItem.value = "";
+  // clear comprovantes input + preview
+  if (inputComprovantes) inputComprovantes.value = "";
+  if (listaComprovantesEl) listaComprovantesEl.innerHTML = "";
 
   if (dateInitial && inputData) inputData.value = toYMD(dateInitial);
 
-  document.querySelectorAll(".chk-monitor").forEach(cb => cb.checked = false);
+  // uncheck monitors
+  document.querySelectorAll(".chk-monitor").forEach(cb => { cb.checked = false; });
 
   if (modal) modal.classList.add("active");
   if (inputCliente) inputCliente.focus();
 }
 
-// ------------------------------------------------------
-// ------------- MODAL (EDITAR) -------------------------
-// ------------------------------------------------------
 async function abrirModalEditar(id) {
   if (!id || !db) return;
-
-  await carregarPacotesEItens();
-
   try {
     const doc = await db.collection("agendamentos").doc(id).get();
-    if (!doc.exists) {
-      Swal.fire("Erro", "Agendamento não encontrado", "error");
-      return;
-    }
+    if (!doc.exists) { Swal.fire("Erro", "Agendamento não encontrado", "error"); return; }
     const a = doc.data();
 
     if (modalTitulo) modalTitulo.textContent = "Editar Agendamento";
-    if (inputId) inputId.value = id;
 
+    if (inputId) inputId.value = id;
     if (inputCliente) inputCliente.value = a.cliente || "";
     if (inputTelefone) inputTelefone.value = a.telefone || "";
     if (inputEndRua) inputEndRua.value = a.endereco?.rua || "";
@@ -384,23 +368,44 @@ async function abrirModalEditar(id) {
     if (inputHoraInicio) inputHoraInicio.value = a.horario || "";
     if (inputHoraFim) inputHoraFim.value = a.hora_fim || "";
 
+    // select item/pacote: try matching by saved pacoteId (we save front-value like 'pacote_xxx' or 'item_xxx')
     if (selectItem) {
       if (a.pacoteId && selectItem.querySelector(`option[value="${a.pacoteId}"]`)) {
         selectItem.value = a.pacoteId;
+      } else {
+        // try to match by name included in option's text
+        Array.from(selectItem.options).forEach(opt => {
+          if ((a.pacoteNome && opt.textContent.includes(a.pacoteNome)) || (a.itemNome && opt.textContent.includes(a.itemNome))) {
+            selectItem.value = opt.value;
+          }
+        });
       }
     }
 
-    setCurrencyInput(inputPreco, a.preco || 0);
-    setCurrencyInput(inputDesconto, a.desconto || 0);
-    setCurrencyInput(inputEntrada, a.entrada || 0);
-    setCurrencyInput(inputValorFinal, a.valor_final || a.preco || 0);
+    if (inputPreco) setCurrencyInput(inputPreco, a.preco ?? a.preço ?? 0);
+    if (inputDesconto) setCurrencyInput(inputDesconto, a.desconto ?? 0);
+    if (inputEntrada) setCurrencyInput(inputEntrada, a.entrada ?? 0);
+    if (inputValorFinal) setCurrencyInput(inputValorFinal, a.valor_final ?? a.preco ?? 0);
 
+    // restante
+    if (inputRestante) {
+      const vf = Number(a.valor_final ?? a.preco ?? 0);
+      const entradaN = Number(a.entrada ?? 0);
+      const restante = Math.max(0, vf - entradaN);
+      setCurrencyInput(inputRestante, restante);
+    }
+
+    if (inputObservacao) inputObservacao.value = a.observacao || "";
+
+    // mark monitors
     document.querySelectorAll(".chk-monitor").forEach(cb => {
       cb.checked = Array.isArray(a.monitores) ? a.monitores.includes(cb.value) : false;
     });
 
-    if (modal) modal.classList.add("active");
+    // render comprovantes (array of {url, name, path})
+    renderComprovantesPreview(a.comprovantes || [], id);
 
+    if (modal) modal.classList.add("active");
   } catch (err) {
     console.error("abrirModalEditar:", err);
     Swal.fire("Erro", "Não foi possível abrir edição.", "error");
@@ -411,44 +416,168 @@ function fecharModal() {
   if (modal) modal.classList.remove("active");
 }
 
-// ------------------------------------------------------
-// ------------- SALVAR ---------------------------------
-// ------------------------------------------------------
+// ---------- COMPROVANTES UI & UPLOAD ----------
+// render preview list (array of objects {url,name,path})
+function renderComprovantesPreview(comprovantesArray, agId) {
+  if (!listaComprovantesEl) return;
+  listaComprovantesEl.innerHTML = "";
+  if (!Array.isArray(comprovantesArray) || comprovantesArray.length === 0) return;
+
+  comprovantesArray.forEach((c, idx) => {
+    const wrapper = document.createElement("div");
+    wrapper.style.width = "80px";
+    wrapper.style.display = "flex";
+    wrapper.style.flexDirection = "column";
+    wrapper.style.alignItems = "center";
+
+    const img = document.createElement("img");
+    img.src = c.url;
+    img.style.width = "80px";
+    img.style.height = "80px";
+    img.style.objectFit = "cover";
+    img.style.borderRadius = "6px";
+    img.style.cursor = "pointer";
+    img.title = c.name || "";
+    img.onclick = () => window.open(c.url, "_blank");
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "Excluir";
+    delBtn.className = "btn btn-danger";
+    delBtn.style.marginTop = "6px";
+    delBtn.style.fontSize = "12px";
+    delBtn.onclick = async () => {
+      // delete from storage and update doc
+      if (!agId) {
+        // if not saved yet, just remove from preview (we store temp list in inputComprovantes.dataset.tmp)
+        // Not expected here, but handle gracefully
+        wrapper.remove();
+        return;
+      }
+      const confirm = await Swal.fire({
+        title: "Excluir comprovante?",
+        text: "Isso removerá o arquivo do armazenamento.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Excluir"
+      });
+      if (!confirm.isConfirmed) return;
+      try {
+        // remove from storage path if path present
+        if (c.path && storage) {
+          await storage.ref(c.path).delete();
+        }
+        // remove from Firestore array
+        const docRef = db.collection("agendamentos").doc(agId);
+        // read current doc, filter comprovantes by url != c.url
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) return;
+        const data = docSnap.data();
+        const novo = (data.comprovantes || []).filter(x => x.url !== c.url);
+        await docRef.update({ comprovantes: novo });
+        // refresh preview
+        renderComprovantesPreview(novo, agId);
+        Swal.fire("OK", "Comprovante removido.", "success");
+      } catch (err) {
+        console.error("Erro excluir comprovante:", err);
+        Swal.fire("Erro", "Não foi possível excluir o comprovante.", "error");
+      }
+    };
+
+    wrapper.appendChild(img);
+    wrapper.appendChild(delBtn);
+    listaComprovantesEl.appendChild(wrapper);
+  });
+}
+
+// upload list of File objects; returns array of {url,name,path}
+async function uploadComprovantesFiles(files, agId) {
+  if (!storage) throw new Error("Storage não disponível");
+  if (!files || files.length === 0) return [];
+
+  const uploaded = [];
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    // build path: comprovantes/{agId}/{timestamp}_{filename}
+    const safeName = f.name.replace(/[^a-z0-9.\-_]/gi, "_");
+    const path = `comprovantes/${agId}/${Date.now()}_${safeName}`;
+    const ref = storage.ref(path);
+    try {
+      await ref.put(f);
+      const url = await ref.getDownloadURL();
+      uploaded.push({ url, name: f.name, path });
+    } catch (err) {
+      console.error("uploadComprovantesFiles error:", err);
+      // continue with others
+    }
+  }
+  return uploaded;
+}
+
+// when user selects files in inputComprovantes, show local preview (before upload)
+if (inputComprovantes) {
+  inputComprovantes.addEventListener("change", (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!listaComprovantesEl) return;
+    // preview local files using object URLs
+    listaComprovantesEl.innerHTML = "";
+    files.forEach(f => {
+      const wrapper = document.createElement("div");
+      wrapper.style.width = "80px";
+      wrapper.style.display = "flex";
+      wrapper.style.flexDirection = "column";
+      wrapper.style.alignItems = "center";
+
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(f);
+      img.style.width = "80px";
+      img.style.height = "80px";
+      img.style.objectFit = "cover";
+      img.style.borderRadius = "6px";
+      img.title = f.name;
+      img.onclick = () => window.open(img.src, "_blank");
+
+      wrapper.appendChild(img);
+      listaComprovantesEl.appendChild(wrapper);
+    });
+  });
+}
+
+// ---------- SALVAR AGENDAMENTO (inclui upload de comprovantes) ----------
 async function salvarAgendamento() {
   if (!db) return;
-
   const id = inputId ? inputId.value || null : null;
   const cliente = inputCliente ? inputCliente.value.trim() : "";
   const telefone = inputTelefone ? inputTelefone.value.trim() : "";
-
   const rua = inputEndRua ? inputEndRua.value.trim() : "";
   const numero = inputEndNumero ? inputEndNumero.value.trim() : "";
   const bairro = inputEndBairro ? inputEndBairro.value.trim() : "";
   const cidade = inputEndCidade ? inputEndCidade.value.trim() : "";
-
   const dataVal = inputData ? inputData.value : "";
   const horaInicio = inputHoraInicio ? inputHoraInicio.value : "";
-  const horaFim = inputHoraFim ? (inputHoraFim.value || calcularHoraFim(horaInicio)) : calcularHoraFim(horaInicio);
+  const horaFim = inputHoraFim ? inputHoraFim.value || calcularHoraFim(horaInicio) : calcularHoraFim(horaInicio);
 
+  // pacote/item selection
   const selected = selectItem ? selectItem.selectedOptions[0] : null;
   const pacoteId = selectItem ? selectItem.value || null : null;
   const pacoteNome = selected ? selected.textContent : "";
 
+  // monetary values robust parse
   const preco = safeNumFromInputEl(inputPreco);
   const desconto = Math.max(0, safeNumFromInputEl(inputDesconto));
   const entrada = Math.max(0, safeNumFromInputEl(inputEntrada));
-
   let valorFinal = safeNumFromInputEl(inputValorFinal);
-  if (!valorFinal || valorFinal === 0) {
-    valorFinal = Math.max(0, preco - desconto);
-  }
 
+  // rule: valor_final = preco - desconto if not provided
+  if (!valorFinal || valorFinal === 0) valorFinal = Math.max(0, preco - desconto);
+  if (valorFinal < 0) valorFinal = 0;
+
+  // validations
   if (!cliente) { Swal.fire("Atenção", "Preencha o nome do cliente.", "warning"); return; }
   if (!dataVal) { Swal.fire("Atenção", "Escolha a data do evento.", "warning"); return; }
   if (!horaInicio) { Swal.fire("Atenção", "Informe o horário de início.", "warning"); return; }
 
-  const monitores = Array.from(document.querySelectorAll(".chk-monitor:checked"))
-    .map(cb => cb.value);
+  const monitores = Array.from(document.querySelectorAll(".chk-monitor:checked")).map(cb => cb.value);
+  const observacao = inputObservacao ? inputObservacao.value : "";
 
   const dados = {
     cliente,
@@ -464,19 +593,45 @@ async function salvarAgendamento() {
     entrada,
     valor_final: valorFinal,
     monitores,
+    observacao,
     status: entrada > 0 ? "confirmado" : "pendente",
     atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
   };
 
   try {
+    // handle create vs update with comprovantes upload accordingly
+    let docRef;
     if (id) {
-      await db.collection("agendamentos").doc(id).set(dados, { merge: true });
-      Swal.fire("OK", "Agendamento atualizado.", "success");
+      docRef = db.collection("agendamentos").doc(id);
+      await docRef.set(dados, { merge: true });
     } else {
-      dados.criado_em = firebase.firestore.FieldValue.serverTimestamp();
-      await db.collection("agendamentos").add(dados);
-      Swal.fire("OK", "Agendamento criado.", "success");
+      docRef = await db.collection("agendamentos").add(dados);
     }
+
+    const docId = id || docRef.id;
+
+    // If there are files selected, upload them and append to doc.comprovantes
+    if (inputComprovantes && inputComprovantes.files && inputComprovantes.files.length > 0 && storage) {
+      Swal.fire({ title: "Enviando comprovantes...", didOpen: () => Swal.showLoading() });
+      const files = Array.from(inputComprovantes.files);
+      const uploaded = await uploadComprovantesFiles(files, docId); // returns array of {url,name,path}
+      // append to doc
+      if (uploaded.length > 0) {
+        const snap = await db.collection("agendamentos").doc(docId).get();
+        const prev = snap.exists ? (snap.data().comprovantes || []) : [];
+        const novo = prev.concat(uploaded);
+        await db.collection("agendamentos").doc(docId).update({ comprovantes: novo });
+      }
+      Swal.close();
+    }
+
+    // final update: ensure comprovantes, observacao included
+    await db.collection("agendamentos").doc(docId).update({
+      observacao,
+      atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    Swal.fire("OK", id ? "Agendamento atualizado." : "Agendamento criado.", "success");
     fecharModal();
     await carregarAgendamentos();
   } catch (err) {
@@ -485,52 +640,44 @@ async function salvarAgendamento() {
   }
 }
 
-// ------------------------------------------------------
-// ------------- EVENTOS UI -----------------------------
-// ------------------------------------------------------
+// ---------- EVENTOS UI / MÁSCARAS ----------
+// safe attach
 function safeAttach(el, ev, fn) { if (el) el.addEventListener(ev, fn); }
 
 safeAttach(btnFiltrar, "click", aplicarFiltros);
-safeAttach(btnNovoAg, "click", () =>
-  abrirModalNovo(filtroData && filtroData.value ? new Date(filtroData.value + "T00:00:00") : null)
-);
+safeAttach(btnNovoAg, "click", () => abrirModalNovo(filtroData && filtroData.value ? new Date(filtroData.value + "T00:00:00") : null));
 safeAttach(btnCancelar, "click", fecharModal);
 safeAttach(btnSalvar, "click", salvarAgendamento);
 
-safeAttach(inputHoraInicio, "change", e => {
-  if (inputHoraFim) inputHoraFim.value = calcularHoraFim(e.target.value);
-});
-safeAttach(inputHoraInicio, "blur", e => {
-  if (inputHoraFim && !inputHoraFim.value) inputHoraFim.value = calcularHoraFim(e.target.value);
-});
+safeAttach(inputHoraInicio, "change", e => { if (inputHoraFim) inputHoraFim.value = calcularHoraFim(e.target.value); });
+safeAttach(inputHoraInicio, "blur", e => { if (inputHoraFim && !inputHoraFim.value) inputHoraFim.value = calcularHoraFim(e.target.value); });
 
-// mask telefone
+// telefone mask
 if (inputTelefone) {
-  inputTelefone.addEventListener("input", e => {
-    e.target.value = maskTelefone(e.target.value);
-  });
+  inputTelefone.addEventListener("input", e => { e.target.value = maskTelefone(e.target.value); });
 }
 
-// corrigido — selectItem funcionando 100%
+// when select item changes -> set preco and recalc valor final and restante
 if (selectItem) {
   selectItem.addEventListener("change", e => {
     const opt = e.target.selectedOptions[0];
     if (!opt) { if (inputPreco) inputPreco.value = ""; return; }
-
-    const p = Number(opt.dataset.valor) || 0;
-
+    const raw = opt.dataset.valor;
+    let p = Number(raw);
+    if (isNaN(p)) p = parseCurrencyToNumber(raw);
     setCurrencyInput(inputPreco, p);
-
+    // recalc valor final and restante
     const desconto = safeNumFromInputEl(inputDesconto);
-    setCurrencyInput(
-      inputValorFinal,
-      Math.max(0, p - desconto)
-    );
+    const vf = Math.max(0, p - desconto);
+    setCurrencyInput(inputValorFinal, vf);
+    const entradaNow = safeNumFromInputEl(inputEntrada);
+    setCurrencyInput(inputRestante, Math.max(0, vf - entradaNow));
   });
 }
 
-// money fields
-[inputPreco, inputDesconto, inputEntrada, inputValorFinal].forEach(el => {
+// money fields behaviour: focus=>plain number, input=>allow numeric characters, blur=>format to R$
+const moneyFields = [inputPreco, inputDesconto, inputEntrada, inputValorFinal];
+moneyFields.forEach(el => {
   if (!el) return;
   el.addEventListener("focus", () => {
     const n = parseCurrencyToNumber(el.value);
@@ -539,66 +686,70 @@ if (selectItem) {
   el.addEventListener("input", () => {
     const cleaned = String(el.value || "").replace(/[^\d,.\-]/g, "");
     el.value = cleaned;
-
+    // live recompute final and restante
     const precoNow = safeNumFromInputEl(inputPreco);
     const descontoNow = safeNumFromInputEl(inputDesconto);
     const computed = Math.max(0, precoNow - descontoNow);
-
-    if (el === inputPreco || el === inputDesconto) {
+    if (inputValorFinal && (el === inputPreco || el === inputDesconto)) {
       inputValorFinal.value = computed.toFixed(2);
     }
+    // restante
+    const entradaNow = safeNumFromInputEl(inputEntrada);
+    const vfNow = safeNumFromInputEl(inputValorFinal) || computed;
+    if (inputRestante) setCurrencyInput(inputRestante, Math.max(0, vfNow - entradaNow));
   });
   el.addEventListener("blur", () => {
     const n = parseCurrencyToNumber(el.value);
-    el.value = n === 0 ? "" : formatNumberToCurrencyString(n);
-
+    if (n === 0) el.value = "";
+    else el.value = formatNumberToCurrencyString(n);
+    // keep valor_final consistent when blur
     const precoNow = safeNumFromInputEl(inputPreco);
     const descontoNow = safeNumFromInputEl(inputDesconto);
     const vf = Math.max(0, precoNow - descontoNow);
     const currentVF = safeNumFromInputEl(inputValorFinal);
-
     if (!currentVF || Math.abs(currentVF - vf) < 0.001) {
       setCurrencyInput(inputValorFinal, vf);
     } else {
       setCurrencyInput(inputValorFinal, currentVF);
     }
+    // restante update
+    const entradaNow = safeNumFromInputEl(inputEntrada);
+    if (inputRestante) setCurrencyInput(inputRestante, Math.max(0, safeNumFromInputEl(inputValorFinal) - entradaNow));
   });
 });
 
-// ------------------------------------------------------
-// ------------- INIT ----------------------------------
-// ------------------------------------------------------
+// ensure entrada blur formatted
+if (inputEntrada) inputEntrada.addEventListener("blur", () => {
+  const n = parseCurrencyToNumber(inputEntrada.value);
+  if (n === 0) inputEntrada.value = ""; else inputEntrada.value = formatNumberToCurrencyString(n);
+  // update restante
+  const vfNow = safeNumFromInputEl(inputValorFinal);
+  setCurrencyInput(inputRestante, Math.max(0, vfNow - safeNumFromInputEl(inputEntrada)));
+});
+
+// ---------- INIT ----------
 async function init() {
   try {
-    if (painelTabela) painelTabela.style.display = "none";
-
-    // CORREÇÃO IMPORTANTE:
-    // retirar "carregarPacotes()" (não existe) e chamar corretamente:
+    if (painelTabela) painelTabela.style.display = "none"; // start hidden
     await carregarPacotesEItens();
     await carregarMonitores();
+    await carregarAgendamentos();
 
-    const snap = await db.collection("agendamentos")
-      .orderBy("data", "asc")
-      .orderBy("horario", "asc")
-      .get();
-
-    STATE.todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    painelTabela.classList.add("table-hidden");
-
-    const p = new URLSearchParams(location.search);
-    const d = p.get("date");
-    if (d && filtroData) {
-      filtroData.value = d;
+    // if ?date=YYYY-MM-DD passed, prefill and run filter
+    const params = new URLSearchParams(location.search);
+    const dateParam = params.get("date");
+    if (dateParam && filtroData) {
+      filtroData.value = dateParam;
       aplicarFiltros();
     }
-
   } catch (err) {
     console.error("init agendamentos:", err);
   }
 }
 document.addEventListener("DOMContentLoaded", init);
 
+// ---------- EXPORT API ----------
 window.agendamentosModule = window.agendamentosModule || {};
 window.agendamentosModule.reload = carregarAgendamentos;
 window.agendamentosModule.openModalNew = abrirModalNovo;
+
