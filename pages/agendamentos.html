@@ -12,17 +12,27 @@
   .table-visible { display: block !important; }
 </style>
 
-  <style>
+<style>
+  .table-hidden { display: none !important; }
+  .table-visible { display: block !important; }
+
   .comp-wrapper {
     position: relative;
+    display: inline-block;   /* essencial */
     width: 80px;
+    height: 80px;
+    margin: 5px;
   }
+
   .comp-wrapper img {
     width: 80px;
     height: 80px;
     object-fit: cover;
     border-radius: 6px;
+    border: 1px solid #555;
+    cursor: pointer;         /* essencial */
   }
+
   .comp-del-btn {
     position: absolute;
     top: -6px;
@@ -37,6 +47,7 @@
     font-size: 12px;
     line-height: 20px;
     text-align: center;
+    z-index: 9999;           /* essencial */
   }
 </style>
 </head>
