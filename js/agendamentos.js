@@ -421,70 +421,50 @@ function fecharModal() {
 function renderComprovantesPreview(comprovantesArray, agId) {
   if (!listaComprovantesEl) return;
   listaComprovantesEl.innerHTML = "";
+
   if (!Array.isArray(comprovantesArray) || comprovantesArray.length === 0) return;
 
-  comprovantesArray.forEach((c, idx) => {
+  comprovantesArray.forEach((c) => {
     const wrapper = document.createElement("div");
-    wrapper.style.width = "80px";
-    wrapper.style.display = "flex";
-    wrapper.style.flexDirection = "column";
-    wrapper.style.alignItems = "center";
+    wrapper.className = "comp-wrapper";
 
     const img = document.createElement("img");
     img.src = c.url;
-    img.style.width = "80px";
-    img.style.height = "80px";
-    img.style.objectFit = "cover";
-    img.style.borderRadius = "6px";
-    img.style.cursor = "pointer";
-    img.title = c.name || "";
     img.onclick = () => window.open(c.url, "_blank");
 
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "Excluir";
-    delBtn.className = "btn btn-danger";
-    delBtn.style.marginTop = "6px";
-    delBtn.style.fontSize = "12px";
-    delBtn.onclick = async () => {
-      // delete from storage and update doc
-      if (!agId) {
-        // if not saved yet, just remove from preview (we store temp list in inputComprovantes.dataset.tmp)
-        // Not expected here, but handle gracefully
-        wrapper.remove();
-        return;
-      }
+    const del = document.createElement("button");
+    del.className = "comp-del-btn";
+    del.textContent = "X";
+
+    del.onclick = async () => {
       const confirm = await Swal.fire({
         title: "Excluir comprovante?",
-        text: "Isso removerá o arquivo do armazenamento.",
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Excluir"
       });
       if (!confirm.isConfirmed) return;
+
       try {
-        // remove from storage path if path present
         if (c.path && storage) {
           await storage.ref(c.path).delete();
         }
-        // remove from Firestore array
-        const docRef = db.collection("agendamentos").doc(agId);
-        // read current doc, filter comprovantes by url != c.url
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) return;
-        const data = docSnap.data();
-        const novo = (data.comprovantes || []).filter(x => x.url !== c.url);
-        await docRef.update({ comprovantes: novo });
-        // refresh preview
+        const ref = db.collection("agendamentos").doc(agId);
+        const snap = await ref.get();
+        if (!snap.exists) return;
+        const atual = snap.data().comprovantes || [];
+        const novo = atual.filter(x => x.url !== c.url);
+        await ref.update({ comprovantes: novo });
+
         renderComprovantesPreview(novo, agId);
-        Swal.fire("OK", "Comprovante removido.", "success");
       } catch (err) {
-        console.error("Erro excluir comprovante:", err);
-        Swal.fire("Erro", "Não foi possível excluir o comprovante.", "error");
+        console.error("Erro excluindo comprovante", err);
+        Swal.fire("Erro", "Não foi possível excluir.", "error");
       }
     };
 
     wrapper.appendChild(img);
-    wrapper.appendChild(delBtn);
+    wrapper.appendChild(del);
     listaComprovantesEl.appendChild(wrapper);
   });
 }
