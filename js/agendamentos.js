@@ -115,18 +115,24 @@ function renderTabela(lista) {
             0
         );
 
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${dataStr} ${a.horario || ""}</td>
-            <td>${cliente}</td>
-            <td>${telefone}</td>
-            <td>${status}</td>
-            <td>${formatMoney(valor)}</td>
-            <td>
-                <button class="btn btn-dark btn-editar" data-id="${a.id}">Editar</button>
-                <button class="btn btn-danger btn-excluir" data-id="${a.id}">Cancelar</button>
-            </td>
-        `;
+        const enderecoStr =
+    (a.endereco?.rua || "") +
+    (a.endereco?.numero ? ", Nº " + a.endereco.numero : "") +
+    (a.endereco?.bairro ? " — " + a.endereco.bairro : "") +
+    (a.endereco?.cidade ? " / " + a.endereco.cidade : "");
+
+tr.innerHTML = `
+    <td>${dataStr} ${a.horario || ""}</td>
+    <td>${cliente}</td>
+    <td>${telefone}</td>
+    <td>${enderecoStr || "---"}</td>
+    <td>${status}</td>
+    <td>${formatMoney(valor)}</td>
+    <td>
+        <button class="btn btn-dark btn-editar" data-id="${a.id}">Editar</button>
+        <button class="btn btn-danger btn-excluir" data-id="${a.id}">Cancelar</button>
+    </td>
+`;
         listaEl.appendChild(tr);
     });
 
@@ -243,10 +249,11 @@ function aplicarFiltros() {
 function abrirModalNovo() {
     modalTitulo.textContent = "Novo Agendamento";
 
-    [
-        inputId, inputCliente, inputTelefone, inputData,
-        inputHoraInicio, inputHoraFim, inputPreco,
-        inputDesconto, inputEntrada, inputValorFinal
+   [
+    inputId, inputCliente, inputTelefone, inputData,
+    inputHoraInicio, inputHoraFim, inputPreco,
+    inputDesconto, inputEntrada, inputValorFinal,
+    inputEndRua, inputEndNumero, inputEndBairro, inputEndCidade
     ].forEach(el => el.value = "");
 
     selectItem.value = "";
@@ -270,6 +277,10 @@ async function abrirModalEditar(id) {
     inputId.value = id;
     inputCliente.value = a.cliente || "";
     inputTelefone.value = a.telefone || "";
+    inputEndRua.value = a.endereco?.rua || "";
+    inputEndNumero.value = a.endereco?.numero || "";
+    inputEndBairro.value = a.endereco?.bairro || "";
+    inputEndCidade.value = a.endereco?.cidade || "";
     inputData.value = toYMD(parseDate(a.data));
     inputHoraInicio.value = a.horario || "";
     inputHoraFim.value = a.hora_fim || "";
@@ -302,6 +313,12 @@ async function salvarAgendamento() {
         data: inputData.value,
         horario: inputHoraInicio.value,
         hora_fim: inputHoraFim.value || calcularHoraFim(inputHoraInicio.value),
+        endereco: {
+        rua: inputEndRua.value.trim(),
+        numero: inputEndNumero.value.trim(),
+        bairro: inputEndBairro.value.trim(),
+        cidade: inputEndCidade.value.trim()
+    },
         pacoteId: selectItem.value || null,
         preco: Number(inputPreco.value || 0),
         desconto: Number(inputDesconto.value || 0),
