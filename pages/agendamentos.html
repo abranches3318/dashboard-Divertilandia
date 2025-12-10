@@ -10,45 +10,52 @@
   <style>
   .table-hidden { display: none !important; }
   .table-visible { display: block !important; }
-</style>
 
-<style>
-  .table-hidden { display: none !important; }
-  .table-visible { display: block !important; }
+#lista-comprovantes { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-start; }
 
-  .comp-wrapper {
-    position: relative;
-    display: inline-block;   /* essencial */
-    width: 80px;
-    height: 80px;
-    margin: 5px;
-  }
+.comp-wrapper {
+  position: relative !important;
+  display: inline-block !important;
+  width: 80px !important;
+  height: 80px !important;
+  margin: 6px !important;
+  overflow: visible !important;
+  vertical-align: top;
+}
 
-  .comp-wrapper img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid #555;
-    cursor: pointer;         /* essencial */
-  }
+.comp-wrapper img {
+  width: 80px !important;
+  height: 80px !important;
+  object-fit: cover !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  cursor: pointer !important;
+  display: block;
+}
 
-  .comp-del-btn {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #d00;
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    font-size: 12px;
-    line-height: 20px;
-    text-align: center;
-    z-index: 9999;           /* essencial */
-  }
+/* Botão X */
+.comp-del-btn {
+  position: absolute !important;
+  top: -8px !important;
+  right: -8px !important;
+  background: #d00 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 22px !important;
+  height: 22px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  line-height: 22px !important;
+  text-align: center !important;
+  z-index: 99999 !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
+  padding: 0 !important;
+}
+
+/* Garantia extra: se o modal ou container usar z-index alto */
+.modal, .modal-content { z-index: 2000; }
+.comp-del-btn { z-index: 3000 !important; }
 </style>
 </head>
 
