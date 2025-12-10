@@ -96,77 +96,86 @@
 
     <h2 id="modalTitulo">Novo Agendamento</h2>
 
-    <div class="modal-body" style="display:grid; grid-template-columns:1fr 1fr; gap:25px;">
+    <div class="modal-body" 
+     style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:25px;">
 
-      <!-- Coluna 1 -->
-      <div>
-        <label>Cliente</label>
-        <input id="ag-cliente" type="text">
+  <!-- COLUNA 1 -->
+  <div>
+    <label>Cliente</label>
+    <input id="ag-cliente" type="text">
 
-        <label>Telefone</label>
-        <input id="ag-telefone" type="text">
+    <label>Telefone</label>
+    <input id="ag-telefone" type="text">
 
-        <label>Data</label>
-        <input id="ag-data" type="date">
+    <label>Data</label>
+    <input id="ag-data" type="date">
 
-        <label>Hora Início</label>
-        <input id="ag-hora-inicio" type="time">
+    <label>Hora Início</label>
+    <input id="ag-hora-inicio" type="time">
 
-        <label>Hora Fim</label>
-        <input id="ag-hora-fim" type="time">
+    <label>Hora Fim</label>
+    <input id="ag-hora-fim" type="time">
 
-        <label>Pacote / Item</label>
-        <select id="ag-item"></select>
+    <label>Pacote / Item</label>
+    <select id="ag-item"></select>
 
-        <label>Preço</label>
-        <input id="ag-preco" type="text">
+    <label>Preço</label>
+    <input id="ag-preco" type="text">
 
-        <label>Desconto</label>
-        <input id="ag-desconto" type="text">
+    <label>Desconto</label>
+    <input id="ag-desconto" type="text">
 
-        <label>Entrada</label>
-        <input id="ag-entrada" type="text">
+    <label>Entrada</label>
+    <input id="ag-entrada" type="text">
+  </div>
 
-        <label>Valor Final</label>
-        <input id="ag-valor-final" type="text">
-      </div>
+  <!-- COLUNA 2 -->
+  <div>
 
-      <label>Restante a pagar</label>
-        <input id="ag-restante" type="text" disabled>
+    <label>Valor Final</label>
+    <input id="ag-valor-final" type="text">
 
-        <label>Comprovantes (fotos)</label>
-         <input id="ag-comprovantes" type="file" accept="image/*" multiple>
+    <label>Restante a pagar</label>
+    <input id="ag-restante" type="text" disabled>
 
-        <div id="lista-comprovantes" 
-        style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
-        </div>
+    <label>Comprovantes (fotos)</label>
+    <input id="ag-comprovantes" type="file" accept="image/*" multiple>
 
-      <!-- Coluna 2 -->
-      <div>
-
-        <label>Rua</label>
-        <input id="ag-end-rua" type="text">
-
-        <label>Número</label>
-        <input id="ag-end-numero" type="text">
-
-        <label>Bairro</label>
-        <input id="ag-end-bairro" type="text">
-
-        <label>Cidade</label>
-        <input id="ag-end-cidade" type="text">
-
-        <label style="margin-top:15px;">Monitores</label>
-        <div id="ag-monitores" style="border:1px solid #ccc; padding:10px; border-radius:5px; max-height:220px; overflow-y:auto;">
-          <!-- checkboxes gerados via JS -->
-        </div>
-
-        <label style="margin-top:20px;">Observação</label>
-        <textarea id="ag-observacao" 
-          style="width:100%; height:160px; resize:none;"></textarea>
-      </div>
-
+    <div id="lista-comprovantes" 
+         style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+      <!-- miniaturas renderizadas via JS -->
     </div>
+
+    <label style="margin-top:25px;">Observação</label>
+    <textarea id="ag-observacao" 
+              style="width:100%; min-height:160px;"></textarea>
+  </div>
+
+  <!-- COLUNA 3 -->
+  <div>
+
+    <label>Rua</label>
+    <input id="ag-end-rua" type="text">
+
+    <label>Número</label>
+    <input id="ag-end-numero" type="text">
+
+    <label>Bairro</label>
+    <input id="ag-end-bairro" type="text">
+
+    <label>Cidade</label>
+    <input id="ag-end-cidade" type="text">
+
+    <label style="margin-top:15px;">Monitores</label>
+    <div id="ag-monitores"
+         style="border:1px solid #ccc; padding:10px; border-radius:5px;
+                max-height:250px; overflow-y:auto;">
+      <!-- checkboxes via JS -->
+       </div>
+
+      </div>
+
+     </div>
 
     <input type="hidden" id="ag-id">
 
