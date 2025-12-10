@@ -127,15 +127,18 @@ function setCurrencyInput(el, n) {
   el.value = formatNumberToCurrencyString(Number(n));
 }
 
-// ------------- RENDER TABELA -------------
+// ------------- RENDER TABELA (NOVO) -------------
 function renderTabela(lista) {
-  // clear
-  if (!listaEl) return;
+  if (!listaEl || !painelTabela) return;
+
+  // limpar conteúdo
   listaEl.innerHTML = "";
 
-  // if empty -> hide painel and show SweetAlert offer to create new
+  // SEM RESULTADOS
   if (!Array.isArray(lista) || lista.length === 0) {
-    if (painelTabela) painelTabela.style.display = "none";
+
+    painelTabela.classList.add("table-hidden");
+    painelTabela.classList.remove("table-visible");
 
     Swal.fire({
       title: "Nenhum agendamento encontrado",
@@ -147,24 +150,28 @@ function renderTabela(lista) {
     }).then(res => {
       if (res.isConfirmed) abrirModalNovo();
     });
+
     return;
   }
 
-  // show painel
-  if (painelTabela) painelTabela.style.display = "block";
+  // COM RESULTADOS
+  painelTabela.classList.remove("table-hidden");
+  painelTabela.classList.add("table-visible");
 
-  // populate rows
+  // preencher linhas
   lista.forEach(a => {
+
     const dt = parseDateField(a.data);
     const dateStr = dt ? dt.toLocaleDateString() : (a.data || "---");
 
-    const enderecoStr = (a.endereco?.rua || "") +
+    const enderecoStr =
+      (a.endereco?.rua || "") +
       (a.endereco?.numero ? ", Nº " + a.endereco.numero : "") +
       (a.endereco?.bairro ? " — " + a.endereco.bairro : "") +
       (a.endereco?.cidade ? " / " + a.endereco.cidade : "");
 
     const itemName = a.pacoteNome || a.itemNome || a.pacoteId || "---";
-    const valor = (typeof a.valor_final !== "undefined") ? Number(a.valor_final) : (Number(a.preco || 0));
+    const valor = Number(a.valor_final ?? a.preco ?? 0);
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -183,23 +190,23 @@ function renderTabela(lista) {
     listaEl.appendChild(tr);
   });
 
-  // attach events
-  listaEl.querySelectorAll(".btn-editar").forEach(b => {
-    b.removeEventListener("click", onEditarClick);
-    b.addEventListener("click", onEditarClick);
+  // instalar eventos nas linhas (somente se existirem)
+  listaEl.querySelectorAll(".btn-editar").forEach(btn => {
+    btn.addEventListener("click", onEditarClick);
   });
-  listaEl.querySelectorAll(".btn-excluir").forEach(b => {
-    b.removeEventListener("click", onExcluirClick);
-    b.addEventListener("click", onExcluirClick);
+
+  listaEl.querySelectorAll(".btn-excluir").forEach(btn => {
+    btn.addEventListener("click", onExcluirClick);
   });
 }
 
-// event handlers for table buttons
+// ------------- EVENTOS DOS BOTÕES DA TABELA -------------
 function onEditarClick(e) {
   const id = e.currentTarget.getAttribute("data-id");
   if (!id) return;
   abrirModalEditar(id);
 }
+
 function onExcluirClick(e) {
   const id = e.currentTarget.getAttribute("data-id");
   if (!id) return;
