@@ -565,9 +565,19 @@ if (inputEntrada) inputEntrada.addEventListener("blur", () => { const n = parseC
 async function init() {
   try {
     if (painelTabela) painelTabela.style.display = "none"; // start hidden
-    await carregarPacotesEItens();
-    await carregarMonitores();
-    await carregarAgendamentos();
+   await carregarPacotes();
+   await carregarMonitores();
+
+// carrega os dados mas NÃO mostra a tabela
+const snap = await db.collection("agendamentos")
+    .orderBy("data", "asc")
+    .orderBy("horario", "asc")
+    .get();
+
+STATE.todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+// tabela permanece oculta até o usuário filtrar
+if (painelTabela) painelTabela.classList.add("table-hidden");
 
     // if ?date=YYYY-MM-DD passed
     const p = new URLSearchParams(location.search);
