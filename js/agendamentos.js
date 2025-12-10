@@ -126,82 +126,76 @@ function updateMoneyInputDisplay(el) {
 // =====================
 // RENDER TABELA
 // =====================
+
 function renderTabela(lista) {
-  if (!listaEl) return;
-  listaEl.innerHTML = "";
+    listaEl.innerHTML = "";
 
-  if (!Array.isArray(lista) || lista.length === 0) {
-    if (painelTabela) painelTabela.style.display = "none";
-    return;
-  }
-  if (painelTabela) painelTabela.style.display = "block";
+    // =============================
+    // SE NÃO HÁ AGENDAMENTOS
+    // =============================
+    if (!lista.length) {
+        painelTabela.style.display = "none";
 
-  lista.forEach(a => {
-    // criar elemento TR corretamente (corrige erro tr is not defined)
-    const tr = document.createElement("tr");
+        Swal.fire({
+            title: "Nenhum agendamento encontrado",
+            text: "Deseja criar um novo agendamento?",
+            icon: "info",
+            showCancelButton: true,
+            confirmButtonText: "Criar novo",
+            cancelButtonText: "Fechar"
+        }).then(res => {
+            if (res.isConfirmed) {
+                abrirModalNovo();
+            }
+        });
 
-    const dt = parseDateField(a.data);
-    const dataStr = dt ? dt.toLocaleDateString() : (a.data || "");
-
-    const cliente = a.cliente || a.cliente_nome || "---";
-    const telefone = a.telefone || a.tel || "---";
-    const status = a.status || "pendente";
-
-    // endereço (obj)
-    const enderecoObj = a.endereco || {};
-    const enderecoStr = (
-      (enderecoObj.rua || "") +
-      (enderecoObj.numero ? ", Nº " + enderecoObj.numero : "") +
-      (enderecoObj.bairro ? " — " + enderecoObj.bairro : "") +
-      (enderecoObj.cidade ? " / " + enderecoObj.cidade : "")
-    ) || "---";
-
-    // pacote/item nome e valor (se houver)
-    let pacoteLabel = "";
-    let pacoteValor = 0;
-    if (a.pacoteId) {
-      // tentar achar no cache
-      const p = STATE.pacotes.find(x => x.id === a.pacoteId);
-      if (p) {
-        pacoteLabel = p.nome || p.title || a.pacoteId;
-        pacoteValor = Number(p.valor || 0);
-      } else {
-        pacoteLabel = a.pacoteNome || a.pacoteId;
-        pacoteValor = Number(a.preco || a.valor || 0);
-      }
-    } else {
-      pacoteLabel = a.item_nome || a.item || "";
-      pacoteValor = Number(a.preco || a.valor || 0);
+        return;
     }
 
-    // valor final (preferência: valor_final > preco > entrada)
-    const valorNum = Number(a.valor_final ?? a.preco ?? a.valor ?? a.entrada ?? 0);
+    // =============================
+    // EXISTEM AGENDAMENTOS
+    // =============================
+    painelTabela.style.display = "block";
 
-    tr.innerHTML = `
-      <td>${dataStr} ${a.horario || ""}</td>
-      <td>${cliente}</td>
-      <td>${telefone}</td>
-      <td>${enderecoStr}</td>
-      <td>${pacoteLabel || "---"}</td>
-      <td>${formatMoney(valorNum)}</td>
-      <td>${status}</td>
-      <td>
-        <button class="btn btn-dark btn-editar" data-id="${a.id}">Editar</button>
-        <button class="btn btn-danger btn-excluir" data-id="${a.id}">Cancelar</button>
-      </td>
-    `;
-    listaEl.appendChild(tr);
-  });
+    lista.forEach(a => {
+        const dt = parseDate(a.data);
+        const dataStr = dt ? dt.toLocaleDateString() : a.data;
 
-  // ligar eventos
-  listaEl.querySelectorAll(".btn-editar").forEach(b => {
-    b.removeEventListener("click", onEditarClick);
-    b.addEventListener("click", onEditarClick);
-  });
-  listaEl.querySelectorAll(".btn-excluir").forEach(b => {
-    b.removeEventListener("click", onExcluirClick);
-    b.addEventListener("click", onExcluirClick);
-  });
+        const cliente = a.cliente || "---";
+        const telefone = a.telefone || "---";
+        const status = a.status || "pendente";
+        const valor = Number(a.valor_final ?? a.preco ?? a.valor ?? a.entrada ?? 0);
+
+        const enderecoStr =
+            (a.endereco?.rua || "") +
+            (a.endereco?.numero ? ", Nº " + a.endereco.numero : "") +
+            (a.endereco?.bairro ? " — " + a.endereco.bairro : "") +
+            (a.endereco?.cidade ? " / " + a.endereco.cidade : "");
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${dataStr} ${a.horario || ""}</td>
+            <td>${cliente}</td>
+            <td>${telefone}</td>
+            <td>${enderecoStr || "---"}</td>
+            <td>${status}</td>
+            <td>${formatMoney(valor)}</td>
+            <td>
+                <button class="btn btn-dark btn-editar" data-id="${a.id}">Editar</button>
+                <button class="btn btn-danger btn-excluir" data-id="${a.id}">Cancelar</button>
+            </td>
+        `;
+
+        listaEl.appendChild(tr);
+    });
+
+    // BOTÕES
+    document.querySelectorAll(".btn-editar")
+        .forEach(btn => btn.addEventListener("click", e => abrirModalEditar(e.target.dataset.id)));
+
+    document.querySelectorAll(".btn-excluir")
+        .forEach(btn => btn.addEventListener("click", e => cancelarAgendamento(e.target.dataset.id)));
 }
 
 // event handlers helpers
