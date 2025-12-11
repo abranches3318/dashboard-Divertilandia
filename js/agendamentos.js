@@ -1,6 +1,9 @@
 // ==============================================
-// agendamentos.js — versão final com comprovantes,
-// observação, restante a pagar, máscara moeda, tabela oculta
+// agendamentos.js — versão atualizada
+// - integra regras_negocio.js para checagem de estoque
+// - corrige upload de comprovantes e preview no editar
+// - bloqueia edição de agendamentos cancelados (apenas exclusão)
+// - adiciona botão Detalhes (modal read-only) e geração de comprovante PNG
 // ==============================================
 
 const AG_BASE = "/dashboard-Divertilandia/";
@@ -124,6 +127,30 @@ function setCurrencyInput(el, n) {
   el.value = formatNumberToCurrencyString(Number(n));
 }
 
+// map item display names (DB) into canonical keys used by regras_negocio (if needed)
+/*
+  You provided the exact DB names:
+  "Pula pula 3,05m"
+  "Pula pula 2,44m"
+  "Toboguinho"
+  "Tobogã"
+  "Piscina de bolinhas"
+  "Algodão doce"
+  "Pipoca"
+*/
+function normalizeItemName(displayName) {
+  if (!displayName) return displayName;
+  const s = String(displayName).trim().toLowerCase();
+  if (s.includes("3,05") || s.includes("3.05") || s.includes("3,05m") || s.includes("3.05m") || s.includes("3,05")) return "pula_pula_grande";
+  if (s.includes("2,44") || s.includes("2.44") || s.includes("2,44m") || s.includes("2.44m")) return "pula_pula_pequeno";
+  if (s.includes("toboguinho")) return "toboguinho";
+  if (s.includes("tobog")) return "toboga";
+  if (s.includes("piscina")) return "piscina_bolinhas";
+  if (s.includes("algod")) return "algodao_doce";
+  if (s.includes("pipoc")) return "pipoca";
+  return s.replace(/\s+/g, "_"); // fallback
+}
+
 // ---------- TABELA ----------
 // renderTabela: mostra painel apenas se lista tiver elementos.
 // se vazio: oculta painelTabela e mostra SweetAlert com opção criar novo.
@@ -133,8 +160,6 @@ function renderTabela(lista) {
 
   if (!Array.isArray(lista) || lista.length === 0) {
     painelTabela.style.display = "none";
-    // don't spam alert if user just opened page and no action yet:
-    // only show alert when user actively pressed Filtrar (we track a flag)
     if (window._ag_show_no_results_alert) {
       window._ag_show_no_results_alert = false; // reset
       Swal.fire({
@@ -156,6 +181,7 @@ function renderTabela(lista) {
   lista.forEach(a => {
     const dt = parseDateField(a.data);
     const dateStr = dt ? dt.toLocaleDateString() : (a.data || "---");
+    const horarioStr = a.horario || "";
 
     const enderecoStr =
       (a.endereco?.rua || "") +
@@ -166,16 +192,24 @@ function renderTabela(lista) {
     const itemName = a.pacoteNome || a.itemNome || a.pacoteId || "---";
     const valor = Number(a.valor_final ?? a.preco ?? 0);
 
+    // status color
+    let statusLabel = (a.status || "pendente").toLowerCase();
+    let statusColor = "#f0ad4e"; // default yellow (pendente)
+    if (statusLabel === "confirmado") statusColor = "#4cafef";
+    if (statusLabel === "cancelado") statusColor = "#d9534f";
+    if (statusLabel === "concluido" || statusLabel === "finalizado" || statusLabel === "concluído") statusColor = "#4caf50";
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${dateStr} ${a.horario || ""}</td>
+      <td>${dateStr}<br><small style="opacity:0.85">${horarioStr}</small></td>
       <td>${a.cliente || "---"}</td>
       <td>${a.telefone || "---"}</td>
       <td>${enderecoStr || "---"}</td>
       <td>${itemName}</td>
-      <td>${a.status || "pendente"}</td>
+      <td><span class="status-chip" data-status="${statusLabel}" style="padding:6px 8px;border-radius:8px;background:${statusColor};color:#fff;display:inline-block">${statusLabel.charAt(0).toUpperCase()+statusLabel.slice(1)}</span></td>
       <td>${formatNumberToCurrencyString(valor)}</td>
       <td>
+        <button class="btn btn-dark btn-detalhes" data-id="${a.id}">Detalhes</button>
         <button class="btn btn-dark btn-editar" data-id="${a.id}">Editar</button>
         <button class="btn btn-danger btn-excluir" data-id="${a.id}">Cancelar</button>
       </td>
@@ -184,27 +218,65 @@ function renderTabela(lista) {
   });
 
   // attach handlers
-  listaEl.querySelectorAll(".btn-editar").forEach(btn => {
-    btn.onclick = onEditarClick;
-  });
-  listaEl.querySelectorAll(".btn-excluir").forEach(btn => {
-    btn.onclick = onExcluirClick;
-  });
+  listaEl.querySelectorAll(".btn-detalhes").forEach(btn => { btn.onclick = onDetalhesClick; });
+  listaEl.querySelectorAll(".btn-editar").forEach(btn => { btn.onclick = onEditarClick; });
+  listaEl.querySelectorAll(".btn-excluir").forEach(btn => { btn.onclick = onExcluirClick; });
 }
 
 // ---------- TABELA BUTTONS ----------
+function onDetalhesClick(e) {
+  const id = e.currentTarget.getAttribute("data-id");
+  if (!id) return;
+  abrirModalDetalhes(id);
+}
+
 function onEditarClick(e) {
   const id = e.currentTarget.getAttribute("data-id");
   if (!id) return;
+
+  // find in state
+  const found = STATE.todos.find(x => x.id === id);
+  if (found && String(found.status || "").toLowerCase() === "cancelado") {
+    // blocked: show options (delete only)
+    Swal.fire({
+      title: "Agendamento cancelado",
+      text: "Este agendamento está cancelado. Deseja excluir permanentemente?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Excluir permanentemente",
+      cancelButtonText: "Fechar"
+    }).then(res => {
+      if (res.isConfirmed) excluirAgendamentoDefinitivo(id);
+    });
+    return;
+  }
+
   abrirModalEditar(id);
 }
+
 function onExcluirClick(e) {
   const id = e.currentTarget.getAttribute("data-id");
   if (!id) return;
+  // check status
+  const found = STATE.todos.find(x => x.id === id);
+  if (found && String(found.status || "").toLowerCase() === "cancelado") {
+    // Offer permanent delete
+    Swal.fire({
+      title: "Excluir permanentemente?",
+      text: "Deseja excluir completamente este agendamento cancelado?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Excluir"
+    }).then(async res => {
+      if (res.isConfirmed) await excluirAgendamentoDefinitivo(id);
+    });
+    return;
+  }
+  // otherwise, just mark as canceled
   cancelarAgendamento(id);
 }
 
-// ---------- CANCELAR ----------
+// ---------- CANCELAR (marca como cancelado) ----------
 async function cancelarAgendamento(id) {
   const res = await Swal.fire({
     title: "Cancelar agendamento?",
@@ -215,12 +287,42 @@ async function cancelarAgendamento(id) {
   });
   if (!res.isConfirmed) return;
   try {
-    await db.collection("agendamentos").doc(id).update({ status: "cancelado" });
+    await db.collection("agendamentos").doc(id).update({ status: "cancelado", atualizado_em: firebase.firestore.FieldValue.serverTimestamp() });
     Swal.fire("OK", "Agendamento cancelado.", "success");
     await carregarAgendamentos();
   } catch (err) {
     console.error("cancelarAgendamento:", err);
     Swal.fire("Erro", "Não foi possível cancelar.", "error");
+  }
+}
+
+// excluir permanentemente (apenas para cancelados)
+async function excluirAgendamentoDefinitivo(id) {
+  try {
+    // optionally: delete storage folder comprovantes/*
+    // attempt to remove comprovantes from storage
+    const snap = await db.collection("agendamentos").doc(id).get();
+    if (snap.exists) {
+      const data = snap.data();
+      const comps = data.comprovantes || [];
+      if (Array.isArray(comps) && comps.length > 0 && storage) {
+        for (const c of comps) {
+          try {
+            if (c.path) await storage.ref(c.path).delete();
+          } catch (err) {
+            // non-fatal
+            console.warn("Erro deletando arquivo storage:", c.path, err);
+          }
+        }
+      }
+    }
+    // delete document
+    await db.collection("agendamentos").doc(id).delete();
+    Swal.fire("OK", "Agendamento excluído.", "success");
+    await carregarAgendamentos();
+  } catch (err) {
+    console.error("excluirAgendamentoDefinitivo:", err);
+    Swal.fire("Erro", "Não foi possível excluir.", "error");
   }
 }
 
@@ -280,7 +382,6 @@ async function carregarMonitores() {
 async function carregarAgendamentos() {
   if (!db) return;
   try {
-    // start hidden (page load)
     if (painelTabela) painelTabela.style.display = "none";
 
     const snap = await db.collection("agendamentos")
@@ -289,9 +390,7 @@ async function carregarAgendamentos() {
       .get();
 
     STATE.todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // do not show table automatically; user must filter OR if there are items and no filters yet we may show:
-    // Here we keep table hidden until filter or until init decides to render
-    renderTabela([]); // keep hidden on initial load
+    renderTabela([]); // keep hidden until filter/action
   } catch (err) {
     console.error("carregarAgendamentos:", err);
     Swal.fire("Erro", "Não foi possível carregar agendamentos.", "error");
@@ -299,7 +398,7 @@ async function carregarAgendamentos() {
 }
 
 // ---------- FILTRAR ----------
-window._ag_show_no_results_alert = false; // flag: when user triggers filter, allow alert
+window._ag_show_no_results_alert = false;
 function aplicarFiltros() {
   let lista = Array.isArray(STATE.todos) ? [...STATE.todos] : [];
 
@@ -318,7 +417,6 @@ function aplicarFiltros() {
     lista = lista.filter(a => (a.status || "") === filtroStatus.value);
   }
 
-  // mark that user intentionally filtered (so we show SweetAlert when empty)
   window._ag_show_no_results_alert = true;
   renderTabela(lista);
 }
@@ -328,19 +426,16 @@ function abrirModalNovo(dateInitial = null) {
   if (modalTitulo) modalTitulo.textContent = "Novo Agendamento";
   if (inputId) inputId.value = "";
 
-  // clear fields
   [
     inputCliente, inputTelefone, inputEndRua, inputEndNumero, inputEndBairro, inputEndCidade,
     inputData, inputHoraInicio, inputHoraFim, selectItem, inputPreco, inputDesconto, inputEntrada, inputValorFinal, inputRestante, inputObservacao
   ].forEach(el => { if (el) el.value = ""; });
 
-  // clear comprovantes input + preview
   if (inputComprovantes) inputComprovantes.value = "";
   if (listaComprovantesEl) listaComprovantesEl.innerHTML = "";
 
   if (dateInitial && inputData) inputData.value = toYMD(dateInitial);
 
-  // uncheck monitors
   document.querySelectorAll(".chk-monitor").forEach(cb => { cb.checked = false; });
 
   if (modal) modal.classList.add("active");
@@ -353,6 +448,12 @@ async function abrirModalEditar(id) {
     const doc = await db.collection("agendamentos").doc(id).get();
     if (!doc.exists) { Swal.fire("Erro", "Agendamento não encontrado", "error"); return; }
     const a = doc.data();
+
+    // Block editing if canceled (safety double-check)
+    if (String(a.status || "").toLowerCase() === "cancelado") {
+      Swal.fire("Bloqueado", "Agendamento cancelado. Edição não permitida.", "info");
+      return;
+    }
 
     if (modalTitulo) modalTitulo.textContent = "Editar Agendamento";
 
@@ -368,12 +469,10 @@ async function abrirModalEditar(id) {
     if (inputHoraInicio) inputHoraInicio.value = a.horario || "";
     if (inputHoraFim) inputHoraFim.value = a.hora_fim || "";
 
-    // select item/pacote: try matching by saved pacoteId (we save front-value like 'pacote_xxx' or 'item_xxx')
     if (selectItem) {
       if (a.pacoteId && selectItem.querySelector(`option[value="${a.pacoteId}"]`)) {
         selectItem.value = a.pacoteId;
       } else {
-        // try to match by name included in option's text
         Array.from(selectItem.options).forEach(opt => {
           if ((a.pacoteNome && opt.textContent.includes(a.pacoteNome)) || (a.itemNome && opt.textContent.includes(a.itemNome))) {
             selectItem.value = opt.value;
@@ -387,7 +486,6 @@ async function abrirModalEditar(id) {
     if (inputEntrada) setCurrencyInput(inputEntrada, a.entrada ?? 0);
     if (inputValorFinal) setCurrencyInput(inputValorFinal, a.valor_final ?? a.preco ?? 0);
 
-    // restante
     if (inputRestante) {
       const vf = Number(a.valor_final ?? a.preco ?? 0);
       const entradaN = Number(a.entrada ?? 0);
@@ -397,7 +495,6 @@ async function abrirModalEditar(id) {
 
     if (inputObservacao) inputObservacao.value = a.observacao || "";
 
-    // mark monitors
     document.querySelectorAll(".chk-monitor").forEach(cb => {
       cb.checked = Array.isArray(a.monitores) ? a.monitores.includes(cb.value) : false;
     });
@@ -416,6 +513,174 @@ function fecharModal() {
   if (modal) modal.classList.remove("active");
 }
 
+// ---------- DETALHES (modal read-only) ----------
+async function abrirModalDetalhes(id) {
+  if (!id || !db) return;
+  try {
+    const snap = await db.collection("agendamentos").doc(id).get();
+    if (!snap.exists) { Swal.fire("Erro", "Agendamento não encontrado", "error"); return; }
+    const b = snap.data();
+
+    // create modal HTML dynamically
+    const existing = document.getElementById("modalDetalhesAg");
+    if (existing) existing.remove();
+
+    const div = document.createElement("div");
+    div.id = "modalDetalhesAg";
+    div.className = "modal active";
+    div.innerHTML = `
+      <div class="modal-content" style="max-width:900px;">
+        <h2>Detalhes - ${b.cliente || ""}</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:12px;">
+          <div>
+            <p><b>Telefone:</b> ${b.telefone || "-"}</p>
+            <p><b>Data:</b> ${b.data || "-"}</p>
+            <p><b>Horário:</b> ${b.horario || "-"}</p>
+            <p><b>Endereço:</b> ${(b.endereco?.rua||"") + (b.endereco?.numero? " Nº " + b.endereco.numero:"") + (b.endereco?.bairro? " — "+b.endereco.bairro:"") + (b.endereco?.cidade? " / "+b.endereco.cidade:"")}</p>
+            <p><b>Item / Pacote:</b> ${b.pacoteNome || b.itemNome || "-"}</p>
+            <p><b>Valor final:</b> ${formatNumberToCurrencyString(Number(b.valor_final ?? b.preco ?? 0))}</p>
+            <p><b>Status:</b> ${b.status || "-"}</p>
+          </div>
+          <div>
+            <p><b>Observação:</b></p>
+            <div style="background:#0f0f0f;padding:10px;border-radius:8px;min-height:80px;">${(b.observacao||"").replace(/\n/g,"<br>")}</div>
+            <div style="margin-top:12px;"><b>Comprovantes:</b></div>
+            <div id="detalhes-comprovantes" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px; display:flex; justify-content:space-between;">
+          <div>
+            <button class="btn btn-dark" id="btnGerarComprovante">Comprovante de agendamento</button>
+          </div>
+          <div>
+            <button class="btn btn-dark" id="btnFecharDetalhes">Fechar</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(div);
+
+    // render comprovantes thumbnails
+    const detList = document.getElementById("detalhes-comprovantes");
+    detList.innerHTML = "";
+    (b.comprovantes || []).forEach(c => {
+      const w = document.createElement("div");
+      w.style.position = "relative";
+      w.style.width = "90px";
+      w.style.height = "90px";
+      w.style.overflow = "hidden";
+      w.style.borderRadius = "6px";
+      w.style.border = "1px solid rgba(255,255,255,0.06)";
+      const img = document.createElement("img");
+      img.src = c.url;
+      img.style.width = "100%";
+      img.style.height = "100%";
+      img.style.objectFit = "cover";
+      img.style.cursor = "pointer";
+      img.onclick = () => window.open(c.url, "_blank");
+      w.appendChild(img);
+      detList.appendChild(w);
+    });
+
+    document.getElementById("btnFecharDetalhes").onclick = () => { div.remove(); };
+    document.getElementById("btnGerarComprovante").onclick = async () => {
+      await gerarComprovantePNG(b);
+    };
+
+  } catch (err) {
+    console.error("abrirModalDetalhes:", err);
+    Swal.fire("Erro", "Não foi possível abrir detalhes.", "error");
+  }
+}
+
+// ---------- GERA COMPROVANTE PNG (simples) ----------
+async function gerarComprovantePNG(ag) {
+  try {
+    Swal.fire({ title: "Gerando comprovante...", didOpen: () => Swal.showLoading() });
+    // create canvas
+    const w = 1000, h = 600;
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+
+    // background
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0,0,w,h);
+
+    // header
+    ctx.fillStyle = "#222";
+    ctx.fillRect(0,0,w,120);
+    ctx.fillStyle = "#fff";
+    ctx.font = "28px Arial";
+    ctx.fillText("Comprovante de Agendamento", 24, 44);
+    ctx.font = "16px Arial";
+    ctx.fillText("Divertilândia", 24, 74);
+
+    // body text
+    ctx.fillStyle = "#000";
+    ctx.font = "18px Arial";
+    const leftX = 24;
+    let y = 150;
+    ctx.fillText(`Cliente: ${ag.cliente || "-"}`, leftX, y); y += 30;
+    ctx.fillText(`Telefone: ${ag.telefone || "-"}`, leftX, y); y += 30;
+    ctx.fillText(`Data: ${ag.data || "-"}`, leftX, y); y += 30;
+    ctx.fillText(`Horário: ${ag.horario || "-"}`, leftX, y); y += 30;
+    ctx.fillText(`Item / Pacote: ${ag.pacoteNome || ag.itemNome || "-"}`, leftX, y); y += 30;
+    ctx.fillText(`Valor final: ${formatNumberToCurrencyString(Number(ag.valor_final ?? ag.preco ?? 0))}`, leftX, y); y += 30;
+    ctx.fillText(`Observação: ${ag.observacao ? (ag.observacao.length > 120 ? ag.observacao.substring(0,120)+"..." : ag.observacao) : "-"}`, leftX, y); y += 30;
+
+    // try add first comprovante thumbnail if available
+    const comps = ag.comprovantes || [];
+    if (comps.length > 0) {
+      try {
+        const img = await loadImageAsBlobURL(comps[0].url);
+        const im = await createImageElement(img);
+        // draw small image
+        ctx.drawImage(im, w - 240, 150, 200, 150);
+      } catch (err) {
+        console.warn("Não foi possível incluir imagem no comprovante (CORS?).", err);
+      }
+    }
+
+    // export
+    const dataUrl = canvas.toDataURL("image/png");
+    // download
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = `comprovante_${ag.cliente ? ag.cliente.replace(/\s+/g,"_") : ag.data}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    Swal.close();
+  } catch (err) {
+    console.error("gerarComprovantePNG:", err);
+    Swal.fire("Erro", "Não foi possível gerar comprovante.", "error");
+  }
+}
+
+function loadImageAsBlobURL(url) {
+  return new Promise((resolve, reject) => {
+    // attempt fetch -> blob -> objectURL (may fail due to CORS)
+    fetch(url, { mode: "cors" }).then(r => r.blob()).then(blob => {
+      const obj = URL.createObjectURL(blob);
+      resolve(obj);
+    }).catch(err => {
+      reject(err);
+    });
+  });
+}
+function createImageElement(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
 // ---------- COMPROVANTES UI & UPLOAD ----------
 // render preview list (array of objects {url,name,path})
 function renderComprovantesPreview(comprovantesArray, agId) {
@@ -427,6 +692,8 @@ function renderComprovantesPreview(comprovantesArray, agId) {
   comprovantesArray.forEach((c) => {
     const wrapper = document.createElement("div");
     wrapper.className = "comp-wrapper";
+    wrapper.dataset.path = c.path || "";
+    wrapper.dataset.agId = agId || "";
 
     const img = document.createElement("img");
     img.src = c.url;
@@ -456,7 +723,6 @@ function renderComprovantesPreview(comprovantesArray, agId) {
         const novo = atual.filter(x => x.url !== c.url);
         await ref.update({ comprovantes: novo });
 
-        // *** RESET DO INPUT AO EXCLUIR ***
         if (inputComprovantes) inputComprovantes.value = "";
 
         renderComprovantesPreview(novo, agId);
@@ -471,7 +737,7 @@ function renderComprovantesPreview(comprovantesArray, agId) {
     listaComprovantesEl.appendChild(wrapper);
   });
 
-  ensureComprovanteDeleteButtons(); 
+  ensureComprovanteDeleteButtons();
 }
 
 // upload list of File objects; returns array of {url,name,path}
@@ -486,11 +752,13 @@ async function uploadComprovantesFiles(files, agId) {
     const path = `comprovantes/${agId}/${Date.now()}_${safeName}`;
     const ref = storage.ref(path);
     try {
-      await ref.put(f);
+      const snapshot = await ref.put(f);
+      // ensure metadata updated if needed
       const url = await ref.getDownloadURL();
       uploaded.push({ url, name: f.name, path });
     } catch (err) {
       console.error("uploadComprovantesFiles error:", err);
+      // continue uploading others
     }
   }
   return uploaded;
@@ -516,14 +784,11 @@ if (inputComprovantes) {
 
       wrapper.appendChild(img);
 
-      // botão X no preview local também
       const del = document.createElement("button");
       del.className = "comp-del-btn";
       del.textContent = "X";
       del.onclick = () => {
         wrapper.remove();
-
-        // *** RESET DO INPUT AO EXCLUIR NO PREVIEW LOCAL ***
         inputComprovantes.value = "";
       };
 
@@ -582,7 +847,6 @@ function ensureComprovanteDeleteButtons() {
 
         wrapper.remove();
 
-        // *** RESET DO INPUT AQUI TAMBÉM ***
         if (inputComprovantes) inputComprovantes.value = "";
 
       } catch (err) {
@@ -632,6 +896,31 @@ async function salvarAgendamento() {
   const monitores = Array.from(document.querySelectorAll(".chk-monitor:checked")).map(cb => cb.value);
   const observacao = inputObservacao ? inputObservacao.value : "";
 
+  // build items list for conflict check:
+  // if pacoteId -> resolve pacote itens via STATE.pacotes
+  let itensList = [];
+  if (pacoteId && pacoteId.startsWith("pacote_")) {
+    const pid = pacoteId.replace("pacote_", "");
+    const pacoteDoc = STATE.pacotes.find(p => p.id === pid) || null;
+    if (pacoteDoc) {
+      // pacoteToItens is in regrasNegocio (or fallback to pacoteDoc.itens)
+      if (window.regrasNegocio && typeof window.regrasNegocio.pacoteToItens === "function") {
+        itensList = window.regrasNegocio.pacoteToItens(pacoteDoc);
+      } else {
+        itensList = Array.isArray(pacoteDoc.itens) ? pacoteDoc.itens.slice() : [];
+      }
+    }
+  } else if (selectItem && selectItem.value && selectItem.value.startsWith("item_")) {
+    const iid = selectItem.value.replace("item_", "");
+    const itemDoc = STATE.itens.find(it => it.id === iid);
+    if (itemDoc) {
+      itensList = [itemDoc.nome || itemDoc.name || itemDoc.id];
+    }
+  }
+
+  // Normalize items into canonical keys for regras_negocio
+  const normalized = itensList.map(n => normalizeItemName(n));
+
   const dados = {
     cliente,
     telefone,
@@ -648,11 +937,62 @@ async function salvarAgendamento() {
     monitores,
     observacao,
     status: entrada > 0 ? "confirmado" : "pendente",
+    comprovantes: firebase.firestore.FieldValue.serverTimestamp ? (id ? firebase.firestore.FieldValue.delete ? undefined : undefined : undefined) : undefined,
     atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
   };
 
+  // Remove the placeholder comprovantes assignment - we'll set comprovantes properly after upload
+  delete dados.comprovantes;
+
   try {
-    // handle create vs update with comprovantes upload accordingly
+    // Before saving: check estoque via regras_negocio
+    if (window.regrasNegocio && typeof window.regrasNegocio.checkConflitoPorEstoque === "function") {
+      // fetch existing bookings for same date (simple approach: same date)
+      const existingSnap = await db.collection("agendamentos")
+        .where("data", "==", dataVal)
+        .get();
+
+      const existingBookings = existingSnap.docs
+        .filter(d => d.id !== (id || ""))
+        .map(d => {
+          const dd = d.data();
+          // produce an object with .itens: array of strings normalized
+          let list = [];
+          if (dd.pacoteId) {
+            // try resolve pacote
+            const p = STATE.pacotes.find(pp => `pacote_${pp.id}` === dd.pacoteId || pp.id === dd.pacoteId);
+            if (p) {
+              list = (window.regrasNegocio && window.regrasNegocio.pacoteToItens) ? window.regrasNegocio.pacoteToItens(p) : (p.itens || []);
+            }
+          } else if (dd.pacoteNome) {
+            // try match pacote by name
+            const p = STATE.pacotes.find(pp => (pp.nome || "").trim() === (dd.pacoteNome || "").trim());
+            if (p) list = (window.regrasNegocio && window.regrasNegocio.pacoteToItens) ? window.regrasNegocio.pacoteToItens(p) : (p.itens || []);
+          } else if (dd.itemNome) {
+            list = [dd.itemNome];
+          } else if (Array.isArray(dd.itens)) {
+            list = dd.itens;
+          }
+          // normalize
+          list = (list || []).map(n => normalizeItemName(n));
+          return { itens: list };
+        });
+
+      // Check conflict
+      const check = window.regrasNegocio.checkConflitoPorEstoque(normalized, existingBookings, window.regrasNegocio.estoquePadrao);
+      if (!check.ok) {
+        const msgs = check.problems.map(p => `${p.item}: precisa ${p.need}, reservado ${p.reserved}, disponível ${p.available}`).join("\n");
+        Swal.fire({
+          title: "Conflito de estoque",
+          icon: "warning",
+          html: `<pre style="text-align:left">${msgs}</pre>`,
+          confirmButtonText: "OK"
+        });
+        return;
+      }
+    }
+
+    // handle create vs update
     let docRef;
     if (id) {
       docRef = db.collection("agendamentos").doc(id);
@@ -668,7 +1008,6 @@ async function salvarAgendamento() {
       Swal.fire({ title: "Enviando comprovantes...", didOpen: () => Swal.showLoading() });
       const files = Array.from(inputComprovantes.files);
       const uploaded = await uploadComprovantesFiles(files, docId); // returns array of {url,name,path}
-      // append to doc
       if (uploaded.length > 0) {
         const snap = await db.collection("agendamentos").doc(docId).get();
         const prev = snap.exists ? (snap.data().comprovantes || []) : [];
@@ -678,7 +1017,7 @@ async function salvarAgendamento() {
       Swal.close();
     }
 
-    // final update: ensure comprovantes, observacao included
+    // final update: ensure observacao and atualizado_em included
     await db.collection("agendamentos").doc(docId).update({
       observacao,
       atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
@@ -694,7 +1033,6 @@ async function salvarAgendamento() {
 }
 
 // ---------- EVENTOS UI / MÁSCARAS ----------
-// safe attach
 function safeAttach(el, ev, fn) { if (el) el.addEventListener(ev, fn); }
 
 safeAttach(btnFiltrar, "click", aplicarFiltros);
@@ -805,4 +1143,3 @@ document.addEventListener("DOMContentLoaded", init);
 window.agendamentosModule = window.agendamentosModule || {};
 window.agendamentosModule.reload = carregarAgendamentos;
 window.agendamentosModule.openModalNew = abrirModalNovo;
-
