@@ -503,22 +503,26 @@ if (inputComprovantes) {
     listaComprovantesEl.innerHTML = "";
     files.forEach(f => {
       const wrapper = document.createElement("div");
-      wrapper.style.width = "80px";
-      wrapper.style.display = "flex";
-      wrapper.style.flexDirection = "column";
-      wrapper.style.alignItems = "center";
+wrapper.className = "comp-wrapper";  // ESSENCIAL
+wrapper.dataset.agId = inputId ? inputId.value : ""; // garante compatibilidade futura
 
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(f);
-      img.style.width = "80px";
-      img.style.height = "80px";
-      img.style.objectFit = "cover";
-      img.style.borderRadius = "6px";
-      img.title = f.name;
-      img.onclick = () => window.open(img.src, "_blank");
+const img = document.createElement("img");
+img.src = URL.createObjectURL(f);
+img.title = f.name;
+img.onclick = () => window.open(img.src, "_blank");
 
-      wrapper.appendChild(img);
-      listaComprovantesEl.appendChild(wrapper);
+wrapper.appendChild(img);
+
+// botão X no preview local também
+const del = document.createElement("button");
+del.className = "comp-del-btn";
+del.textContent = "X";
+del.onclick = () => {
+  wrapper.remove();
+};
+
+wrapper.appendChild(del);
+listaComprovantesEl.appendChild(wrapper);
     });
     ensureComprovanteDeleteButtons();
   });
