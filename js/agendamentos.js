@@ -459,9 +459,7 @@ function aplicarFiltros() {
 
 // ---------- MODAL: abrir / editar / fechar ----------
 function abrirModalNovo(dateInitial = null) {
-  if (modalTitleExistsAndCanceled()) {
-    // safety
-  }
+
   if (modalTitulo) modalTitulo.textContent = "Novo Agendamento";
   if (inputId) inputId.value = "";
 
