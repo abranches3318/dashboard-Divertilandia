@@ -456,6 +456,9 @@ function renderComprovantesPreview(comprovantesArray, agId) {
         const novo = atual.filter(x => x.url !== c.url);
         await ref.update({ comprovantes: novo });
 
+        // *** RESET DO INPUT AO EXCLUIR ***
+        if (inputComprovantes) inputComprovantes.value = "";
+
         renderComprovantesPreview(novo, agId);
       } catch (err) {
         console.error("Erro excluindo comprovante", err);
@@ -467,6 +470,7 @@ function renderComprovantesPreview(comprovantesArray, agId) {
     wrapper.appendChild(del);
     listaComprovantesEl.appendChild(wrapper);
   });
+
   ensureComprovanteDeleteButtons(); 
 }
 
@@ -478,7 +482,6 @@ async function uploadComprovantesFiles(files, agId) {
   const uploaded = [];
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
-    // build path: comprovantes/{agId}/{timestamp}_{filename}
     const safeName = f.name.replace(/[^a-z0-9.\-_]/gi, "_");
     const path = `comprovantes/${agId}/${Date.now()}_${safeName}`;
     const ref = storage.ref(path);
@@ -488,7 +491,6 @@ async function uploadComprovantesFiles(files, agId) {
       uploaded.push({ url, name: f.name, path });
     } catch (err) {
       console.error("uploadComprovantesFiles error:", err);
-      // continue with others
     }
   }
   return uploaded;
@@ -499,31 +501,36 @@ if (inputComprovantes) {
   inputComprovantes.addEventListener("change", (e) => {
     const files = Array.from(e.target.files || []);
     if (!listaComprovantesEl) return;
-    // preview local files using object URLs
+
     listaComprovantesEl.innerHTML = "";
     files.forEach(f => {
+
       const wrapper = document.createElement("div");
-wrapper.className = "comp-wrapper";  // ESSENCIAL
-wrapper.dataset.agId = inputId ? inputId.value : ""; // garante compatibilidade futura
+      wrapper.className = "comp-wrapper";
+      wrapper.dataset.agId = inputId ? inputId.value : "";
 
-const img = document.createElement("img");
-img.src = URL.createObjectURL(f);
-img.title = f.name;
-img.onclick = () => window.open(img.src, "_blank");
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(f);
+      img.title = f.name;
+      img.onclick = () => window.open(img.src, "_blank");
 
-wrapper.appendChild(img);
+      wrapper.appendChild(img);
 
-// botão X no preview local também
-const del = document.createElement("button");
-del.className = "comp-del-btn";
-del.textContent = "X";
-del.onclick = () => {
-  wrapper.remove();
-};
+      // botão X no preview local também
+      const del = document.createElement("button");
+      del.className = "comp-del-btn";
+      del.textContent = "X";
+      del.onclick = () => {
+        wrapper.remove();
 
-wrapper.appendChild(del);
-listaComprovantesEl.appendChild(wrapper);
+        // *** RESET DO INPUT AO EXCLUIR NO PREVIEW LOCAL ***
+        inputComprovantes.value = "";
+      };
+
+      wrapper.appendChild(del);
+      listaComprovantesEl.appendChild(wrapper);
     });
+
     ensureComprovanteDeleteButtons();
   });
 }
@@ -533,7 +540,7 @@ listaComprovantesEl.appendChild(wrapper);
 // ---------------------------------------------------------
 function ensureComprovanteDeleteButtons() {
   document.querySelectorAll(".comp-wrapper").forEach(wrapper => {
-    // se já tiver botão, não recria
+
     if (wrapper.querySelector(".comp-del-btn")) return;
 
     const img = wrapper.querySelector("img");
@@ -543,7 +550,6 @@ function ensureComprovanteDeleteButtons() {
     del.className = "comp-del-btn";
     del.textContent = "X";
 
-    // evento de exclusão
     del.onclick = async (ev) => {
       ev.stopPropagation();
       const url = img.src;
@@ -557,7 +563,6 @@ function ensureComprovanteDeleteButtons() {
       if (!confirm.isConfirmed) return;
 
       try {
-        // tenta obter path do wrapper (estamos adicionando compatibilidade)
         const path = wrapper.dataset.path || null;
         const agId = wrapper.dataset.agId || (inputId ? inputId.value : null);
 
@@ -576,6 +581,10 @@ function ensureComprovanteDeleteButtons() {
         }
 
         wrapper.remove();
+
+        // *** RESET DO INPUT AQUI TAMBÉM ***
+        if (inputComprovantes) inputComprovantes.value = "";
+
       } catch (err) {
         console.error("Erro ao excluir comprovante (fallback):", err);
         Swal.fire("Erro", "Não foi possível excluir o comprovante.", "error");
