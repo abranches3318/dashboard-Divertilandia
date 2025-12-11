@@ -467,6 +467,7 @@ function renderComprovantesPreview(comprovantesArray, agId) {
     wrapper.appendChild(del);
     listaComprovantesEl.appendChild(wrapper);
   });
+  ensureComprovanteDeleteButtons(); 
 }
 
 // upload list of File objects; returns array of {url,name,path}
@@ -519,6 +520,65 @@ if (inputComprovantes) {
       wrapper.appendChild(img);
       listaComprovantesEl.appendChild(wrapper);
     });
+    ensureComprovanteDeleteButtons();
+  });
+}
+
+// ---------------------------------------------------------
+// REPARO: GARANTE QUE OS BOTÕES X EXISTAM E FUNCIONEM
+// ---------------------------------------------------------
+function ensureComprovanteDeleteButtons() {
+  document.querySelectorAll(".comp-wrapper").forEach(wrapper => {
+    // se já tiver botão, não recria
+    if (wrapper.querySelector(".comp-del-btn")) return;
+
+    const img = wrapper.querySelector("img");
+    if (!img) return;
+
+    const del = document.createElement("button");
+    del.className = "comp-del-btn";
+    del.textContent = "X";
+
+    // evento de exclusão
+    del.onclick = async (ev) => {
+      ev.stopPropagation();
+      const url = img.src;
+
+      const confirm = await Swal.fire({
+        title: "Excluir comprovante?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Excluir"
+      });
+      if (!confirm.isConfirmed) return;
+
+      try {
+        // tenta obter path do wrapper (estamos adicionando compatibilidade)
+        const path = wrapper.dataset.path || null;
+        const agId = wrapper.dataset.agId || (inputId ? inputId.value : null);
+
+        if (path && storage) {
+          await storage.ref(path).delete();
+        }
+
+        if (agId && db) {
+          const ref = db.collection("agendamentos").doc(agId);
+          const snap = await ref.get();
+          if (snap.exists) {
+            const atual = snap.data().comprovantes || [];
+            const novo = atual.filter(x => x.url !== url);
+            await ref.update({ comprovantes: novo });
+          }
+        }
+
+        wrapper.remove();
+      } catch (err) {
+        console.error("Erro ao excluir comprovante (fallback):", err);
+        Swal.fire("Erro", "Não foi possível excluir o comprovante.", "error");
+      }
+    };
+
+    wrapper.appendChild(del);
   });
 }
 
