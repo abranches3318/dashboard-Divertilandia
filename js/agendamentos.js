@@ -1,4 +1,15 @@
-// js/agendamentos.js (corrigido: tabela, ações por status, upload+exclusão comprovantes no modal, validação estoque)
+// js/agendamentos.js (corrigido/refinado para demandas: modal detalhes, delete comprovante em tempo real,
+// validação antes de salvar, conflito de estoque visível, manter filtros, botões por status)
+
+// small helper: ensure SweetAlert appears above modal by adding custom CSS class
+(function ensureSwalStyle() {
+  if (document.getElementById("swal-high-z-style")) return;
+  const s = document.createElement("style");
+  s.id = "swal-high-z-style";
+  s.innerHTML = `.swal-high-z { z-index: 200000 !important; } .swal-high-z::backdrop { z-index:199999 !important; }`;
+  document.head.appendChild(s);
+})();
+
 const AG_BASE = "/dashboard-Divertilandia/";
 
 // firebase compat (deve estar carregado via <script> no HTML)
@@ -64,6 +75,14 @@ const STATE = {
   monitores: []
 };
 
+// ---------- FILTER STATE (to preserve filters across updates) ----------
+let LAST_FILTERS = {
+  data: "",
+  cliente: "",
+  telefone: "",
+  status: ""
+};
+
 // ---------- HELPERS / FORMATAÇÃO ----------
 function parseDateField(v) {
   if (!v) return null;
@@ -120,23 +139,9 @@ function setCurrencyInput(el, n) {
   el.value = formatNumberToCurrencyString(Number(n));
 }
 
-// ---------- UTIL: resolve selected value (item_... or pacote_...) => array of item names
-function resolveSelectedValueToItemNames(selectValue) {
-  if (!selectValue) return [];
-  if (selectValue.startsWith("pacote_")) {
-    const pid = selectValue.replace(/^pacote_/, "");
-    const pack = STATE.pacotes.find(p => p.id === pid);
-    if (pack) return Array.isArray(pack.itens) ? pack.itens.slice() : [];
-    return []; // fallback (will be resolved from Firestore when checking)
-  } else if (selectValue.startsWith("item_")) {
-    const iid = selectValue.replace(/^item_/, "");
-    const it = STATE.itens.find(x => x.id === iid);
-    if (it) return [it.nome || it.name || it.nome || it.nome || it.name || it.id];
-  }
-  return [];
-}
-
 // ---------- TABELA ----------
+// renderTabela: mostra painel apenas se lista tiver elementos.
+// se vazio: oculta painelTabela e mostra SweetAlert com opção criar novo.
 function renderTabela(lista) {
   if (!listaEl || !painelTabela) return;
   listaEl.innerHTML = "";
@@ -151,7 +156,8 @@ function renderTabela(lista) {
         icon: "info",
         showCancelButton: true,
         confirmButtonText: "Criar novo",
-        cancelButtonText: "Fechar"
+        cancelButtonText: "Fechar",
+        customClass: { popup: 'swal-high-z' }
       }).then(res => {
         if (res.isConfirmed) abrirModalNovo(filtroData && filtroData.value ? new Date(filtroData.value + "T00:00:00") : null);
       });
@@ -164,7 +170,7 @@ function renderTabela(lista) {
   lista.forEach(a => {
     const dt = parseDateField(a.data);
     const dateStr = dt ? dt.toLocaleDateString() : (a.data || "---");
-    const horarioStr = a.horario || (a.horario_inicio || "") || "";
+    const horario = a.horario || "";
 
     const enderecoStr =
       (a.endereco?.rua || "") +
@@ -177,76 +183,84 @@ function renderTabela(lista) {
 
     const tr = document.createElement("tr");
 
-    // Build status colored label
-    const status = (a.status || "pendente").toLowerCase();
-    let statusHtml = status;
-    if (status === "confirmado") statusHtml = `<span class="label-status label-confirmado">Confirmado</span>`;
-    else if (status === "pendente") statusHtml = `<span class="label-status label-pendente">Pendente</span>`;
-    else if (status === "cancelado") statusHtml = `<span class="label-status label-cancelado">Cancelado</span>`;
-    else if (status === "concluido" || status === "finalizado" || status === "concluído") statusHtml = `<span class="label-status label-finalizado">Finalizado</span>`;
-
-    // Actions: for canceled show details + excluir; for others show detalhes, editar, cancelar
-    let actionsHtml = `<button class="btn btn-dark btn-detalhes" data-id="${a.id}">Detalhes</button> `;
-    if (status === "cancelado") {
-      actionsHtml += `<button class="btn btn-danger btn-excluir-perm" data-id="${a.id}">Excluir</button>`;
-    } else {
-      actionsHtml += `<button class="btn btn-dark btn-editar" data-id="${a.id}">Editar</button> `;
-      actionsHtml += `<button class="btn btn-danger btn-cancelar" data-id="${a.id}">Cancelar</button>`;
-    }
-
+    // Create cells in desired order: Data | Horário | Cliente | Telefone | Endereço | Item/Pacote | Status | Valor | Actions
     tr.innerHTML = `
       <td>${dateStr}</td>
-      <td>${horarioStr}</td>
+      <td>${horario}</td>
       <td>${a.cliente || "---"}</td>
       <td>${a.telefone || "---"}</td>
       <td>${enderecoStr || "---"}</td>
       <td>${itemName}</td>
-      <td>${statusHtml}</td>
+      <td class="status-cell">${a.status || "pendente"}</td>
       <td>${formatNumberToCurrencyString(valor)}</td>
-      <td>${actionsHtml}</td>
+      <td class="actions-cell"></td>
     `;
+    // add data-id so handlers can reference
+    tr.dataset.id = a.id;
 
     listaEl.appendChild(tr);
-  });
 
-  // attach handlers (delegation could be used but keep simple)
-  listaEl.querySelectorAll(".btn-editar").forEach(btn => btn.onclick = onEditarClick);
-  listaEl.querySelectorAll(".btn-cancelar").forEach(btn => btn.onclick = async (e) => {
-    const id = e.currentTarget.getAttribute("data-id");
-    if (!id) return;
-    // reuse cancelarAgendamento
-    await cancelarAgendamento(id);
-  });
-  listaEl.querySelectorAll(".btn-excluir-perm").forEach(btn => btn.onclick = async (e) => {
-    const id = e.currentTarget.getAttribute("data-id");
-    if (!id) return;
-    const c = await Swal.fire({
-      title: "Excluir permanentemente?",
-      text: "A exclusão é irreversível.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Excluir"
-    });
-    if (!c.isConfirmed) return;
-    try {
-      // delete storage comprovantes if any
-      const snap = await db.collection("agendamentos").doc(id).get();
-      if (snap.exists) {
-        const arr = snap.data().comprovantes || [];
-        for (const cp of arr) {
-          try { if (cp.path && storage) await storage.ref(cp.path).delete(); } catch(e){ console.warn("del storage fallback", e); }
-        }
+    // style status cell by class
+    const statusCell = tr.querySelector(".status-cell");
+    if (statusCell) {
+      const st = (a.status || "pendente").toLowerCase();
+      statusCell.style.fontWeight = "700";
+      if (st === "confirmado") statusCell.style.color = "#4cafef"; // azul
+      else if (st === "pendente") statusCell.style.color = "#e6b800"; // amarelo
+      else if (st === "cancelado") statusCell.style.color = "#d32f2f"; // vermelho
+      else if (st === "concluido" || st === "finalizado" || st === "concluido") statusCell.style.color = "#2e7d32"; // verde
+    }
+
+    // build action buttons depending on status
+    const actionsTd = tr.querySelector(".actions-cell");
+    if (actionsTd) {
+      // Details always present
+      const btnDetalhes = document.createElement("button");
+      btnDetalhes.className = "btn btn-dark btn-detalhes";
+      btnDetalhes.textContent = "Detalhes";
+      btnDetalhes.dataset.id = a.id;
+      actionsTd.appendChild(btnDetalhes);
+
+      if ((a.status || "pendente").toLowerCase() === "cancelado") {
+        // only show Excluir
+        const btnExcluir = document.createElement("button");
+        btnExcluir.className = "btn btn-danger btn-excluir-full";
+        btnExcluir.style.marginLeft = "6px";
+        btnExcluir.textContent = "Excluir";
+        btnExcluir.dataset.id = a.id;
+        actionsTd.appendChild(btnExcluir);
+      } else {
+        // show Editar + Cancelar
+        const btnEditar = document.createElement("button");
+        btnEditar.className = "btn btn-dark btn-editar";
+        btnEditar.style.marginLeft = "6px";
+        btnEditar.textContent = "Editar";
+        btnEditar.dataset.id = a.id;
+        actionsTd.appendChild(btnEditar);
+
+        const btnCancelar = document.createElement("button");
+        btnCancelar.className = "btn btn-danger btn-excluir";
+        btnCancelar.style.marginLeft = "6px";
+        btnCancelar.textContent = "Cancelar";
+        btnCancelar.dataset.id = a.id;
+        actionsTd.appendChild(btnCancelar);
       }
-      await db.collection("agendamentos").doc(id).delete();
-      Swal.fire("OK", "Agendamento excluído.", "success");
-      await carregarAgendamentos();
-    } catch (err) {
-      console.error("Excluir perm:", err);
-      Swal.fire("Erro", "Não foi possível excluir.", "error");
     }
   });
 
-  listaEl.querySelectorAll(".btn-detalhes").forEach(btn => btn.onclick = onDetalhesClick);
+  // attach handlers
+  listaEl.querySelectorAll(".btn-editar").forEach(btn => {
+    btn.onclick = onEditarClick;
+  });
+  listaEl.querySelectorAll(".btn-excluir").forEach(btn => {
+    btn.onclick = onExcluirClick;
+  });
+  listaEl.querySelectorAll(".btn-excluir-full").forEach(btn => {
+    btn.onclick = onExcluirPermanenteClick;
+  });
+  listaEl.querySelectorAll(".btn-detalhes").forEach(btn => {
+    btn.onclick = onDetalhesClick;
+  });
 }
 
 // ---------- TABELA BUTTONS ----------
@@ -260,24 +274,68 @@ function onExcluirClick(e) {
   if (!id) return;
   cancelarAgendamento(id);
 }
+function onExcluirPermanenteClick(e) {
+  const id = e.currentTarget.getAttribute("data-id");
+  if (!id) return;
+  excluirPermanente(id);
+}
+function onDetalhesClick(e) {
+  const id = e.currentTarget.getAttribute("data-id");
+  if (!id) return;
+  abrirModalDetalhes(id);
+}
 
-// ---------- CANCELAR (marca como cancelado) ----------
+// ---------- CANCELAR (marca cancelado) ----------
 async function cancelarAgendamento(id) {
   const res = await Swal.fire({
     title: "Cancelar agendamento?",
     text: "O agendamento será marcado como cancelado (não será removido).",
     icon: "warning",
     showCancelButton: true,
-    confirmButtonText: "Sim, cancelar"
+    confirmButtonText: "Sim, cancelar",
+    customClass: { popup: 'swal-high-z' }
   });
   if (!res.isConfirmed) return;
   try {
     await db.collection("agendamentos").doc(id).update({ status: "cancelado", atualizado_em: firebase.firestore.FieldValue.serverTimestamp() });
-    Swal.fire("OK", "Agendamento cancelado.", "success");
-    await carregarAgendamentos();
+    Swal.fire({ title: "OK", text: "Agendamento cancelado.", icon: "success", customClass: { popup: 'swal-high-z' } });
+    // reload preserving filters
+    await carregarAgendamentosPreservandoFiltro();
   } catch (err) {
     console.error("cancelarAgendamento:", err);
-    Swal.fire("Erro", "Não foi possível cancelar.", "error");
+    Swal.fire({ title: "Erro", text: "Não foi possível cancelar.", icon: "error", customClass: { popup: 'swal-high-z' } });
+  }
+}
+
+// ---------- EXCLUIR PERMANENTE (para agendamentos já cancelados) ----------
+async function excluirPermanente(id) {
+  const res = await Swal.fire({
+    title: "Excluir agendamento permanentemente?",
+    text: "Essa ação removerá o agendamento do sistema.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Sim, excluir",
+    customClass: { popup: 'swal-high-z' }
+  });
+  if (!res.isConfirmed) return;
+  try {
+    // delete any comprovantes in storage first (best-effort)
+    if (db && storage) {
+      const snap = await db.collection("agendamentos").doc(id).get();
+      if (snap.exists) {
+        const data = snap.data() || {};
+        const comps = data.comprovantes || [];
+        for (const c of comps) {
+          try { if (c.path) await storage.ref(c.path).delete(); } catch (_) { /* ignore individual failures */ }
+        }
+      }
+    }
+    await db.collection("agendamentos").doc(id).delete();
+    Swal.fire({ title: "OK", text: "Agendamento excluído.", icon: "success", customClass: { popup: 'swal-high-z' } });
+    await carregarAgendamentosPreservandoFiltro();
+  } catch (err) {
+    console.error("excluirPermanente:", err);
+    Swal.fire({ title: "Erro", text: "Não foi possível excluir.", icon: "error", customClass: { popup: 'swal-high-z' } });
   }
 }
 
@@ -296,8 +354,8 @@ async function carregarPacotesEItens() {
     STATE.pacotes.forEach(p => {
       const opt = document.createElement("option");
       opt.value = `pacote_${p.id}`;
-      opt.dataset.valor = Number(p.preco ?? p.preço ?? p.valor ?? 0);
-      opt.textContent = `${p.nome || p.title || p.id} (pacote) - R$ ${Number(p.preco ?? p.preço ?? p.valor ?? 0).toFixed(2)}`;
+      opt.dataset.valor = Number(p.preço ?? p.preco ?? p.valor ?? 0);
+      opt.textContent = `${p.nome || p.title || p.id} (pacote) - R$ ${Number(p.preço ?? p.preco ?? p.valor ?? 0).toFixed(2)}`;
       selectItem.appendChild(opt);
     });
 
@@ -305,8 +363,8 @@ async function carregarPacotesEItens() {
     STATE.itens.forEach(i => {
       const opt = document.createElement("option");
       opt.value = `item_${i.id}`;
-      opt.dataset.valor = Number(i.preco ?? i.preço ?? i.valor ?? 0);
-      opt.textContent = `${i.nome || i.title || i.id} (item) - R$ ${Number(i.preco ?? i.preço ?? i.valor ?? 0).toFixed(2)}`;
+      opt.dataset.valor = Number(i.preço ?? i.preco ?? i.valor ?? 0);
+      opt.textContent = `${i.nome || i.title || i.id} (item) - R$ ${Number(i.preço ?? i.preco ?? i.valor ?? 0).toFixed(2)}`;
       selectItem.appendChild(opt);
     });
   } catch (err) {
@@ -338,16 +396,32 @@ async function carregarAgendamentos() {
   if (!db) return;
   try {
     if (painelTabela) painelTabela.style.display = "none";
+
     const snap = await db.collection("agendamentos")
       .orderBy("data", "asc")
       .orderBy("horario", "asc")
       .get();
 
     STATE.todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    // default: keep table hidden until user filters or until init decides to render
     renderTabela([]); // keep hidden on initial load
   } catch (err) {
     console.error("carregarAgendamentos:", err);
-    Swal.fire("Erro", "Não foi possível carregar agendamentos.", "error");
+    Swal.fire({ title: "Erro", text: "Não foi possível carregar agendamentos.", icon: "error", customClass: { popup: 'swal-high-z' } });
+  }
+}
+
+// helper to reload and re-apply last filters
+async function carregarAgendamentosPreservandoFiltro() {
+  await carregarAgendamentos();
+  // re-apply last filters if any
+  if (LAST_FILTERS && (LAST_FILTERS.data || LAST_FILTERS.cliente || LAST_FILTERS.telefone || LAST_FILTERS.status)) {
+    // set UI controls silently
+    if (filtroData) filtroData.value = LAST_FILTERS.data || "";
+    if (filtroCliente) filtroCliente.value = LAST_FILTERS.cliente || "";
+    if (filtroTelefone) filtroTelefone.value = LAST_FILTERS.telefone || "";
+    if (filtroStatus) filtroStatus.value = LAST_FILTERS.status || "";
+    aplicarFiltros();
   }
 }
 
@@ -371,24 +445,39 @@ function aplicarFiltros() {
     lista = lista.filter(a => (a.status || "") === filtroStatus.value);
   }
 
+  // save last filters
+  LAST_FILTERS = {
+    data: filtroData ? filtroData.value : "",
+    cliente: filtroCliente ? filtroCliente.value : "",
+    telefone: filtroTelefone ? filtroTelefone.value : "",
+    status: filtroStatus ? filtroStatus.value : ""
+  };
+
   window._ag_show_no_results_alert = true;
   renderTabela(lista);
 }
 
 // ---------- MODAL: abrir / editar / fechar ----------
 function abrirModalNovo(dateInitial = null) {
+  if (modalTitleExistsAndCanceled()) {
+    // safety
+  }
   if (modalTitulo) modalTitulo.textContent = "Novo Agendamento";
   if (inputId) inputId.value = "";
 
+  // clear fields
   [
     inputCliente, inputTelefone, inputEndRua, inputEndNumero, inputEndBairro, inputEndCidade,
     inputData, inputHoraInicio, inputHoraFim, selectItem, inputPreco, inputDesconto, inputEntrada, inputValorFinal, inputRestante, inputObservacao
   ].forEach(el => { if (el) el.value = ""; });
 
+  // clear comprovantes input + preview
   if (inputComprovantes) inputComprovantes.value = "";
   if (listaComprovantesEl) listaComprovantesEl.innerHTML = "";
 
   if (dateInitial && inputData) inputData.value = toYMD(dateInitial);
+
+  // uncheck monitors
   document.querySelectorAll(".chk-monitor").forEach(cb => { cb.checked = false; });
 
   if (modal) modal.classList.add("active");
@@ -399,14 +488,13 @@ async function abrirModalEditar(id) {
   if (!id || !db) return;
   try {
     const doc = await db.collection("agendamentos").doc(id).get();
-    if (!doc.exists) { Swal.fire("Erro", "Agendamento não encontrado", "error"); return; }
+    if (!doc.exists) { Swal.fire({ title: "Erro", text: "Agendamento não encontrado", icon: "error", customClass: { popup: 'swal-high-z' } }); return; }
     const a = doc.data();
 
-    // If canceled, do not open edit - show details instead
+    // block editing canceled appointments
     if ((a.status || "").toLowerCase() === "cancelado") {
-      Swal.fire("Agendamento cancelado", "Este agendamento está cancelado. Abra Detalhes para ações.", "info");
-      // open detalhes modal instead
-      return onDetalhesShow(id, a);
+      Swal.fire({ title: "Agendamento cancelado", text: "Este agendamento está cancelado e não pode ser editado.", icon: "info", customClass: { popup: 'swal-high-z' } });
+      return;
     }
 
     if (modalTitulo) modalTitulo.textContent = "Editar Agendamento";
@@ -427,10 +515,7 @@ async function abrirModalEditar(id) {
     if (selectItem) {
       if (a.pacoteId && selectItem.querySelector(`option[value="${a.pacoteId}"]`)) {
         selectItem.value = a.pacoteId;
-      } else if (a.itemId && selectItem.querySelector(`option[value="${a.itemId}"]`)) {
-        selectItem.value = a.itemId;
       } else {
-        // try match by text containing name
         Array.from(selectItem.options).forEach(opt => {
           if ((a.pacoteNome && opt.textContent.includes(a.pacoteNome)) || (a.itemNome && opt.textContent.includes(a.itemNome))) {
             selectItem.value = opt.value;
@@ -444,24 +529,28 @@ async function abrirModalEditar(id) {
     if (inputEntrada) setCurrencyInput(inputEntrada, a.entrada ?? 0);
     if (inputValorFinal) setCurrencyInput(inputValorFinal, a.valor_final ?? a.preco ?? 0);
 
+    // restante
     if (inputRestante) {
       const vf = Number(a.valor_final ?? a.preco ?? 0);
       const entradaN = Number(a.entrada ?? 0);
-      setCurrencyInput(inputRestante, Math.max(0, vf - entradaN));
+      const restante = Math.max(0, vf - entradaN);
+      setCurrencyInput(inputRestante, restante);
     }
 
     if (inputObservacao) inputObservacao.value = a.observacao || "";
 
+    // mark monitors
     document.querySelectorAll(".chk-monitor").forEach(cb => {
       cb.checked = Array.isArray(a.monitores) ? a.monitores.includes(cb.value) : false;
     });
 
-    renderComprovantesPreview(a.comprovantes || [], id);
+    // render comprovantes (array of {url, name, path})
+    renderComprovantesPreview(a.comprovantes || [], id, false);
 
     if (modal) modal.classList.add("active");
   } catch (err) {
     console.error("abrirModalEditar:", err);
-    Swal.fire("Erro", "Não foi possível abrir edição.", "error");
+    Swal.fire({ title: "Erro", text: "Não foi possível abrir edição.", icon: "error", customClass: { popup: 'swal-high-z' } });
   }
 }
 
@@ -470,7 +559,9 @@ function fecharModal() {
 }
 
 // ---------- COMPROVANTES UI & UPLOAD ----------
-function renderComprovantesPreview(comprovantesArray, agId) {
+// render preview list (array of objects {url,name,path})
+// readOnly=true -> no delete buttons, click opens link
+function renderComprovantesPreview(comprovantesArray, agId, readOnly = false) {
   if (!listaComprovantesEl) return;
   listaComprovantesEl.innerHTML = "";
 
@@ -479,54 +570,63 @@ function renderComprovantesPreview(comprovantesArray, agId) {
   comprovantesArray.forEach((c) => {
     const wrapper = document.createElement("div");
     wrapper.className = "comp-wrapper";
-    wrapper.dataset.path = c.path || "";
     wrapper.dataset.agId = agId || "";
+    if (c.path) wrapper.dataset.path = c.path;
+
     const img = document.createElement("img");
     img.src = c.url;
+    img.style.cursor = "pointer";
     img.onclick = () => window.open(c.url, "_blank");
 
-    const del = document.createElement("button");
-    del.className = "comp-del-btn";
-    del.textContent = "X";
-
-    del.onclick = async (ev) => {
-      ev.stopPropagation();
-      const confirm = await Swal.fire({
-        title: "Excluir comprovante?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Excluir"
-      });
-      if (!confirm.isConfirmed) return;
-
-      try {
-        if (c.path && storage) {
-          await storage.ref(c.path).delete();
-        }
-        const ref = db.collection("agendamentos").doc(agId);
-        const snap = await ref.get();
-        if (!snap.exists) return;
-        const atual = snap.data().comprovantes || [];
-        const novo = atual.filter(x => x.url !== c.url);
-        await ref.update({ comprovantes: novo });
-
-        if (inputComprovantes) inputComprovantes.value = "";
-
-        renderComprovantesPreview(novo, agId);
-      } catch (err) {
-        console.error("Erro excluindo comprovante", err);
-        Swal.fire("Erro", "Não foi possível excluir.", "error");
-      }
-    };
-
     wrapper.appendChild(img);
-    wrapper.appendChild(del);
+
+    if (!readOnly) {
+      const del = document.createElement("button");
+      del.className = "comp-del-btn";
+      del.textContent = "X";
+
+      del.onclick = async (ev) => {
+        ev.stopPropagation();
+        const confirm = await Swal.fire({
+          title: "Excluir comprovante?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Excluir",
+          customClass: { popup: 'swal-high-z' }
+        });
+        if (!confirm.isConfirmed) return;
+
+        try {
+          // delete from storage (if path) and then update firestore doc
+          if (wrapper.dataset.path && storage) {
+            await storage.ref(wrapper.dataset.path).delete();
+          }
+          if (agId && db) {
+            const ref = db.collection("agendamentos").doc(agId);
+            const snap = await ref.get();
+            if (snap.exists) {
+              const atual = snap.data().comprovantes || [];
+              const novo = atual.filter(x => x.url !== c.url);
+              await ref.update({ comprovantes: novo });
+            }
+          }
+          wrapper.remove();
+          // reset file input to allow reupload same file if needed
+          if (inputComprovantes) inputComprovantes.value = "";
+        } catch (err) {
+          console.error("Erro excluindo comprovante (modal):", err);
+          Swal.fire({ title: "Erro", text: "Não foi possível excluir o comprovante.", icon: "error", customClass: { popup: 'swal-high-z' } });
+        }
+      };
+
+      wrapper.appendChild(del);
+    }
+
     listaComprovantesEl.appendChild(wrapper);
   });
-
-  ensureComprovanteDeleteButtons();
 }
 
+// upload list of File objects; returns array of {url,name,path}
 async function uploadComprovantesFiles(files, agId) {
   if (!storage) throw new Error("Storage não disponível");
   if (!files || files.length === 0) return [];
@@ -548,6 +648,7 @@ async function uploadComprovantesFiles(files, agId) {
   return uploaded;
 }
 
+// when user selects files in inputComprovantes, show local preview (before upload)
 if (inputComprovantes) {
   inputComprovantes.addEventListener("change", (e) => {
     const files = Array.from(e.target.files || []);
@@ -566,77 +667,28 @@ if (inputComprovantes) {
 
       wrapper.appendChild(img);
 
+      // botão X no preview local também
       const del = document.createElement("button");
       del.className = "comp-del-btn";
       del.textContent = "X";
-      del.onclick = () => {
+      del.onclick = (ev) => {
+        ev.stopPropagation();
         wrapper.remove();
+        // reset input so same file can be re-selected
         inputComprovantes.value = "";
       };
 
       wrapper.appendChild(del);
       listaComprovantesEl.appendChild(wrapper);
     });
-
-    ensureComprovanteDeleteButtons();
-  });
-}
-
-function ensureComprovanteDeleteButtons() {
-  document.querySelectorAll(".comp-wrapper").forEach(wrapper => {
-    if (wrapper.querySelector(".comp-del-btn") && wrapper.dataset._handled) return;
-    wrapper.dataset._handled = "1";
-
-    const img = wrapper.querySelector("img");
-    if (!img) return;
-
-    const del = wrapper.querySelector(".comp-del-btn");
-    if (!del) return;
-
-    del.onclick = async (ev) => {
-      ev.stopPropagation();
-      const url = img.src;
-      const confirm = await Swal.fire({
-        title: "Excluir comprovante?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Excluir"
-      });
-      if (!confirm.isConfirmed) return;
-
-      try {
-        const path = wrapper.dataset.path || null;
-        const agId = wrapper.dataset.agId || (inputId ? inputId.value : null);
-
-        if (path && storage) {
-          await storage.ref(path).delete();
-        }
-
-        if (agId && db) {
-          const ref = db.collection("agendamentos").doc(agId);
-          const snap = await ref.get();
-          if (snap.exists) {
-            const atual = snap.data().comprovantes || [];
-            const novo = atual.filter(x => x.url !== url);
-            await ref.update({ comprovantes: novo });
-          }
-        }
-
-        wrapper.remove();
-        if (inputComprovantes) inputComprovantes.value = "";
-
-      } catch (err) {
-        console.error("Erro ao excluir comprovante (fallback):", err);
-        Swal.fire("Erro", "Não foi possível excluir o comprovante.", "error");
-      }
-    };
   });
 }
 
 // ---------- SALVAR AGENDAMENTO (inclui upload de comprovantes) ----------
 async function salvarAgendamento() {
   if (!db) return;
-  const id = inputId ? inputId.value || null : null;
+
+  // VALIDATION (required fields)
   const cliente = inputCliente ? inputCliente.value.trim() : "";
   const telefone = inputTelefone ? inputTelefone.value.trim() : "";
   const rua = inputEndRua ? inputEndRua.value.trim() : "";
@@ -645,59 +697,99 @@ async function salvarAgendamento() {
   const cidade = inputEndCidade ? inputEndCidade.value.trim() : "";
   const dataVal = inputData ? inputData.value : "";
   const horaInicio = inputHoraInicio ? inputHoraInicio.value : "";
-  const horaFim = inputHoraFim ? inputHoraFim.value || calcularHoraFim(horaInicio) : calcularHoraFim(horaInicio);
+  const horaFim = inputHoraFim ? inputHoraFim.value : "";
 
-  const selected = selectItem ? selectItem.selectedOptions[0] : null;
-  const pacoteId = selectItem ? selectItem.value || null : null;
-  const pacoteNome = selected ? selected.textContent : "";
-
+  const pacoteSelection = selectItem ? selectItem.value || null : null;
   const preco = safeNumFromInputEl(inputPreco);
+  const valorFinalInput = safeNumFromInputEl(inputValorFinal);
+
+  // required checks
+  if (!cliente) { Swal.fire({ title: "Atenção", text: "Preencha o nome do cliente.", icon: "warning", customClass: { popup: 'swal-high-z' } }); return; }
+  if (!telefone) { Swal.fire({ title: "Atenção", text: "Preencha o telefone.", icon: "warning", customClass: { popup: 'swal-high-z' } }); return; }
+  if (!dataVal) { Swal.fire({ title: "Atenção", text: "Escolha a data do evento.", icon: "warning", customClass: { popup: 'swal-high-z' } }); return; }
+  if (!horaInicio) { Swal.fire({ title: "Atenção", text: "Informe o horário de início.", icon: "warning", customClass: { popup: 'swal-high-z' } }); return; }
+  if (!horaFim) { Swal.fire({ title: "Atenção", text: "Informe o horário fim.", icon: "warning", customClass: { popup: 'swal-high-z' } }); return; }
+  if (!pacoteSelection) { Swal.fire({ title: "Atenção", text: "Selecione um item ou pacote.", icon: "warning", customClass: { popup: 'swal-high-z' } }); return; }
+  if (!preco || preco <= 0) { Swal.fire({ title: "Atenção", text: "Preço inválido.", icon: "warning", customClass: { popup: 'swal-high-z' } }); return; }
+  if (!valorFinalInput || valorFinalInput <= 0) { Swal.fire({ title: "Atenção", text: "Valor final inválido.", icon: "warning", customClass: { popup: 'swal-high-z' } }); return; }
+  if (!rua || !numero || !bairro || !cidade) { Swal.fire({ title: "Atenção", text: "Preencha o endereço completo.", icon: "warning", customClass: { popup: 'swal-high-z' } }); return; }
+
+  // gather common fields
+  const id = inputId ? inputId.value || null : null;
   const desconto = Math.max(0, safeNumFromInputEl(inputDesconto));
   const entrada = Math.max(0, safeNumFromInputEl(inputEntrada));
   let valorFinal = safeNumFromInputEl(inputValorFinal);
   if (!valorFinal || valorFinal === 0) valorFinal = Math.max(0, preco - desconto);
   if (valorFinal < 0) valorFinal = 0;
 
-  if (!cliente) { Swal.fire("Atenção", "Preencha o nome do cliente.", "warning"); return; }
-  if (!dataVal) { Swal.fire("Atenção", "Escolha a data do evento.", "warning"); return; }
-  if (!horaInicio) { Swal.fire("Atenção", "Informe o horário de início.", "warning"); return; }
-
   const monitores = Array.from(document.querySelectorAll(".chk-monitor:checked")).map(cb => cb.value);
   const observacao = inputObservacao ? inputObservacao.value : "";
 
-  // determine requestedItems (array of names)
-  const requestedItems = resolveSelectedValueToItemNames(pacoteId);
-  // fallback: if empty but pacoteNome present, include pacoteNome text
-  if (requestedItems.length === 0 && pacoteNome) requestedItems.push(pacoteNome);
-
-  // fetch existing bookings for same date (excluding current id if editing)
-  let existing = [];
+  // PREPARE requestedItems array for estoque check
+  let requestedItems = [];
   try {
-    const q = await db.collection("agendamentos").where("data", "==", dataVal).get();
-    existing = q.docs.map(d => {
-      const obj = { id: d.id, ...d.data() };
-      return obj;
-    }).filter(x => x.id !== id);
+    if (pacoteSelection && pacoteSelection.startsWith("pacote_")) {
+      const pacId = pacoteSelection.replace(/^pacote_/, "");
+      // try to find in STATE.pacotes
+      const pac = STATE.pacotes.find(p => p.id === pacId);
+      if (pac) {
+        // pacoteToItens expects pacoteDoc, but must return array of item ids (strings)
+        const itensList = (window.regrasNegocio && window.regrasNegocio.pacoteToItens) ? window.regrasNegocio.pacoteToItens(pac) : (pac.itens || []);
+        requestedItems = itensList.slice();
+      } else {
+        // fallback: attempt to fetch pacote doc from Firestore
+        const snapPac = await db.collection("pacotes").doc(pacId).get();
+        if (snapPac.exists) {
+          const pacData = snapPac.data();
+          const itensList = (window.regrasNegocio && window.regrasNegocio.pacoteToItens) ? window.regrasNegocio.pacoteToItens(pacData) : (pacData.itens || []);
+          requestedItems = itensList.slice();
+        }
+      }
+    } else if (pacoteSelection && pacoteSelection.startsWith("item_")) {
+      const itemId = pacoteSelection.replace(/^item_/, "");
+      requestedItems = [itemId];
+    } else {
+      // unknown selection; try to derive from text
+      requestedItems = [pacoteSelection || ""];
+    }
   } catch (err) {
-    console.warn("Erro ao buscar agendamentos para checagem de estoque:", err);
+    console.warn("Erro ao montar requestedItems:", err);
+    requestedItems = [];
   }
 
-  // call regras_negocio to validate (async)
+  // get existing bookings in same date (and optionally overlapping time) to check reserved counts
+  // for simplicity we filter by same date; if you later want time overlap refine here
+  let existingBookings = [];
   try {
-    if (window.regrasNegocio && window.regrasNegocio.checkConflitoPorEstoque) {
-      const res = await window.regrasNegocio.checkConflitoPorEstoque(requestedItems, existing, { fetchFromFirestore: true });
-      if (!res.ok) {
-        const msg = res.problems.map(p => `${p.item}: precisa ${p.need}, reservado ${p.reserved}, disponível ${p.available}`).join("\n");
-        Swal.fire("Conflito de estoque", msg, "error");
-        return;
+    if (db) {
+      const q = await db.collection("agendamentos").where("data", "==", dataVal).get();
+      existingBookings = q.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => b.id !== id); // ignore itself if editing
+    }
+  } catch (err) {
+    console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
+  }
+
+  // CALL ASYNC CHECK
+  try {
+    if (window.regrasNegocio && window.regrasNegocio.checkConflitoPorEstoqueAsync) {
+      const result = await window.regrasNegocio.checkConflitoPorEstoqueAsync(requestedItems, existingBookings);
+      if (!result.ok) {
+        // show custom message per first problem
+        const p = result.problems && result.problems[0];
+        const itemName = p ? p.item : "um item";
+        const message = `Ops — não é possível realizar este agendamento. O brinquedo "${itemName}" não está mais disponível neste horário.`;
+        await Swal.fire({ title: "Conflito de estoque", text: message, icon: "warning", customClass: { popup: 'swal-high-z' } });
+        return; // do not proceed saving
       }
     }
   } catch (err) {
-    console.error("Erro ao validar estoque:", err);
-    Swal.fire("Erro", "Não foi possível validar estoque. Tente novamente.", "error");
+    console.error("Erro ao validar conflito de estoque:", err);
+    // if check fails, prevent saving to be safe
+    await Swal.fire({ title: "Erro", text: "Não foi possível verificar estoque. Tente novamente.", icon: "error", customClass: { popup: 'swal-high-z' } });
     return;
   }
 
+  // Build dados object
   const dados = {
     cliente,
     telefone,
@@ -705,8 +797,8 @@ async function salvarAgendamento() {
     horario: horaInicio,
     hora_fim: horaFim,
     endereco: { rua, numero, bairro, cidade },
-    pacoteId,
-    pacoteNome,
+    pacoteId: pacoteSelection,
+    pacoteNome: (selectItem && selectItem.selectedOptions[0]) ? selectItem.selectedOptions[0].textContent : "",
     preco,
     desconto,
     entrada,
@@ -725,11 +817,12 @@ async function salvarAgendamento() {
     } else {
       docRef = await db.collection("agendamentos").add(dados);
     }
+
     const docId = id || docRef.id;
 
-    // process file uploads (if any)
+    // If there are files selected, upload them and append to doc.comprovantes
     if (inputComprovantes && inputComprovantes.files && inputComprovantes.files.length > 0 && storage) {
-      Swal.fire({ title: "Enviando comprovantes...", didOpen: () => Swal.showLoading() });
+      Swal.fire({ title: "Enviando comprovantes...", didOpen: () => Swal.showLoading(), customClass: { popup: 'swal-high-z' } });
       const files = Array.from(inputComprovantes.files);
       const uploaded = await uploadComprovantesFiles(files, docId);
       if (uploaded.length > 0) {
@@ -741,17 +834,18 @@ async function salvarAgendamento() {
       Swal.close();
     }
 
+    // final update: ensure observacao included
     await db.collection("agendamentos").doc(docId).update({
       observacao,
       atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    Swal.fire("OK", id ? "Agendamento atualizado." : "Agendamento criado.", "success");
+    Swal.fire({ title: "OK", text: id ? "Agendamento atualizado." : "Agendamento criado.", icon: "success", customClass: { popup: 'swal-high-z' } });
     fecharModal();
-    await carregarAgendamentos();
+    await carregarAgendamentosPreservandoFiltro();
   } catch (err) {
     console.error("salvarAgendamento:", err);
-    Swal.fire("Erro", "Não foi possível salvar o agendamento.", "error");
+    Swal.fire({ title: "Erro", text: "Não foi possível salvar o agendamento.", icon: "error", customClass: { popup: 'swal-high-z' } });
   }
 }
 
@@ -766,10 +860,12 @@ safeAttach(btnSalvar, "click", salvarAgendamento);
 safeAttach(inputHoraInicio, "change", e => { if (inputHoraFim) inputHoraFim.value = calcularHoraFim(e.target.value); });
 safeAttach(inputHoraInicio, "blur", e => { if (inputHoraFim && !inputHoraFim.value) inputHoraFim.value = calcularHoraFim(e.target.value); });
 
+// telefone mask
 if (inputTelefone) {
   inputTelefone.addEventListener("input", e => { e.target.value = maskTelefone(e.target.value); });
 }
 
+// when select item changes -> set preco and recalc valor final and restante
 if (selectItem) {
   selectItem.addEventListener("change", e => {
     const opt = e.target.selectedOptions[0];
@@ -786,6 +882,7 @@ if (selectItem) {
   });
 }
 
+// money fields behaviour: focus=>plain number, input=>allow numeric characters, blur=>format to R$
 const moneyFields = [inputPreco, inputDesconto, inputEntrada, inputValorFinal];
 moneyFields.forEach(el => {
   if (!el) return;
@@ -824,6 +921,7 @@ moneyFields.forEach(el => {
   });
 });
 
+// ensure entrada blur formatted
 if (inputEntrada) inputEntrada.addEventListener("blur", () => {
   const n = parseCurrencyToNumber(inputEntrada.value);
   if (n === 0) inputEntrada.value = ""; else inputEntrada.value = formatNumberToCurrencyString(n);
@@ -831,117 +929,191 @@ if (inputEntrada) inputEntrada.addEventListener("blur", () => {
   setCurrencyInput(inputRestante, Math.max(0, vfNow - safeNumFromInputEl(inputEntrada)));
 });
 
-// ---------- DETALHES (modal) ----------
-function onDetalhesClick(e) {
-  const id = e.currentTarget.getAttribute("data-id");
-  if (!id) return;
-  // load doc and show detalhes
-  db.collection("agendamentos").doc(id).get().then(doc => {
-    if (!doc.exists) { Swal.fire("Erro", "Agendamento não encontrado", "error"); return; }
-    onDetalhesShow(id, doc.data());
-  }).catch(err => {
-    console.error("onDetalhesClick:", err);
-    Swal.fire("Erro", "Não foi possível carregar detalhes.", "error");
-  });
-}
+// ---------- DETALHES MODAL (read-only) ----------
+function abrirModalDetalhes(id) {
+  if (!id || !db) return;
 
-function onDetalhesShow(id, a) {
-  // dynamic modal
+  // remove existing if any
   const existing = document.getElementById("modalDetalhesAg");
   if (existing) existing.remove();
 
-  const div = document.createElement("div");
-  div.id = "modalDetalhesAg";
-  div.className = "modal active";
-  const enderecoStr =
-    (a.endereco?.rua || "") +
-    (a.endereco?.numero ? ", Nº " + a.endereco.numero : "") +
-    (a.endereco?.bairro ? " — " + a.endereco.bairro : "") +
-    (a.endereco?.cidade ? " / " + a.endereco.cidade : "");
+  // fetch doc
+  db.collection("agendamentos").doc(id).get().then(doc => {
+    if (!doc.exists) { Swal.fire({ title: "Erro", text: "Agendamento não encontrado", icon: "error", customClass: { popup: 'swal-high-z' } }); return; }
+    const a = doc.data();
 
-  const itensList = (a.itens && a.itens.length) ? a.itens.join(", ") : (a.pacoteNome || a.itemNome || "");
+    const div = document.createElement("div");
+    div.id = "modalDetalhesAg";
+    div.className = "modal active";
+    // build HTML: left column general, right column valores + comprovantes
+    div.innerHTML = `
+      <div class="modal-content" style="max-width:900px;">
+        <h2>Detalhes - ${a.cliente || ""}</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:10px;">
+          <div>
+            <label>Cliente</label><div>${a.cliente || ""}</div>
+            <label>Telefone</label><div>${a.telefone || ""}</div>
+            <label>Data</label><div>${a.data || ""}</div>
+            <label>Horário</label><div>${(a.horario || "") + (a.hora_fim ? " — " + (a.hora_fim||"") : "")}</div>
+            <label>Endereço</label><div>${(a.endereco?.rua||"")}${a.endereco?.numero ? ", Nº " + a.endereco.numero : ""} ${(a.endereco?.bairro ? " — " + a.endereco.bairro : "")} ${(a.endereco?.cidade ? " / " + a.endereco.cidade : "")}</div>
+          </div>
+          <div>
+            <label>Item / Pacote</label><div>${a.pacoteNome || a.itemNome || a.pacoteId || ""}</div>
+            <label>Preço</label><div>${formatNumberToCurrencyString(Number(a.preco || 0))}</div>
+            <label>Desconto</label><div>${formatNumberToCurrencyString(Number(a.desconto || 0))}</div>
+            <label>Valor final</label><div>${formatNumberToCurrencyString(Number(a.valor_final || 0))}</div>
+            <label>Entrada</label><div>${formatNumberToCurrencyString(Number(a.entrada || 0))}</div>
+            <label>Restante</label><div>${formatNumberToCurrencyString(Math.max(0, Number(a.valor_final || 0) - Number(a.entrada || 0)))}</div>
+          </div>
+        </div>
 
-  let comprovantesHtml = "";
-  (a.comprovantes || []).forEach(c => {
-    comprovantesHtml += `<div style="display:inline-block;margin:6px"><img src="${c.url}" style="width:100px;height:100px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="window.open('${c.url}','_blank')"></div>`;
+        <div style="margin-top:12px;">
+          <label>Observação</label>
+          <div style="white-space:pre-wrap; background:#111; padding:10px; border-radius:6px; border:1px solid #222;">${a.observacao || ""}</div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label>Comprovantes</label>
+          <div id="detalhes-comprovantes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+        </div>
+
+        <div style="margin-top:18px; display:flex; justify-content:space-between;">
+          <div>
+            <button class="btn btn-dark" id="btnFecharDetalhes">Fechar</button>
+          </div>
+          <div>
+            <button class="btn btn-dark" id="btnGerarComprovante">Comprovante de agendamento</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(div);
+
+    // render comprovantes as readOnly
+    const compsEl = document.getElementById("detalhes-comprovantes");
+    if (compsEl) {
+      const comps = a.comprovantes || [];
+      comps.forEach(c => {
+        const w = document.createElement("div");
+        w.className = "comp-wrapper";
+        const img = document.createElement("img");
+        img.src = c.url;
+        img.onclick = () => window.open(c.url, "_blank");
+        w.appendChild(img);
+        compsEl.appendChild(w);
+      });
+    }
+
+    document.getElementById("btnFecharDetalhes").onclick = () => {
+      const el = document.getElementById("modalDetalhesAg");
+      if (el) el.remove();
+    };
+
+    // generate PNG comprovante
+    document.getElementById("btnGerarComprovante").onclick = async () => {
+      if ((a.status || "").toLowerCase() === "cancelado") {
+        await Swal.fire({ title: "Indisponível", text: "Agendamento cancelado não pode gerar comprovante.", icon: "info", customClass: { popup: 'swal-high-z' } });
+        return;
+      }
+      try {
+        await gerarComprovantePNG(a);
+      } catch (err) {
+        console.error("Erro gerando comprovante:", err);
+        Swal.fire({ title: "Erro", text: "Não foi possível gerar comprovante.", icon: "error", customClass: { popup: 'swal-high-z' } });
+      }
+    };
+  }).catch(err => {
+    console.error("abrirModalDetalhes:", err);
+    Swal.fire({ title: "Erro", text: "Não foi possível abrir detalhes.", icon: "error", customClass: { popup: 'swal-high-z' } });
   });
-
-  div.innerHTML = `
-    <div class="modal-content" style="max-width:900px;">
-      <h2>Detalhes - ${a.cliente || ""}</h2>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px;">
-        <div>
-          <b>Data:</b> ${a.data || ""}<br>
-          <b>Horário:</b> ${a.horario || ""}<br>
-          <b>Telefone:</b> ${a.telefone || ""}<br>
-          <b>Endereço:</b> ${enderecoStr || ""}<br>
-          <b>Itens / Pacote:</b> ${itensList || ""}<br>
-          <b>Valor final:</b> ${formatNumberToCurrencyString(a.valor_final || a.preco || 0)}<br>
-          <b>Status:</b> ${a.status || ""}<br>
-        </div>
-        <div>
-          <b>Observação:</b><br>
-          <div style="white-space:pre-wrap;margin-top:8px;">${a.observacao || ""}</div>
-        </div>
-      </div>
-
-      <div style="margin-top:12px">
-        <h3>Comprovantes</h3>
-        <div id="detalhes-comprovantes">${comprovantesHtml || "<i>Sem comprovantes</i>"}</div>
-      </div>
-
-      <div style="margin-top:18px; display:flex; justify-content:space-between;">
-        <div>
-          <button class="btn btn-dark" id="fecharDetalhes">Fechar</button>
-        </div>
-        <div>
-          <button class="btn" id="gerarComprovante">Comprovante de agendamento</button>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(div);
-
-  document.getElementById("fecharDetalhes").onclick = () => { div.remove(); };
-  document.getElementById("gerarComprovante").onclick = () => {
-    gerarComprovanteImagemAgora(a);
-  };
 }
 
-// gera imagem simples em canvas e baixa como PNG
-function gerarComprovanteImagemAgora(a) {
-  try {
-    const w = 1000, h = 600;
-    const c = document.createElement("canvas");
-    c.width = w; c.height = h;
-    const ctx = c.getContext("2d");
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0,0,w,h);
-    ctx.fillStyle = "#000";
-    ctx.font = "24px Arial";
-    let y = 40;
-    ctx.fillText("Comprovante de Agendamento", 30, y); y += 40;
-    ctx.font = "20px Arial";
-    ctx.fillText("Cliente: " + (a.cliente || ""), 30, y); y += 30;
-    ctx.fillText("Telefone: " + (a.telefone || ""), 30, y); y += 30;
-    ctx.fillText("Data: " + (a.data || ""), 30, y); y += 30;
-    ctx.fillText("Horário: " + (a.horario || ""), 30, y); y += 30;
-    ctx.fillText("Item/Pacote: " + (a.pacoteNome || a.itemNome || ""), 30, y); y += 30;
-    ctx.fillText("Valor: " + formatNumberToCurrencyString(a.valor_final || a.preco || 0), 30, y); y += 40;
-    ctx.fillText("Observação:", 30, y); y += 28;
-    const obs = String(a.observacao || "");
-    wrapText(ctx, obs, 30, y, w - 60, 22);
-    const dataUrl = c.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.href = dataUrl;
-    link.download = `comprovante_agendamento_${(a.cliente||'')}_${(a.data||'')}.png`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (err) {
-    console.error("Erro gerar comprovante imagem:", err);
-    Swal.fire("Erro", "Não foi possível gerar comprovante.", "error");
+// ---------- GERAR COMPROVANTE (PNG) ----------
+async function gerarComprovantePNG(agendamentoData) {
+  // draws a simple layout on canvas and triggers download; includes logo from storage root (logo.png or logo)
+  const w = 1200;
+  const h = 800;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+
+  // background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0,0,w,h);
+
+  ctx.fillStyle = "#222";
+  ctx.font = "bold 28px Arial";
+  ctx.fillText("Comprovante de Agendamento", 40, 60);
+
+  // try to load logo from storage root: 'logo.png' (best-effort)
+  let logoImg = null;
+  if (storage) {
+    try {
+      // try common logo names
+      const possible = ["logo.png","logo.jpg","logo.jpeg","logo"];
+      for (const p of possible) {
+        try {
+          const url = await storage.ref(p).getDownloadURL();
+          logoImg = await loadImage(url);
+          break;
+        } catch (_) { /* try next */ }
+      }
+    } catch (_) {}
   }
+  if (logoImg) {
+    // draw logo at top-right
+    const logoW = 180;
+    const logoH = Math.round(logoImg.height * (logoW / logoImg.width));
+    ctx.drawImage(logoImg, w - logoW - 40, 20, logoW, logoH);
+  }
+
+  // draw content
+  ctx.fillStyle = "#000";
+  ctx.font = "22px Arial";
+  const leftX = 40;
+  let y = 110;
+  const lineH = 34;
+
+  const addLine = (label, value) => {
+    ctx.font = "bold 18px Arial";
+    ctx.fillText(label + ": ", leftX, y);
+    ctx.font = "16px Arial";
+    const maxW = w - leftX - 60;
+    wrapText(ctx, String(value || ""), leftX + 150, y - 14, maxW, 20);
+    y += lineH;
+  };
+
+  addLine("Cliente", agendamentoData.cliente || "");
+  addLine("Telefone", agendamentoData.telefone || "");
+  addLine("Data", agendamentoData.data || "");
+  addLine("Horário", (agendamentoData.horario || "") + (agendamentoData.hora_fim ? " — " + (agendamentoData.hora_fim||"") : ""));
+  addLine("Endereço", `${agendamentoData.endereco?.rua || ""}${agendamentoData.endereco?.numero ? ", Nº " + agendamentoData.endereco.numero : ""} ${agendamentoData.endereco?.bairro ? " — " + agendamentoData.endereco.bairro : ""} ${agendamentoData.endereco?.cidade ? " / " + agendamentoData.endereco.cidade : ""}`);
+  addLine("Item / Pacote", agendamentoData.pacoteNome || agendamentoData.itemNome || "");
+  addLine("Preço", formatNumberToCurrencyString(Number(agendamentoData.preco || 0)));
+  addLine("Desconto", formatNumberToCurrencyString(Number(agendamentoData.desconto || 0)));
+  addLine("Entrada", formatNumberToCurrencyString(Number(agendamentoData.entrada || 0)));
+  addLine("Valor final", formatNumberToCurrencyString(Number(agendamentoData.valor_final || 0)));
+  addLine("Observação", agendamentoData.observacao || "");
+
+  // finalize and download
+  const dataUrl = canvas.toDataURL("image/png");
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = `comprovante_ag_${agendamentoData.cliente ? agendamentoData.cliente.replace(/\s+/g,'_') : agendamentoData.data}.png`;
+  a.click();
+}
+
+// small helpers for imagem
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
 }
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   const words = text.split(' ');
@@ -964,7 +1136,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 // ---------- INIT ----------
 async function init() {
   try {
-    if (painelTabela) painelTabela.style.display = "none";
+    if (painelTabela) painelTabela.style.display = "none"; // start hidden
     await carregarPacotesEItens();
     await carregarMonitores();
     await carregarAgendamentos();
@@ -974,23 +1146,6 @@ async function init() {
     if (dateParam && filtroData) {
       filtroData.value = dateParam;
       aplicarFiltros();
-    }
-
-    // add small CSS for status labels (inject if not present)
-    if (!document.getElementById("ag-status-styles")) {
-      const style = document.createElement("style");
-      style.id = "ag-status-styles";
-      style.innerHTML = `
-        .label-status { padding:4px 8px; border-radius:6px; color:#fff; font-weight:600; font-size:12px; }
-        .label-confirmado { background:#1976d2; } /* azul */
-        .label-pendente { background:#f4b400; color:#111; } /* amarelo */
-        .label-cancelado { background:#d32f2f; } /* vermelho */
-        .label-finalizado { background:#2e7d32; } /* verde */
-        .comp-wrapper { position:relative; display:inline-block; width:80px; height:80px; margin:6px; }
-        .comp-wrapper img { width:80px; height:80px; object-fit:cover; border-radius:6px; }
-        .comp-del-btn { position:absolute; top:-8px; right:-8px; background:#d00; color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:12px; line-height:22px; }
-      `;
-      document.head.appendChild(style);
     }
   } catch (err) {
     console.error("init agendamentos:", err);
