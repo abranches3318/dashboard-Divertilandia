@@ -850,11 +850,11 @@ async function salvarAgendamento() {
   }
 
  // pega o ID do agendamento em edição (vazio se for novo)
-const agendamentoId = document.getElementById('ag-id').value || "";
+const agendamentoId = (document.getElementById('ag-id').value || "").toString();
 
 // ---------- CHECAR DUPLICIDADE (ignorando edição) ----------
 const agendamentoDuplicado = existingBookings.find(b => 
-  b.id !== agendamentoId && // ignora o próprio agendamento em edição
+  (b.id?.toString() || "") !== agendamentoId && // ignora o próprio agendamento em edição
   (b.horario || "") === horaInicio &&
   (b.telefone || "").replace(/\D/g,"") === telefone.replace(/\D/g,"") &&
   (b.endereco?.rua || "").toLowerCase() === rua.toLowerCase() &&
