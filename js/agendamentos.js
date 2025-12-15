@@ -382,11 +382,7 @@ async function carregarMonitores() {
 
     containerMonitores.innerHTML = "";
 
-    // wrapper
-    const wrapper = document.createElement("div");
-    wrapper.style.position = "relative";
-
-    // campo visual
+    // campo visual (igual item/pacote)
     const field = document.createElement("div");
     field.style.display = "flex";
     field.style.alignItems = "center";
@@ -396,6 +392,7 @@ async function carregarMonitores() {
     field.style.padding = "10px";
     field.style.borderRadius = "5px";
     field.style.color = "#fff";
+    field.style.cursor = "default";
 
     const text = document.createElement("span");
     text.textContent = "Selecionar monitores";
@@ -403,31 +400,24 @@ async function carregarMonitores() {
     const arrow = document.createElement("span");
     arrow.textContent = "▼";
     arrow.style.cursor = "pointer";
-    arrow.style.marginLeft = "10px";
 
     field.appendChild(text);
     field.appendChild(arrow);
+    containerMonitores.appendChild(field);
 
-    // lista dropdown
-    const list = document.createElement("div");
-    list.style.position = "absolute";
-    list.style.top = "100%";
-    list.style.left = "0";
-    list.style.right = "0";
-    list.style.background = "#1e1e1e";
-    list.style.border = "1px solid #444";
-    list.style.borderRadius = "5px";
-    list.style.marginTop = "4px";
-    list.style.display = "none";
-    list.style.zIndex = "1000";
+    // dropdown FORA do container
+    const dropdown = document.createElement("div");
+    dropdown.style.position = "absolute";
+    dropdown.style.background = "#1e1e1e";
+    dropdown.style.border = "1px solid #444";
+    dropdown.style.borderRadius = "5px";
+    dropdown.style.display = "none";
+    dropdown.style.zIndex = "9999";
 
-    // toggle SOMENTE na seta
-    arrow.addEventListener("click", (e) => {
-      e.stopPropagation();
-      list.style.display = list.style.display === "none" ? "block" : "none";
-    });
+    document.body.appendChild(dropdown);
 
-    // opções
+    // montar lista
+    dropdown.innerHTML = "";
     STATE.monitores.forEach(m => {
       const line = document.createElement("label");
       line.style.display = "flex";
@@ -444,7 +434,7 @@ async function carregarMonitores() {
 
       chk.addEventListener("change", () => {
         const selecionados = Array.from(
-          list.querySelectorAll(".chk-monitor:checked")
+          dropdown.querySelectorAll(".chk-monitor:checked")
         ).map(i => {
           const mon = STATE.monitores.find(x => x.id === i.value);
           return mon ? (mon.nome || mon.name || mon.id) : "";
@@ -460,22 +450,32 @@ async function carregarMonitores() {
 
       line.appendChild(chk);
       line.appendChild(span);
-      list.appendChild(line);
+      dropdown.appendChild(line);
     });
 
-    wrapper.appendChild(field);
-    wrapper.appendChild(list);
-    containerMonitores.appendChild(wrapper);
+    // abrir dropdown
+    arrow.addEventListener("click", (e) => {
+      e.stopPropagation();
 
-    // fecha ao clicar fora
+      const rect = field.getBoundingClientRect();
+      dropdown.style.minWidth = rect.width + "px";
+      dropdown.style.left = rect.left + "px";
+      dropdown.style.top = rect.bottom + "px";
+
+      dropdown.style.display =
+        dropdown.style.display === "none" ? "block" : "none";
+    });
+
+    // fechar ao clicar fora
     document.addEventListener("click", () => {
-      list.style.display = "none";
+      dropdown.style.display = "none";
     });
 
   } catch (err) {
     console.error("carregarMonitores:", err);
   }
 }
+O QUE AGORA FICA IGUAL AO ITEM / PACOTE
 
 // ---------- CARREGAR AGENDAMENTOS ----------
 async function carregarAgendamentos() {
