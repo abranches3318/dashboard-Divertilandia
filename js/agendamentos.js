@@ -1,33 +1,37 @@
 // js/agendamentos.js (corrigido/refinado para demandas: modal detalhes, delete comprovante em tempo real,
 // validação antes de salvar, conflito de estoque visível, manter filtros, botões por status)
 
-// ---------- SWEETALERT GLOBAL CONFIG PARA MODAIS ----------
+// ---------- SWEETALERT GLOBAL CONFIG DEFINITIVA ----------
 (function setupGlobalSwal() {
   if (!Swal) return;
+
+  // cria container global se não existir
+  if (!document.getElementById('swal-global-container')) {
+    const container = document.createElement('div');
+    container.id = 'swal-global-container';
+    container.style.position = 'fixed';
+    container.style.top = '0';
+    container.style.left = '0';
+    container.style.width = '100%';
+    container.style.height = '100%';
+    container.style.zIndex = '2147483647';
+    document.body.appendChild(container);
+  }
 
   const _originalFire = Swal.fire;
   Swal.fire = function(options) {
     options = options || {};
     options.customClass = options.customClass || {};
-
-    // força classe para popup
     options.customClass.popup = 'swal-high-z';
+    options.target = document.getElementById('swal-global-container'); // força SweetAlert fora de qualquer modal
+    options.backdrop = true;
 
-    // força SweetAlert fora de qualquer modal
-    options.target = document.body;
-
-    // força popup e backdrop acima de tudo
+    const didOpenOriginal = options.didOpen;
     options.didOpen = function(popup) {
-      const swalPopup = popup || document.querySelector('.swal2-popup');
-      const swalBackdrop = document.querySelector('.swal2-backdrop');
-
-      if (swalPopup) {
-        swalPopup.style.position = 'fixed';
-        swalPopup.style.zIndex = '2147483647';
-      }
-      if (swalBackdrop) {
-        swalBackdrop.style.zIndex = '2147483646';
-      }
+      if (popup) popup.style.zIndex = '2147483647';
+      const backdrop = document.querySelector('.swal2-backdrop');
+      if (backdrop) backdrop.style.zIndex = '2147483646';
+      if (typeof didOpenOriginal === 'function') didOpenOriginal(popup);
     };
 
     return _originalFire.call(this, options);
