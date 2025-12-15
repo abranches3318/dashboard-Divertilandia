@@ -420,12 +420,13 @@ async function carregarMonitores() {
     dropdown.innerHTML = "";
     STATE.monitores.forEach(m => {
       const line = document.createElement("label");
-      line.style.display = "flex";
-      line.style.alignItems = "center";
-      line.style.gap = "8px";
-      line.style.padding = "8px";
-      line.style.cursor = "pointer";
-      line.style.color = "#fff";
+line.style.display = "grid";
+line.style.gridTemplateColumns = "20px 1fr";
+line.style.alignItems = "center";
+line.style.padding = "10px 12px";
+line.style.cursor = "pointer";
+line.style.color = "#fff";
+line.style.userSelect = "none";
 
       const chk = document.createElement("input");
       chk.type = "checkbox";
