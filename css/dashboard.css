@@ -16,6 +16,15 @@ body {
   overflow: hidden;
 }
 
+
+.swal-high-z {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 2147483647 !important;
+}
+
 /* ============================
    SIDEBAR
 ============================ */
@@ -497,11 +506,3 @@ label {
   font-family: inherit !important;
 }
 
-/* css global */
-.swal-high-z {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 2147483647 !important;
-}
