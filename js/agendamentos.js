@@ -6,7 +6,18 @@
   if (document.getElementById("swal-high-z-style")) return;
   const s = document.createElement("style");
   s.id = "swal-high-z-style";
-  s.innerHTML = `.swal-high-z { z-index: 200000 !important; } .swal-high-z::backdrop { z-index:199999 !important; }`;
+  s.innerHTML = `
+    .swal-high-z { 
+      z-index: 2147483647 !important; 
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+    } 
+    .swal-high-z::backdrop { 
+      z-index: 2147483646 !important; 
+    }
+  `;
   document.head.appendChild(s);
 })();
 
@@ -14,33 +25,15 @@
 (function setupGlobalSwal() {
   if (!Swal) return;
 
-  // adiciona style global (se ainda não existir)
-  if (!document.getElementById("swal-high-z-style")) {
-    const s = document.createElement("style");
-    s.id = "swal-high-z-style";
-    s.innerHTML = `
-      .swal-high-z {
-        position: fixed !important;
-        z-index: 999999 !important; /* acima de qualquer modal */
-      }
-      .swal-high-z::backdrop {
-        z-index: 999998 !important;
-      }
-    `;
-    document.head.appendChild(s);
-  }
-
-  // override global do Swal.fire
   const _originalFire = Swal.fire;
   Swal.fire = function(options) {
     if (!options) options = {};
     if (!options.customClass) options.customClass = {};
-    // força sempre a classe
     options.customClass.popup = 'swal-high-z';
+    options.target = document.body; // força SweetAlert no body
     return _originalFire.call(this, options);
   }
 })();
-
 
 const AG_BASE = "/dashboard-Divertilandia/";
 
