@@ -1,4 +1,4 @@
-// js/swal-global.js
+// ---------- SWEETALERT GLOBAL CONFIGURAÇÃO ----------
 (function setupGlobalSwal() {
   if (!Swal) return;
 
@@ -6,11 +6,18 @@
   Swal.fire = function(options = {}) {
     options.customClass = options.customClass || {};
     options.customClass.popup = 'swal-high-z';
-    options.target = document.body; // garante que o popup vai no body
+
+    // força SweetAlert no body, fora de qualquer modal
+    options.target = document.body;
 
     const didOpenOriginal = options.didOpen;
     options.didOpen = function(popup) {
-      if (popup) popup.style.zIndex = '2147483647';
+      // garante z-index máximo do popup
+      if (popup) {
+        popup.style.zIndex = '2147483647';
+        popup.style.position = 'fixed';
+      }
+      // garante z-index máximo do backdrop
       const backdrop = document.querySelector('.swal2-backdrop');
       if (backdrop) backdrop.style.zIndex = '2147483646';
 
