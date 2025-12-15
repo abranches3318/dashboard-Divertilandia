@@ -10,17 +10,36 @@
   document.head.appendChild(s);
 })();
 
-// ---------- SWEETALERT GLOBAL CONFIG ----------
-if (Swal) {
+// ---------- SWEETALERT GLOBAL CONFIG PARA MODAIS ----------
+(function setupGlobalSwal() {
+  if (!Swal) return;
+
+  // adiciona style global (se ainda não existir)
+  if (!document.getElementById("swal-high-z-style")) {
+    const s = document.createElement("style");
+    s.id = "swal-high-z-style";
+    s.innerHTML = `
+      .swal-high-z {
+        position: fixed !important;
+        z-index: 999999 !important; /* acima de qualquer modal */
+      }
+      .swal-high-z::backdrop {
+        z-index: 999998 !important;
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  // override global do Swal.fire
   const _originalFire = Swal.fire;
   Swal.fire = function(options) {
     if (!options) options = {};
     if (!options.customClass) options.customClass = {};
-    // força sempre usar a classe de alto z-index
-    if (!options.customClass.popup) options.customClass.popup = 'swal-high-z';
+    // força sempre a classe
+    options.customClass.popup = 'swal-high-z';
     return _originalFire.call(this, options);
   }
-}
+})();
 
 
 const AG_BASE = "/dashboard-Divertilandia/";
