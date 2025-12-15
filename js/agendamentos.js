@@ -475,7 +475,7 @@ async function carregarMonitores() {
     console.error("carregarMonitores:", err);
   }
 }
-O QUE AGORA FICA IGUAL AO ITEM / PACOTE
+
 
 // ---------- CARREGAR AGENDAMENTOS ----------
 async function carregarAgendamentos() {
