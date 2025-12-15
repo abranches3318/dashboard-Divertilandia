@@ -427,6 +427,7 @@ line.style.padding = "10px 12px";
 line.style.cursor = "pointer";
 line.style.color = "#fff";
 line.style.userSelect = "none";
+line.style.fontSize = "14px";      
 
       const chk = document.createElement("input");
 chk.type = "checkbox";
