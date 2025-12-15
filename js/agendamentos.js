@@ -857,6 +857,26 @@ async function salvarAgendamento() {
     console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
   }
 
+  // ---------- CHECAR DUPLICIDADE ----------
+const agendamentoDuplicado = existingBookings.find(b => 
+  (b.horario || "") === horaInicio &&
+  (b.telefone || "").replace(/\D/g,"") === telefone.replace(/\D/g,"") &&
+  (b.endereco?.rua || "").toLowerCase() === rua.toLowerCase() &&
+  (b.endereco?.numero || "") === numero &&
+  (b.endereco?.bairro || "").toLowerCase() === bairro.toLowerCase() &&
+  (b.endereco?.cidade || "").toLowerCase() === cidade.toLowerCase()
+);
+
+if (agendamentoDuplicado) {
+  Swal.fire({
+    title: "Agendamento duplicado",
+    text: "Já existe um agendamento com a mesma data, horário, telefone e endereço.",
+    icon: "warning",
+    customClass: { popup: 'swal-high-z' }
+  });
+  return; // bloqueia salvar
+}
+
   // CALL ASYNC CHECK
   try {
     if (window.regrasNegocio && window.regrasNegocio.checkConflitoPorEstoqueAsync) {
