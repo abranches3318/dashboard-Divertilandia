@@ -394,7 +394,9 @@ async function carregarMonitores() {
     field.style.color = "#fff";
     field.style.cursor = "default";
 
-  
+    const text = document.createElement("span");
+     text.innerHTML = "&nbsp;"; // 
+    
     const arrow = document.createElement("span");
     arrow.textContent = "▼";
     arrow.style.cursor = "pointer";
