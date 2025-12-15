@@ -10,6 +10,19 @@
   document.head.appendChild(s);
 })();
 
+// ---------- SWEETALERT GLOBAL CONFIG ----------
+if (Swal) {
+  const _originalFire = Swal.fire;
+  Swal.fire = function(options) {
+    if (!options) options = {};
+    if (!options.customClass) options.customClass = {};
+    // força sempre usar a classe de alto z-index
+    if (!options.customClass.popup) options.customClass.popup = 'swal-high-z';
+    return _originalFire.call(this, options);
+  }
+}
+
+
 const AG_BASE = "/dashboard-Divertilandia/";
 
 // firebase compat (deve estar carregado via <script> no HTML)
