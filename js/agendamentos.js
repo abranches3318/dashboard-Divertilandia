@@ -1120,7 +1120,6 @@ function abrirModalDetalhes(id) {
 function carregarImagem(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous"; // importante se for de outro domínio
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error("Não foi possível carregar a imagem: " + url));
     img.src = url;
@@ -1166,7 +1165,7 @@ async function gerarComprovantePNG(agendamentoData) {
   ctx.strokeRect(10, 10, W - 20, H - 20);
 
   // ===== LOGO =====
-  const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/dashdivert.firebasestorage.app/o/logo.png?alt=media&token=656b876c-f07a-4d77-b78f-3914520c45f3";
+  const LOGO_URL = "./img/logo.png";
 
   try {
     const logo = await carregarImagem(LOGO_URL);
