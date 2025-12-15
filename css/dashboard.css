@@ -17,6 +17,7 @@ body {
 }
 
 
+/* SweetAlert acima de tudo */
 .swal-high-z {
   position: fixed !important;
   top: 50% !important;
