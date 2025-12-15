@@ -10,24 +10,24 @@
     options = options || {};
     options.customClass = options.customClass || {};
 
-    // força classe para popup (pode manter se quiser, mas inline já garante)
+    // força classe para popup
     options.customClass.popup = 'swal-high-z';
 
-    // força SweetAlert diretamente no body
+    // força SweetAlert fora de qualquer modal
     options.target = document.body;
 
-    // garante que o popup e backdrop fiquem acima do modal
-    const onBeforeOpen = options.didOpen;
-    options.didOpen = function(...args) {
-      const popup = document.querySelector('.swal2-popup');
-      if (popup) {
-        popup.style.position = 'fixed';
-        popup.style.zIndex = '2147483647';
-      }
-      const backdrop = document.querySelector('.swal2-backdrop');
-      if (backdrop) backdrop.style.zIndex = '2147483646';
+    // força popup e backdrop acima de tudo
+    options.didOpen = function(popup) {
+      const swalPopup = popup || document.querySelector('.swal2-popup');
+      const swalBackdrop = document.querySelector('.swal2-backdrop');
 
-      if (typeof onBeforeOpen === 'function') onBeforeOpen(...args);
+      if (swalPopup) {
+        swalPopup.style.position = 'fixed';
+        swalPopup.style.zIndex = '2147483647';
+      }
+      if (swalBackdrop) {
+        swalBackdrop.style.zIndex = '2147483646';
+      }
     };
 
     return _originalFire.call(this, options);
