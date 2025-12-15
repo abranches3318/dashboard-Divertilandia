@@ -848,29 +848,20 @@ async function salvarAgendamento() {
   } catch (err) {
     console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
   }
-// pega o ID do agendamento em edição (vazio se for novo)
-agendamentoId = (document.getElementById('ag-id').value || "").toString();
-
-// atualiza os valores do formulário
-telefone = inputTelefone.value;
-horaInicio = inputHoraInicio.value;
-rua = inputEndRua.value;
-numero = inputEndNumero.value;
-bairro = inputEndBairro.value;
-cidade = inputEndCidade.value;
+  
+const agendamentoId = (document.getElementById('ag-id').value || "").toString();
 
 // ---------- CHECAR DUPLICIDADE (ignora o próprio agendamento) ----------
 const agendamentoDuplicado = existingBookings.find(b => {
   const bId = (b.id || "").toString();
-  const mesmaPessoa = (b.telefone || "").replace(/\D/g,"") === telefone.replace(/\D/g,"");
-  const mesmoHorario = (b.horario || "") === horaInicio;
+  const mesmaPessoa = (b.telefone || "").replace(/\D/g,"") === inputTelefone.value.replace(/\D/g,"");
+  const mesmoHorario = (b.horario || "") === inputHoraInicio.value;
   const mesmoEndereco = 
-    (b.endereco?.rua || "").toLowerCase() === rua.toLowerCase() &&
-    (b.endereco?.numero || "") === numero &&
-    (b.endereco?.bairro || "").toLowerCase() === bairro.toLowerCase() &&
-    (b.endereco?.cidade || "").toLowerCase() === cidade.toLowerCase();
+    (b.endereco?.rua || "").toLowerCase() === inputEndRua.value.toLowerCase() &&
+    (b.endereco?.numero || "") === inputEndNumero.value &&
+    (b.endereco?.bairro || "").toLowerCase() === inputEndBairro.value.toLowerCase() &&
+    (b.endereco?.cidade || "").toLowerCase() === inputEndCidade.value.toLowerCase();
 
-  // retorna true somente se for outro agendamento
   return (bId !== agendamentoId) && mesmaPessoa && mesmoHorario && mesmoEndereco;
 });
 
@@ -881,7 +872,7 @@ if (agendamentoDuplicado) {
     icon: "warning",
     customClass: { popup: 'swal-high-z' }
   });
-  return; // bloqueia salvar apenas se for outro agendamento
+  return;
 }
   
   // CALL ASYNC CHECK
