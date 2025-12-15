@@ -429,7 +429,9 @@ line.style.color = "#fff";
 line.style.userSelect = "none";
 
       const chk = document.createElement("input");
-      chk.type = "checkbox";
+chk.type = "checkbox";
+chk.style.margin = "0";
+chk.style.transform = "scale(1.05)";
       chk.className = "chk-monitor";
       chk.value = m.id;
 
