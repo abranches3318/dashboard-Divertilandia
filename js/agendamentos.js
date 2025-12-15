@@ -6,38 +6,51 @@
   if (!Swal) return;
 
   const _originalFire = Swal.fire;
+
   Swal.fire = function(options) {
     options = options || {};
     options.customClass = options.customClass || {};
-    options.customClass.popup = 'swal-high-z';
-    options.backdrop = true; // mantém backdrop
+    options.customClass.popup = 'swal2-popup-high-z';
+    options.backdrop = true;
 
-    // força SweetAlert a ser adicionado ao body
+    // força SweetAlert a ser adicionado diretamente ao body, fora de modais
     options.target = document.body;
 
+    // ganchos para ajustar z-index
     const didOpenOriginal = options.didOpen;
     options.didOpen = function(popup) {
       if (popup) {
-        popup.style.zIndex = '2147483647';
+        popup.style.zIndex = 2147483647;
         popup.style.position = 'fixed';
       }
-
       const backdrop = document.querySelector('.swal2-backdrop');
-      if (backdrop) backdrop.style.zIndex = '2147483646';
+      if (backdrop) backdrop.style.zIndex = 2147483646;
 
       if (typeof didOpenOriginal === 'function') didOpenOriginal(popup);
     };
 
-    const willCloseOriginal = options.willClose;
-    options.willClose = function() {
-      // remove qualquer referência de z-index extra quando fechar
-      const backdrop = document.querySelector('.swal2-backdrop');
-      if (backdrop) backdrop.style.zIndex = '';
-      if (typeof willCloseOriginal === 'function') willCloseOriginal();
-    };
-
     return _originalFire.call(this, options);
   };
+})();
+
+// Adiciona CSS global
+(function addSwalHighZStyle() {
+  if (document.getElementById('swal-high-z-style')) return;
+  const style = document.createElement('style');
+  style.id = 'swal-high-z-style';
+  style.innerHTML = `
+    .swal2-popup-high-z {
+      z-index: 2147483647 !important;
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+    }
+    .swal2-backdrop {
+      z-index: 2147483646 !important;
+    }
+  `;
+  document.head.appendChild(style);
 })();
 
 const AG_BASE = "/dashboard-Divertilandia/";
