@@ -1165,7 +1165,7 @@ async function gerarComprovantePNG(agendamentoData) {
   ctx.strokeRect(10, 10, W - 20, H - 20);
 
   // ===== LOGO =====
-  const LOGO_URL = "./img/logo.png";
+  const LOGO_URL = "https://abranches3318.github.io/dashboard-Divertilandia/img/logo.png";
 
   try {
     const logo = await carregarImagem(LOGO_URL);
