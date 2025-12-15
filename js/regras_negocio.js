@@ -1,263 +1,187 @@
 // js/regras_negocio.js
-// Regras de negócio: inventário — agora lê dados do Firestore quando disponível.
-// Exporta window.regrasNegocio com funções síncronas e assíncronas.
+// Regras de negócio — controle de estoque e conflitos
+// Fonte principal: Firestore (coleção "item")
 
 (function () {
-  // fallback local (apenas backup, usado se Firestore não fornecer dados)
+
+  /* =======================
+     ESTOQUE FALLBACK
+     ======================= */
   const estoquePadrao = {
-    "pula_pula": 5,
-    "toboga": 1,
-    "toboguinho": 1,
-    "piscina_bolinhas": 2,
-    "algodao_doce": 3,
-    "pipoca": 3,
-    "barraca_simples": 5,
-    "barraca_dupla": 1
+    pula_pula: 5,
+    toboguinho: 1,
+    toboga: 1,
+    piscina_bolinhas: 2,
+    algodao_doce: 3,
+    pipoca: 3,
+    barraca_simples: 5,
+    barraca_dupla: 1
   };
 
-  // ============================================================
-  // CORREÇÃO ESSENCIAL: normalização + mapeamento real
-  // ============================================================
-  function normalizeName(s) {
-    if (!s) return "";
+  /* =======================
+     NORMALIZAÇÃO DE NOMES
+     ======================= */
+  function normalizeName(str) {
+    if (!str) return "";
 
-    let norm = String(s)
+    const norm = String(str)
       .toLowerCase()
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "_")
       .replace(/^_+|_+$/g, "");
 
-    // MAPEAMENTO — garante que todas variações caiam nos itens corretos
-    // ---------------------------------------------------------------
+    if (norm.includes("pula")) return "pula_pula";
+    if (norm.includes("piscina")) return "piscina_bolinhas";
+    if (norm.includes("algodao")) return "algodao_doce";
+    if (norm.includes("pipoca")) return "pipoca";
+    if (norm.includes("toboguinho")) return "toboguinho";
+    if (norm.includes("toboga")) return "toboga";
+    if (norm.includes("barraca") && norm.includes("dupla")) return "barraca_dupla";
+    if (norm.includes("barraca")) return "barraca_simples";
 
-    // pula-pula grande / pequeno / medidas
-    if (norm.includes("pula_pula") || norm.includes("pula__pula") || norm.includes("pula_pula_3") || norm.includes("pula_pula_2")) {
-      return "pula_pula";
-    }
-
-    // piscina de bolinhas
-    if (
-      norm.includes("piscina") ||
-      norm.includes("bolinha") ||
-      norm.includes("bolinhas")
-    ) {
-      return "piscina_bolinhas";
-    }
-
-    // algodão doce
-    if (norm.includes("algodao") || norm.includes("algodao_doce") || norm.includes("algodao__doce") || norm.includes("doce")) {
-      return "algodao_doce";
-    }
-
-    // pipoca
-    if (norm.includes("pipoca")) {
-      return "pipoca";
-    }
-
-    // toboguinho
-    if (norm.includes("toboguinho") || norm.includes("tobo_guinho")) {
-      return "toboguinho";
-    }
-
-    // tobogã
-    if (norm.includes("toboga")) {
-      return "toboga";
-    }
-
-    // barracas
-    if (norm.includes("barraca_dupla") || norm.includes("dupla")) {
-      return "barraca_dupla";
-    }
-
-    if (norm.includes("barraca_simples") || norm.includes("simples") || norm.includes("barraca")) {
-      return "barraca_simples";
-    }
-
-    // fallback: retorna norm
     return norm;
   }
 
-  // Conta itens por nome (entrada: array de strings)
-  function contarItensLista(itensArray) {
-    const counts = {};
-    (itensArray || []).forEach(it => {
-      const key = String(it || "").trim();
-      if (!key) return;
-      counts[key] = (counts[key] || 0) + 1;
+  /* =======================
+     CONTADORES
+     ======================= */
+  function contarItensLista(arr = []) {
+    const map = {};
+    arr.forEach(n => {
+      const k = normalizeName(n);
+      if (!k) return;
+      map[k] = (map[k] || 0) + 1;
     });
-    return counts;
+    return map;
   }
 
-  // converte listagens que incluem algodao/pipoca para incluir barracas necessárias
-  function expandirItensComBarracas(itensArray) {
-    const counts = contarItensLista(itensArray);
-    const algodao =
-      counts["Algodão doce"] || counts["Algodao doce"] || counts["algodao_doce"] ||
-      counts["algodao doce"] || counts["algodao"] || 0;
+  /* =======================
+     BARRACAS AUTOMÁTICAS
+     ======================= */
+  function expandirItensComBarracas(itens = []) {
+    const counts = contarItensLista(itens);
 
-    const pipoca = counts["Pipoca"] || counts["pipoca"] || 0;
+    const algodao = counts.algodao_doce || 0;
+    const pipoca = counts.pipoca || 0;
 
-    let need_simple = 0;
-    let need_dupla = 0;
     const pares = Math.min(algodao, pipoca);
-    need_dupla = pares;
+    const simples = (algodao - pares) + (pipoca - pares);
 
-    const restante_alg = Math.max(0, algodao - pares);
-    const restante_pip = Math.max(0, pipoca - pares);
-    need_simple = restante_alg + restante_pip;
+    const expanded = [...itens];
+    for (let i = 0; i < pares; i++) expanded.push("barraca_dupla");
+    for (let i = 0; i < simples; i++) expanded.push("barraca_simples");
 
-    const expanded = [...(itensArray || [])];
-    for (let i = 0; i < need_dupla; i++) expanded.push("barraca_dupla");
-    for (let i = 0; i < need_simple; i++) expanded.push("barraca_simples");
-
-    return { expandedList: expanded, need_dupla, need_simple };
+    return expanded;
   }
 
-  // Converte um documento pacote (do Firestore) para lista de nomes de itens (strings).
-  // O seu pacote tem campo `itens` que é array de nomes (strings) — conforme você confirmou.
+  /* =======================
+     PACOTES
+     ======================= */
   function pacoteToItens(pacoteDoc) {
     if (!pacoteDoc) return [];
     if (Array.isArray(pacoteDoc.itens)) return pacoteDoc.itens.slice();
-    if (Array.isArray(pacoteDoc.items)) return pacoatDoc.items.slice();
+    if (Array.isArray(pacoteDoc.items)) return pacoteDoc.items.slice();
     return [];
-  }
-
-  // Constrói mapa de estoque a partir da coleção `item` no Firestore
-  async function buildEstoqueFromFirestore() {
-    if (!window.db) return null;
-    try {
-      const snap = await db.collection("item").get();
-      const map = {};
-      snap.docs.forEach(d => {
-        const data = d.data() || {};
-        const nome = data.nome || data.name || "";
-        const quantRaw =
-          data.quantidade != null ? data.quantidade :
-            (data.quant || data.quantity || 0);
-
-        const quant = Number.isFinite(Number(quantRaw)) ? Number(quantRaw) : 0;
-
-        const key = normalizeName(nome);
-        map[key] = {
-          nomeOriginal: nome,
-          quantidade: quant
-        };
-      });
-      return map;
-    } catch (err) {
-      console.warn("regras_negocio.buildEstoqueFromFirestore erro:", err);
-      return null;
-    }
   }
 
   async function carregarItensDoPacotePorId(pacoteId) {
     if (!window.db || !pacoteId) return [];
-    try {
-      const id = String(pacoteId).replace(/^pacote_/, "");
-      const doc = await db.collection("pacotes").doc(id).get();
-      if (!doc.exists) return [];
-      const data = doc.data() || {};
-      return pacoteToItens(data);
-    } catch (err) {
-      console.error("carregarItensDoPacotePorId:", err);
-      return [];
-    }
+    const id = String(pacoteId).replace(/^pacote_/, "");
+    const doc = await db.collection("pacotes").doc(id).get();
+    if (!doc.exists) return [];
+    return pacoteToItens(doc.data());
   }
 
-  // ============================================================
-  // CHECK DE ESTOQUE (NÃO ALTERADO — APENAS NORMALIZAÇÃO FUNCIONANDO)
-  // ============================================================
-  async function checkConflitoPorEstoque(requestedItems, existingBookings = [], options = {}) {
-    const fetchFromFirestore = options.fetchFromFirestore !== false;
+  /* =======================
+     ESTOQUE FIRESTORE
+     ======================= */
+  async function buildEstoqueFromFirestore() {
+    if (!window.db) return null;
 
-    const { expandedList: reqExpanded } = expandirItensComBarracas(requestedItems);
-    const needCounts = contarItensLista(reqExpanded);
+    const snap = await db.collection("item").get();
+    const map = {};
+
+    snap.docs.forEach(d => {
+      const data = d.data() || {};
+      const nome = data.nome || data.name || "";
+      const qtd = Number(data.quantidade ?? data.quant ?? 0);
+      const key = normalizeName(nome);
+
+      map[key] = qtd;
+    });
+
+    return map;
+  }
+
+  /* =======================
+     CHECK DE CONFLITO
+     ======================= */
+  async function checkConflitoPorEstoque(
+    requestedItems = [],
+    existingBookings = []
+  ) {
+    const estoqueFirestore = await buildEstoqueFromFirestore();
+    const requestedExpanded = expandirItensComBarracas(requestedItems);
+    const needCounts = contarItensLista(requestedExpanded);
 
     const reservedCounts = {};
-    for (const b of existingBookings || []) {
-      let arr = [];
-      if (Array.isArray(b.itens) && b.itens.length) arr = b.itens;
-      else if (Array.isArray(b.pacoteItens) && b.pacoteItens.length) arr = b.pacoteItens;
-      else if (b.pacoteId) {
-        const pid = String(b.pacoteId).replace(/^pacote_/, "");
-        const pacItens = await carregarItensDoPacotePorId(pid);
-        arr = pacItens;
+
+    for (const ag of existingBookings) {
+      let itens = [];
+
+      if (Array.isArray(ag.itens)) {
+        itens = ag.itens;
+      } else if (ag.pacoteId) {
+        itens = await carregarItensDoPacotePorId(ag.pacoteId);
       }
 
-      const { expandedList: exp } = expandirItensComBarracas(arr);
-      const c = contarItensLista(exp);
+      const expanded = expandirItensComBarracas(itens);
+      const counts = contarItensLista(expanded);
 
-      Object.keys(c).forEach(k => {
-        reservedCounts[k] = (reservedCounts[k] || 0) + c[k];
+      Object.keys(counts).forEach(k => {
+        reservedCounts[k] = (reservedCounts[k] || 0) + counts[k];
       });
     }
 
-    let estoqueMap = null;
-    if (fetchFromFirestore && window.db) {
-      estoqueMap = await buildEstoqueFromFirestore();
-    }
+    const problemas = [];
 
-    const problems = [];
+    Object.keys(needCounts).forEach(k => {
+      const need = needCounts[k];
+      const reserved = reservedCounts[k] || 0;
 
-    Object.keys(needCounts).forEach(itemName => {
-      const need = needCounts[itemName] || 0;
-
-      const norm = normalizeName(itemName);
-
-      let available = null;
-
-      if (estoqueMap && estoqueMap[norm]) {
-        available = Number(estoqueMap[norm].quantidade || 0);
-      } else if (estoqueMap) {
-        const foundKey = Object.keys(estoqueMap)
-          .find(k => k === norm || k.includes(norm) || norm.includes(k));
-
-        if (foundKey) available = Number(estoqueMap[foundKey].quantidade || 0);
-      }
-
-      if (available == null) {
-        available = estoquePadrao[norm] != null ? estoquePadrao[norm] : 0;
-      }
-
-      let reserved = 0;
-
-      if (reservedCounts[itemName]) {
-        reserved = reservedCounts[itemName];
-      } else {
-        const rcKey = Object.keys(reservedCounts)
-          .find(k => normalizeName(k) === norm);
-
-        if (rcKey) reserved = reservedCounts[rcKey] || 0;
-      }
+      const available =
+        estoqueFirestore?.[k] ??
+        estoquePadrao[k] ??
+        0;
 
       if ((reserved + need) > available) {
-        problems.push({
-          item: itemName,
+        problemas.push({
+          item: k,
           need,
           reserved,
-          available,
-          availableRemaining: Math.max(0, available - reserved)
+          available
         });
       }
     });
 
     return {
-      ok: problems.length === 0,
-      problems,
-      needCounts,
-      reservedCounts
+      ok: problemas.length === 0,
+      problemas
     };
   }
 
-  // Export
+  /* =======================
+     EXPORT
+     ======================= */
   window.regrasNegocio = {
-    estoquePadrao,
     normalizeName,
     contarItensLista,
     expandirItensComBarracas,
     checkConflitoPorEstoque,
     pacoteToItens,
+    carregarItensDoPacotePorId,
     buildEstoqueFromFirestore,
-    carregarItensDoPacotePorId
+    estoquePadrao
   };
+
 })();
