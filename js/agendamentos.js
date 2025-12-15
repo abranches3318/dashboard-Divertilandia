@@ -764,16 +764,19 @@ if (inputComprovantes) {
   });
 }
 
+
 /**
  * Checa duplicidade de agendamento
  * 
  * @param {Array} existingBookings - Lista de agendamentos existentes no mesmo dia
  * @param {Object} formData - Dados do agendamento atual do formulário
- *        { id, data, horario, endereco: { rua, numero, bairro, cidade } }
+ *        { id, telefone, data, horario, endereco: { rua, numero, bairro, cidade } }
+ * @param {boolean} ignorarTelefone - Se true, verifica apenas data+hora+endereço, ignorando telefone
  * @returns {Object|null} - Retorna o agendamento duplicado encontrado ou null se não houver
  */
-function checarDuplicidade(existingBookings, formData) {
+function checarDuplicidade(existingBookings, formData, ignorarTelefone = false) {
   const agendamentoId = String(formData.id || "");
+  const telefoneForm = (formData.telefone || "").replace(/\D/g,"");
   const dataForm = String(formData.data || "").trim(); // YYYY-MM-DD
   const horaForm = String(formData.horario || "").padEnd(5, "0"); // HH:MM
   const ruaForm = (formData.endereco?.rua || "").trim().toLowerCase();
@@ -786,14 +789,21 @@ function checarDuplicidade(existingBookings, formData) {
     if (bId === agendamentoId) return false; // ignora próprio agendamento
 
     const mesmaData = String(b.data || "").trim() === dataForm;
-    const mesmoHorario = String(b.horario || "").padEnd(5, "0") === horaForm;
+    const mesmoHorario = String(b.horario || "").padEnd(5,"0") === horaForm;
     const mesmoEndereco =
       (b.endereco?.rua || "").trim().toLowerCase() === ruaForm &&
       String(b.endereco?.numero || "").trim() === numeroForm &&
       (b.endereco?.bairro || "").trim().toLowerCase() === bairroForm &&
       (b.endereco?.cidade || "").trim().toLowerCase() === cidadeForm;
 
-    return mesmaData && mesmoHorario && mesmoEndereco;
+    if (ignorarTelefone) {
+      // Apenas data + horário + endereço
+      return mesmaData && mesmoHorario && mesmoEndereco;
+    } else {
+      const mesmaPessoa = (b.telefone || "").replace(/\D/g,"") === telefoneForm;
+      // Telefone + horário + endereço
+      return mesmaPessoa && mesmoHorario && mesmoEndereco;
+    }
   });
 
   return duplicado || null;
