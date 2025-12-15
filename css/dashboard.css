@@ -488,3 +488,11 @@ label {
   font-size: 14px;
   line-height: 1.4;
 }
+
+#ag-monitores,
+#ag-monitores * {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  font-family: inherit !important;
+}
