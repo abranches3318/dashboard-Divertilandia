@@ -839,11 +839,14 @@ async function salvarAgendamento() {
 
   // get existing bookings in same date (and optionally overlapping time) to check reserved counts
   // for simplicity we filter by same date; if you later want time overlap refine here
+  
   let existingBookings = [];
 try {
   if (db) {
     const q = await db.collection("agendamentos").where("data", "==", dataVal).get();
-    existingBookings = q.docs.map(d => ({ id: d.id, ...d.data() })); // pega todos, inclusive o próprio
+    existingBookings = q.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(b => b.id !== (inputId?.value || "")); // IGNORA o próprio agendamento em edição
   }
 } catch (err) {
   console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
