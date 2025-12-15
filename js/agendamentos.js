@@ -849,10 +849,16 @@ async function salvarAgendamento() {
     console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
   }
 
- // pega o ID do agendamento em edição (vazio se for novo)
+// pega o ID do agendamento em edição (vazio se for novo)
 const agendamentoId = (document.getElementById('ag-id').value || "").toString();
+const telefone = inputTelefone.value;
+const horaInicio = inputHoraInicio.value;
+const rua = inputEndRua.value;
+const numero = inputEndNumero.value;
+const bairro = inputEndBairro.value;
+const cidade = inputEndCidade.value;
 
-// ---------- CHECAR DUPLICIDADE (ignorando edição) ----------
+// ---------- CHECAR DUPLICIDADE (ignora o próprio agendamento) ----------
 const agendamentoDuplicado = existingBookings.find(b => {
   const bId = (b.id || "").toString();
   const mesmaPessoa = (b.telefone || "").replace(/\D/g,"") === telefone.replace(/\D/g,"");
@@ -863,7 +869,7 @@ const agendamentoDuplicado = existingBookings.find(b => {
     (b.endereco?.bairro || "").toLowerCase() === bairro.toLowerCase() &&
     (b.endereco?.cidade || "").toLowerCase() === cidade.toLowerCase();
 
-  // ignora o próprio agendamento em edição
+  // retorna true somente se for outro agendamento
   return (bId !== agendamentoId) && mesmaPessoa && mesmoHorario && mesmoEndereco;
 });
 
@@ -874,9 +880,8 @@ if (agendamentoDuplicado) {
     icon: "warning",
     customClass: { popup: 'swal-high-z' }
   });
-  return; // bloqueia salvar
+  return; // bloqueia salvar apenas se for outro agendamento
 }
-
   // CALL ASYNC CHECK
   try {
     if (window.regrasNegocio && window.regrasNegocio.checkConflitoPorEstoqueAsync) {
