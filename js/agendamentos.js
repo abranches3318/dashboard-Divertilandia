@@ -1,38 +1,37 @@
 // js/agendamentos.js (corrigido/refinado para demandas: modal detalhes, delete comprovante em tempo real,
 // validação antes de salvar, conflito de estoque visível, manter filtros, botões por status)
 
-// small helper: ensure SweetAlert appears above modal by adding custom CSS class
-(function ensureSwalStyle() {
-  if (document.getElementById("swal-high-z-style")) return;
-  const s = document.createElement("style");
-  s.id = "swal-high-z-style";
-  s.innerHTML = `
-    .swal-high-z { 
-      z-index: 2147483647 !important; 
-      position: fixed !important;
-      top: 50% !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%) !important;
-    } 
-    .swal-high-z::backdrop { 
-      z-index: 2147483646 !important; 
-    }
-  `;
-  document.head.appendChild(s);
-})();
-
 // ---------- SWEETALERT GLOBAL CONFIG PARA MODAIS ----------
 (function setupGlobalSwal() {
   if (!Swal) return;
 
   const _originalFire = Swal.fire;
   Swal.fire = function(options) {
-    if (!options) options = {};
-    if (!options.customClass) options.customClass = {};
+    options = options || {};
+    options.customClass = options.customClass || {};
+
+    // força classe para popup (pode manter se quiser, mas inline já garante)
     options.customClass.popup = 'swal-high-z';
-    options.target = document.body; // força SweetAlert no body
+
+    // força SweetAlert diretamente no body
+    options.target = document.body;
+
+    // garante que o popup e backdrop fiquem acima do modal
+    const onBeforeOpen = options.didOpen;
+    options.didOpen = function(...args) {
+      const popup = document.querySelector('.swal2-popup');
+      if (popup) {
+        popup.style.position = 'fixed';
+        popup.style.zIndex = '2147483647';
+      }
+      const backdrop = document.querySelector('.swal2-backdrop');
+      if (backdrop) backdrop.style.zIndex = '2147483646';
+
+      if (typeof onBeforeOpen === 'function') onBeforeOpen(...args);
+    };
+
     return _originalFire.call(this, options);
-  }
+  };
 })();
 
 const AG_BASE = "/dashboard-Divertilandia/";
