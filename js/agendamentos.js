@@ -848,15 +848,16 @@ async function salvarAgendamento() {
   } catch (err) {
     console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
   }
-
 // pega o ID do agendamento em edição (vazio se for novo)
-const agendamentoId = (document.getElementById('ag-id').value || "").toString();
-const telefone = inputTelefone.value;
-const horaInicio = inputHoraInicio.value;
-const rua = inputEndRua.value;
-const numero = inputEndNumero.value;
-const bairro = inputEndBairro.value;
-const cidade = inputEndCidade.value;
+agendamentoId = (document.getElementById('ag-id').value || "").toString();
+
+// atualiza os valores do formulário
+telefone = inputTelefone.value;
+horaInicio = inputHoraInicio.value;
+rua = inputEndRua.value;
+numero = inputEndNumero.value;
+bairro = inputEndBairro.value;
+cidade = inputEndCidade.value;
 
 // ---------- CHECAR DUPLICIDADE (ignora o próprio agendamento) ----------
 const agendamentoDuplicado = existingBookings.find(b => {
@@ -882,6 +883,7 @@ if (agendamentoDuplicado) {
   });
   return; // bloqueia salvar apenas se for outro agendamento
 }
+  
   // CALL ASYNC CHECK
   try {
     if (window.regrasNegocio && window.regrasNegocio.checkConflitoPorEstoqueAsync) {
