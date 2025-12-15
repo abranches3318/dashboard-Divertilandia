@@ -1119,106 +1119,101 @@ function abrirModalDetalhes(id) {
 
 // ---------- GERAR COMPROVANTE (PNG) ----------
 async function gerarComprovantePNG(agendamentoData) {
-  // draws a simple layout on canvas and triggers download; includes logo from storage root (logo.png or logo)
-  const w = 1200;
-  const h = 800;
+
+  const W = 1200;
+  const H = 820;
+  const MARGIN = 40;
+
   const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = W;
+  canvas.height = H;
   const ctx = canvas.getContext("2d");
 
-  // background
+  // ===== FUNDO =====
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0,0,w,h);
+  ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = "#222";
-  ctx.font = "bold 28px Arial";
-  ctx.fillText("Comprovante de Agendamento", 40, 60);
+  // ===== BORDA =====
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(10, 10, W - 20, H - 20);
 
-  // try to load logo from storage root: 'logo.png' (best-effort)
-  let logoImg = null;
-  if (storage) {
-    try {
-      // try common logo names
-      const possible = ["logo.png","logo.jpg","logo.jpeg","logo"];
-      for (const p of possible) {
-        try {
-          const url = await storage.ref(p).getDownloadURL();
-          logoImg = await loadImage(url);
-          break;
-        } catch (_) { /* try next */ }
-      }
-    } catch (_) {}
-  }
-  if (logoImg) {
-    // draw logo at top-right
+  // ===== LOGO =====
+  const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/dashdivert.firebasestorage.app/o/logo.png?alt=media&token=656b876c-f07a-4d77-b78f-3914520c45f3";
+
+  try {
+    const logo = await loadImage(LOGO_URL);
     const logoW = 180;
-    const logoH = Math.round(logoImg.height * (logoW / logoImg.width));
-    ctx.drawImage(logoImg, w - logoW - 40, 20, logoW, logoH);
+    const logoH = Math.round(logo.height * (logoW / logo.width));
+    ctx.drawImage(logo, W - logoW - MARGIN, MARGIN, logoW, logoH);
+  } catch (e) {
+    console.warn("Logo não carregada no comprovante:", e);
   }
 
-  // draw content
+  // ===== TÍTULO =====
   ctx.fillStyle = "#000";
-  ctx.font = "22px Arial";
-  const leftX = 40;
-  let y = 110;
-  const lineH = 34;
+  ctx.font = "bold 30px Arial";
+  ctx.textAlign = "left";
+  ctx.fillText("COMPROVANTE DE AGENDAMENTO", MARGIN, 70);
 
-  const addLine = (label, value) => {
+  // ===== TABELA =====
+  let y = 120;
+  const rowH = 36;
+  const labelX = MARGIN;
+  const valueX = 320;
+
+  function row(label, value) {
     ctx.font = "bold 18px Arial";
-    ctx.fillText(label + ": ", leftX, y);
+    ctx.fillText(label, labelX, y);
     ctx.font = "16px Arial";
-    const maxW = w - leftX - 60;
-    wrapText(ctx, String(value || ""), leftX + 150, y - 14, maxW, 20);
-    y += lineH;
-  };
-
-  addLine("Cliente", agendamentoData.cliente || "");
-  addLine("Telefone", agendamentoData.telefone || "");
-  addLine("Data", agendamentoData.data || "");
-  addLine("Horário", (agendamentoData.horario || "") + (agendamentoData.hora_fim ? " — " + (agendamentoData.hora_fim||"") : ""));
-  addLine("Endereço", `${agendamentoData.endereco?.rua || ""}${agendamentoData.endereco?.numero ? ", Nº " + agendamentoData.endereco.numero : ""} ${agendamentoData.endereco?.bairro ? " — " + agendamentoData.endereco.bairro : ""} ${agendamentoData.endereco?.cidade ? " / " + agendamentoData.endereco.cidade : ""}`);
-  addLine("Item / Pacote", agendamentoData.pacoteNome || agendamentoData.itemNome || "");
-  addLine("Preço", formatNumberToCurrencyString(Number(agendamentoData.preco || 0)));
-  addLine("Desconto", formatNumberToCurrencyString(Number(agendamentoData.desconto || 0)));
-  addLine("Entrada", formatNumberToCurrencyString(Number(agendamentoData.entrada || 0)));
-  addLine("Valor final", formatNumberToCurrencyString(Number(agendamentoData.valor_final || 0)));
-  addLine("Observação", agendamentoData.observacao || "");
-
-  // finalize and download
-  const dataUrl = canvas.toDataURL("image/png");
-  const a = document.createElement("a");
-  a.href = dataUrl;
-  a.download = `comprovante_ag_${agendamentoData.cliente ? agendamentoData.cliente.replace(/\s+/g,'_') : agendamentoData.data}.png`;
-  a.click();
-}
-
-// small helpers for imagem
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  const words = text.split(' ');
-  let line = '';
-  for (let n = 0; n < words.length; n++) {
-    const testLine = line + words[n] + ' ';
-    const metrics = ctx.measureText(testLine);
-    const testWidth = metrics.width;
-    if (testWidth > maxWidth && n > 0) {
-      ctx.fillText(line, x, y);
-      line = words[n] + ' ';
-      y += lineHeight;
-    } else {
-      line = testLine;
-    }
+    wrapText(ctx, String(value || ""), valueX, y - 14, W - valueX - MARGIN, 20);
+    y += rowH;
   }
-  ctx.fillText(line, x, y);
+
+  row("Cliente:", agendamentoData.cliente);
+  row("Telefone:", agendamentoData.telefone);
+  row("Data:", agendamentoData.data);
+  row("Horário:", `${agendamentoData.horario || ""}${agendamentoData.hora_fim ? " — " + agendamentoData.hora_fim : ""}`);
+
+  const end =
+    `${agendamentoData.endereco?.rua || ""}${agendamentoData.endereco?.numero ? ", Nº " + agendamentoData.endereco.numero : ""}` +
+    `${agendamentoData.endereco?.bairro ? " — " + agendamentoData.endereco.bairro : ""}` +
+    `${agendamentoData.endereco?.cidade ? " / " + agendamentoData.endereco.cidade : ""}`;
+
+  row("Endereço:", end);
+  row("Item / Pacote:", agendamentoData.pacoteNome || agendamentoData.itemNome || "");
+  row("Preço:", formatNumberToCurrencyString(Number(agendamentoData.preco || 0)));
+  row("Desconto:", formatNumberToCurrencyString(Number(agendamentoData.desconto || 0)));
+  row("Entrada:", formatNumberToCurrencyString(Number(agendamentoData.entrada || 0)));
+  row("Valor final:", formatNumberToCurrencyString(Number(agendamentoData.valor_final || 0)));
+
+  if (agendamentoData.observacao) {
+    row("Observação:", agendamentoData.observacao);
+  }
+
+  // ===== LINHA DIVISÓRIA =====
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(MARGIN, H - 130);
+  ctx.lineTo(W - MARGIN, H - 130);
+  ctx.stroke();
+
+  // ===== RODAPÉ =====
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#000";
+  ctx.font = "bold 16px Arial";
+  ctx.fillText("DIVERTILANDIA FESTA", W / 2, H - 95);
+
+  ctx.font = "14px Arial";
+  ctx.fillText("CNPJ 32.375.178/0001-03", W / 2, H - 70);
+  ctx.fillText("(27) 99905-9753", W / 2, H - 50);
+
+  // ===== DOWNLOAD =====
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png");
+  a.download = `comprovante_ag_${(agendamentoData.cliente || "cliente").replace(/\s+/g, "_")}.png`;
+  a.click();
 }
 
 // ---------- INIT ----------
