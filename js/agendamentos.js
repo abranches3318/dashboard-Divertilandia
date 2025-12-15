@@ -5,33 +5,35 @@
 (function setupGlobalSwal() {
   if (!Swal) return;
 
-  // cria container global se não existir
-  if (!document.getElementById('swal-global-container')) {
-    const container = document.createElement('div');
-    container.id = 'swal-global-container';
-    container.style.position = 'fixed';
-    container.style.top = '0';
-    container.style.left = '0';
-    container.style.width = '100%';
-    container.style.height = '100%';
-    container.style.zIndex = '2147483647';
-    document.body.appendChild(container);
-  }
-
   const _originalFire = Swal.fire;
   Swal.fire = function(options) {
     options = options || {};
     options.customClass = options.customClass || {};
     options.customClass.popup = 'swal-high-z';
-    options.target = document.getElementById('swal-global-container'); // força SweetAlert fora de qualquer modal
-    options.backdrop = true;
+    options.backdrop = true; // mantém backdrop
+
+    // força SweetAlert a ser adicionado ao body
+    options.target = document.body;
 
     const didOpenOriginal = options.didOpen;
     options.didOpen = function(popup) {
-      if (popup) popup.style.zIndex = '2147483647';
+      if (popup) {
+        popup.style.zIndex = '2147483647';
+        popup.style.position = 'fixed';
+      }
+
       const backdrop = document.querySelector('.swal2-backdrop');
       if (backdrop) backdrop.style.zIndex = '2147483646';
+
       if (typeof didOpenOriginal === 'function') didOpenOriginal(popup);
+    };
+
+    const willCloseOriginal = options.willClose;
+    options.willClose = function() {
+      // remove qualquer referência de z-index extra quando fechar
+      const backdrop = document.querySelector('.swal2-backdrop');
+      if (backdrop) backdrop.style.zIndex = '';
+      if (typeof willCloseOriginal === 'function') willCloseOriginal();
     };
 
     return _originalFire.call(this, options);
