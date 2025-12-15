@@ -853,15 +853,19 @@ async function salvarAgendamento() {
 const agendamentoId = (document.getElementById('ag-id').value || "").toString();
 
 // ---------- CHECAR DUPLICIDADE (ignorando edição) ----------
-const agendamentoDuplicado = existingBookings.find(b => 
-  (b.id?.toString() || "") !== agendamentoId && // ignora o próprio agendamento em edição
-  (b.horario || "") === horaInicio &&
-  (b.telefone || "").replace(/\D/g,"") === telefone.replace(/\D/g,"") &&
-  (b.endereco?.rua || "").toLowerCase() === rua.toLowerCase() &&
-  (b.endereco?.numero || "") === numero &&
-  (b.endereco?.bairro || "").toLowerCase() === bairro.toLowerCase() &&
-  (b.endereco?.cidade || "").toLowerCase() === cidade.toLowerCase()
-);
+const agendamentoDuplicado = existingBookings.find(b => {
+  const bId = (b.id || "").toString();
+  const mesmaPessoa = (b.telefone || "").replace(/\D/g,"") === telefone.replace(/\D/g,"");
+  const mesmoHorario = (b.horario || "") === horaInicio;
+  const mesmoEndereco = 
+    (b.endereco?.rua || "").toLowerCase() === rua.toLowerCase() &&
+    (b.endereco?.numero || "") === numero &&
+    (b.endereco?.bairro || "").toLowerCase() === bairro.toLowerCase() &&
+    (b.endereco?.cidade || "").toLowerCase() === cidade.toLowerCase();
+
+  // ignora o próprio agendamento em edição
+  return (bId !== agendamentoId) && mesmaPessoa && mesmoHorario && mesmoEndereco;
+});
 
 if (agendamentoDuplicado) {
   Swal.fire({
