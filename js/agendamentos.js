@@ -373,19 +373,45 @@ async function carregarPacotesEItens() {
 }
 
 // ---------- CARREGAR MONITORES ----------
-async function carregarMonitores() {
+async function carregarMonitores(monitoresSelecionados = []) {
   if (!db || !containerMonitores) return;
+
   try {
     const snap = await db.collection("monitores").get();
-    STATE.monitores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    STATE.monitores = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
 
     containerMonitores.innerHTML = "";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "monitores-wrapper";
+
     STATE.monitores.forEach(m => {
-      const div = document.createElement("div");
-      div.className = "chk-line";
-      div.innerHTML = `<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" class="chk-monitor" value="${m.id}"> ${m.nome || m.name || m.id}</label>`;
-      containerMonitores.appendChild(div);
+      const label = document.createElement("label");
+      label.className = "monitor-item";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "chk-monitor"; // mantém compatibilidade
+      checkbox.value = m.id;
+
+      if (monitoresSelecionados.includes(m.id)) {
+        checkbox.checked = true;
+      }
+
+      const span = document.createElement("span");
+      span.textContent = m.nome || m.name || m.id;
+
+      label.appendChild(checkbox);
+      label.appendChild(span);
+      wrapper.appendChild(label);
     });
+
+    containerMonitores.appendChild(wrapper);
+
   } catch (err) {
     console.error("carregarMonitores:", err);
   }
