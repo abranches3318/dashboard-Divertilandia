@@ -840,31 +840,30 @@ async function salvarAgendamento() {
   // get existing bookings in same date (and optionally overlapping time) to check reserved counts
   // for simplicity we filter by same date; if you later want time overlap refine here
   let existingBookings = [];
-  try {
-    if (db) {
-      const q = await db.collection("agendamentos").where("data", "==", dataVal).get();
-      existingBookings = q.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => b.id !== id); // ignore itself if editing
-    }
-  } catch (err) {
-    console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
+try {
+  if (db) {
+    const q = await db.collection("agendamentos").where("data", "==", dataVal).get();
+    existingBookings = q.docs.map(d => ({ id: d.id, ...d.data() })); // pega todos, inclusive o próprio
   }
+} catch (err) {
+  console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
+}
   
 // pega o ID do agendamento em edição (vazio se for novo)
-const agendamentoId = (document.getElementById('ag-id').value || "").toString();
+const agendamentoId = (inputId?.value || "").toString();
 
 // pega valores do formulário
-const telefoneForm = inputTelefone.value.replace(/\D/g,"");
-const horaInicioForm = inputHoraInicio.value;
-const ruaForm = inputEndRua.value.toLowerCase();
-const numeroForm = inputEndNumero.value;
-const bairroForm = inputEndBairro.value.toLowerCase();
-const cidadeForm = inputEndCidade.value.toLowerCase();
+const telefoneForm = telefone.replace(/\D/g,"");
+const horaInicioForm = horaInicio;
+const ruaForm = rua.toLowerCase();
+const numeroForm = numero;
+const bairroForm = bairro.toLowerCase();
+const cidadeForm = cidade.toLowerCase();
 
 // ---------- CHECAR DUPLICIDADE (ignora o próprio agendamento) ----------
 const agendamentoDuplicado = existingBookings.find(b => {
   const bId = (b.id || "").toString();
-
-  if(bId === agendamentoId) return false; // ignora o próprio agendamento em edição
+  if (bId === agendamentoId) return false; // ignora o próprio agendamento em edição
 
   const mesmaPessoa = (b.telefone || "").replace(/\D/g,"") === telefoneForm;
   const mesmoHorario = (b.horario || "") === horaInicioForm;
@@ -876,16 +875,6 @@ const agendamentoDuplicado = existingBookings.find(b => {
 
   return mesmaPessoa && mesmoHorario && mesmoEndereco;
 });
-
-if (agendamentoDuplicado) {
-  Swal.fire({
-    title: "Agendamento duplicado",
-    text: "Já existe um agendamento com a mesma data, horário, telefone e endereço.",
-    icon: "warning",
-    customClass: { popup: 'swal-high-z' }
-  });
-  return; // bloqueia salvar
-}
   
   // CALL ASYNC CHECK
   try {
