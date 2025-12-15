@@ -497,7 +497,7 @@ label {
   font-family: inherit !important;
 }
 
-/* sweetalert acima de tudo */
+/* css global */
 .swal-high-z {
   position: fixed !important;
   top: 50% !important;
