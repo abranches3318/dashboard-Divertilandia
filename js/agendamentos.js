@@ -764,6 +764,33 @@ if (inputComprovantes) {
   });
 }
 
+function checarDuplicidade(existingBookings, formData) {
+  const agendamentoId = String(formData.id || "");
+  const telefoneForm = (formData.telefone || "").replace(/\D/g, "");
+  const horaForm = String(formData.horario || "").padEnd(5, "0");
+  const ruaForm = (formData.endereco?.rua || "").trim().toLowerCase();
+  const numeroForm = String(formData.endereco?.numero || "").trim();
+  const bairroForm = (formData.endereco?.bairro || "").trim().toLowerCase();
+  const cidadeForm = (formData.endereco?.cidade || "").trim().toLowerCase();
+
+  const duplicado = existingBookings.find(b => {
+    const bId = String(b.id || "");
+    if (bId === agendamentoId) return false;
+
+    const mesmaPessoa = (b.telefone || "").replace(/\D/g, "") === telefoneForm;
+    const mesmoHorario = String(b.horario || "").padEnd(5, "0") === horaForm;
+    const mesmoEndereco =
+      (b.endereco?.rua || "").trim().toLowerCase() === ruaForm &&
+      String(b.endereco?.numero || "").trim() === numeroForm &&
+      (b.endereco?.bairro || "").trim().toLowerCase() === bairroForm &&
+      (b.endereco?.cidade || "").trim().toLowerCase() === cidadeForm;
+
+    return mesmaPessoa && mesmoHorario && mesmoEndereco;
+  });
+
+  return duplicado || null;
+}
+
 // ---------- SALVAR AGENDAMENTO (inclui upload de comprovantes) ----------
 async function salvarAgendamento() {
   if (!db) return;
@@ -810,26 +837,19 @@ async function salvarAgendamento() {
   try {
     if (pacoteSelection && pacoteSelection.startsWith("pacote_")) {
       const pacId = pacoteSelection.replace(/^pacote_/, "");
-      // try to find in STATE.pacotes
       const pac = STATE.pacotes.find(p => p.id === pacId);
       if (pac) {
-        // pacoteToItens expects pacoteDoc, but must return array of item ids (strings)
-        const itensList = (window.regrasNegocio && window.regrasNegocio.pacoteToItens) ? window.regrasNegocio.pacoteToItens(pac) : (pac.itens || []);
-        requestedItems = itensList.slice();
+        requestedItems = (window.regrasNegocio && window.regrasNegocio.pacoteToItens) ? window.regrasNegocio.pacoteToItens(pac) : (pac.itens || []);
       } else {
-        // fallback: attempt to fetch pacote doc from Firestore
         const snapPac = await db.collection("pacotes").doc(pacId).get();
         if (snapPac.exists) {
           const pacData = snapPac.data();
-          const itensList = (window.regrasNegocio && window.regrasNegocio.pacoteToItens) ? window.regrasNegocio.pacoteToItens(pacData) : (pacData.itens || []);
-          requestedItems = itensList.slice();
+          requestedItems = (window.regrasNegocio && window.regrasNegocio.pacoteToItens) ? window.regrasNegocio.pacoteToItens(pacData) : (pacData.itens || []);
         }
       }
     } else if (pacoteSelection && pacoteSelection.startsWith("item_")) {
-      const itemId = pacoteSelection.replace(/^item_/, "");
-      requestedItems = [itemId];
+      requestedItems = [pacoteSelection.replace(/^item_/, "")];
     } else {
-      // unknown selection; try to derive from text
       requestedItems = [pacoteSelection || ""];
     }
   } catch (err) {
@@ -837,64 +857,49 @@ async function salvarAgendamento() {
     requestedItems = [];
   }
 
-  // get existing bookings in same date (and optionally overlapping time) to check reserved counts
-  // for simplicity we filter by same date; if you later want time overlap refine here
-  
+  // get existing bookings in same date
   let existingBookings = [];
-try {
-  if (db) {
-    const q = await db.collection("agendamentos").where("data", "==", dataVal).get();
-    existingBookings = q.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(b => b.id !== (inputId?.value || "")); // IGNORA o próprio agendamento em edição
+  try {
+    if (db) {
+      const q = await db.collection("agendamentos").where("data", "==", dataVal).get();
+      existingBookings = q.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+  } catch (err) {
+    console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
   }
-} catch (err) {
-  console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
-}
-  
-// pega o ID do agendamento em edição (vazio se for novo)
-const agendamentoId = (inputId?.value || "").toString();
 
-// pega valores do formulário
-const telefoneForm = telefone.replace(/\D/g,"");
-const horaInicioForm = horaInicio;
-const ruaForm = rua.toLowerCase();
-const numeroForm = numero;
-const bairroForm = bairro.toLowerCase();
-const cidadeForm = cidade.toLowerCase();
+  // ---------- CHECAR DUPLICIDADE ----------
+  const formData = {
+    id,
+    telefone,
+    horario: horaInicio,
+    endereco: { rua, numero, bairro, cidade }
+  };
+  const agendamentoDuplicado = checarDuplicidade(existingBookings, formData);
+  if (agendamentoDuplicado) {
+    Swal.fire({
+      title: "Duplicidade detectada",
+      text: "Já existe um agendamento para esta pessoa, endereço e horário.",
+      icon: "warning",
+      customClass: { popup: 'swal-high-z' }
+    });
+    return; // bloqueia apenas duplicados reais
+  }
 
-// ---------- CHECAR DUPLICIDADE (ignora o próprio agendamento) ----------
-const agendamentoDuplicado = existingBookings.find(b => {
-  const bId = (b.id || "").toString();
-  if (bId === agendamentoId) return false; // ignora o próprio agendamento em edição
-
-  const mesmaPessoa = (b.telefone || "").replace(/\D/g,"") === telefoneForm;
-  const mesmoHorario = (b.horario || "") === horaInicioForm;
-  const mesmoEndereco = 
-    (b.endereco?.rua || "").toLowerCase() === ruaForm &&
-    (b.endereco?.numero || "") === numeroForm &&
-    (b.endereco?.bairro || "").toLowerCase() === bairroForm &&
-    (b.endereco?.cidade || "").toLowerCase() === cidadeForm;
-
-  return mesmaPessoa && mesmoHorario && mesmoEndereco;
-});
-  
-  // CALL ASYNC CHECK
+  // CALL ASYNC CHECK for estoque
   try {
     if (window.regrasNegocio && window.regrasNegocio.checkConflitoPorEstoqueAsync) {
       const result = await window.regrasNegocio.checkConflitoPorEstoqueAsync(requestedItems, existingBookings);
       if (!result.ok) {
-        // show custom message per first problem
         const p = result.problems && result.problems[0];
         const itemName = p ? p.item : "um item";
         const message = `Ops — não é possível realizar este agendamento. O brinquedo "${itemName}" não está mais disponível neste horário.`;
         await Swal.fire({ title: "Conflito de estoque", text: message, icon: "warning", customClass: { popup: 'swal-high-z' } });
-        return; // do not proceed saving
+        return;
       }
     }
   } catch (err) {
     console.error("Erro ao validar conflito de estoque:", err);
-    // if check fails, prevent saving to be safe
     await Swal.fire({ title: "Erro", text: "Não foi possível verificar estoque. Tente novamente.", icon: "error", customClass: { popup: 'swal-high-z' } });
     return;
   }
@@ -930,7 +935,7 @@ const agendamentoDuplicado = existingBookings.find(b => {
 
     const docId = id || docRef.id;
 
-    // If there are files selected, upload them and append to doc.comprovantes
+    // upload comprovantes
     if (inputComprovantes && inputComprovantes.files && inputComprovantes.files.length > 0 && storage) {
       Swal.fire({ title: "Enviando comprovantes...", didOpen: () => Swal.showLoading(), customClass: { popup: 'swal-high-z' } });
       const files = Array.from(inputComprovantes.files);
@@ -944,7 +949,7 @@ const agendamentoDuplicado = existingBookings.find(b => {
       Swal.close();
     }
 
-    // final update: ensure observacao included
+    // final update
     await db.collection("agendamentos").doc(docId).update({
       observacao,
       atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
