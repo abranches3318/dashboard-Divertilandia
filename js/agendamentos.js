@@ -769,12 +769,12 @@ if (inputComprovantes) {
  * 
  * @param {Array} existingBookings - Lista de agendamentos existentes no mesmo dia
  * @param {Object} formData - Dados do agendamento atual do formulário
- *        { id, cliente, horario, endereco: { rua, numero, bairro, cidade } }
+ *        { id, data, horario, endereco: { rua, numero, bairro, cidade } }
  * @returns {Object|null} - Retorna o agendamento duplicado encontrado ou null se não houver
  */
 function checarDuplicidade(existingBookings, formData) {
   const agendamentoId = String(formData.id || "");
-  const clienteForm = (formData.cliente || "").trim().toLowerCase();
+  const dataForm = String(formData.data || "").trim(); // YYYY-MM-DD
   const horaForm = String(formData.horario || "").padEnd(5, "0"); // HH:MM
   const ruaForm = (formData.endereco?.rua || "").trim().toLowerCase();
   const numeroForm = String(formData.endereco?.numero || "").trim();
@@ -785,7 +785,7 @@ function checarDuplicidade(existingBookings, formData) {
     const bId = String(b.id || "");
     if (bId === agendamentoId) return false; // ignora próprio agendamento
 
-    const mesmoCliente = (b.cliente || "").trim().toLowerCase() === clienteForm;
+    const mesmaData = String(b.data || "").trim() === dataForm;
     const mesmoHorario = String(b.horario || "").padEnd(5, "0") === horaForm;
     const mesmoEndereco =
       (b.endereco?.rua || "").trim().toLowerCase() === ruaForm &&
@@ -793,7 +793,7 @@ function checarDuplicidade(existingBookings, formData) {
       (b.endereco?.bairro || "").trim().toLowerCase() === bairroForm &&
       (b.endereco?.cidade || "").trim().toLowerCase() === cidadeForm;
 
-    return mesmoCliente && mesmoHorario && mesmoEndereco;
+    return mesmaData && mesmoHorario && mesmoEndereco;
   });
 
   return duplicado || null;
