@@ -373,44 +373,96 @@ async function carregarPacotesEItens() {
 }
 
 // ---------- CARREGAR MONITORES ----------
-async function carregarMonitores(monitoresSelecionados = []) {
+async function carregarMonitores() {
   if (!db || !containerMonitores) return;
 
   try {
     const snap = await db.collection("monitores").get();
+    STATE.monitores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    STATE.monitores = snap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
-
+    // limpa container
     containerMonitores.innerHTML = "";
 
+    // wrapper dropdown
     const wrapper = document.createElement("div");
-    wrapper.className = "monitores-wrapper";
+    wrapper.style.position = "relative";
 
+    // input fake
+    const display = document.createElement("div");
+    display.textContent = "Selecionar monitores";
+    display.style.background = "#1e1e1e";
+    display.style.border = "1px solid #444";
+    display.style.padding = "10px";
+    display.style.borderRadius = "5px";
+    display.style.cursor = "pointer";
+    display.style.color = "#fff";
+
+    // dropdown lista
+    const dropdown = document.createElement("div");
+    dropdown.style.position = "absolute";
+    dropdown.style.top = "100%";
+    dropdown.style.left = "0";
+    dropdown.style.right = "0";
+    dropdown.style.background = "#1e1e1e";
+    dropdown.style.border = "1px solid #444";
+    dropdown.style.borderRadius = "5px";
+    dropdown.style.marginTop = "4px";
+    dropdown.style.maxHeight = "180px";
+    dropdown.style.overflowY = "auto";
+    dropdown.style.display = "none";
+    dropdown.style.zIndex = "1000";
+
+    // toggle
+    display.addEventListener("click", () => {
+      dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+    });
+
+    // opções
     STATE.monitores.forEach(m => {
-      const label = document.createElement("label");
-      label.className = "monitor-item";
+      const line = document.createElement("label");
+      line.style.display = "flex";
+      line.style.alignItems = "center";
+      line.style.gap = "8px";
+      line.style.padding = "8px";
+      line.style.cursor = "pointer";
+      line.style.color = "#fff";
 
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.className = "chk-monitor"; // mantém compatibilidade
-      checkbox.value = m.id;
+      const chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.className = "chk-monitor";
+      chk.value = m.id;
 
-      if (monitoresSelecionados.includes(m.id)) {
-        checkbox.checked = true;
-      }
+      chk.addEventListener("change", () => {
+        const selecionados = Array.from(
+          dropdown.querySelectorAll(".chk-monitor:checked")
+        ).map(i => {
+          const mon = STATE.monitores.find(x => x.id === i.value);
+          return mon ? (mon.nome || mon.name || mon.id) : "";
+        }).filter(Boolean);
+
+        display.textContent = selecionados.length
+          ? selecionados.join(", ")
+          : "Selecionar monitores";
+      });
 
       const span = document.createElement("span");
       span.textContent = m.nome || m.name || m.id;
 
-      label.appendChild(checkbox);
-      label.appendChild(span);
-      wrapper.appendChild(label);
+      line.appendChild(chk);
+      line.appendChild(span);
+      dropdown.appendChild(line);
     });
 
+    wrapper.appendChild(display);
+    wrapper.appendChild(dropdown);
     containerMonitores.appendChild(wrapper);
+
+    // fecha ao clicar fora
+    document.addEventListener("click", (e) => {
+      if (!wrapper.contains(e.target)) {
+        dropdown.style.display = "none";
+      }
+    });
 
   } catch (err) {
     console.error("carregarMonitores:", err);
