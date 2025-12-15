@@ -380,41 +380,51 @@ async function carregarMonitores() {
     const snap = await db.collection("monitores").get();
     STATE.monitores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // limpa container
     containerMonitores.innerHTML = "";
 
-    // wrapper dropdown
+    // wrapper
     const wrapper = document.createElement("div");
     wrapper.style.position = "relative";
 
-    // input fake
-    const display = document.createElement("div");
-    display.textContent = "Selecionar monitores";
-    display.style.background = "#1e1e1e";
-    display.style.border = "1px solid #444";
-    display.style.padding = "10px";
-    display.style.borderRadius = "5px";
-    display.style.cursor = "pointer";
-    display.style.color = "#fff";
+    // campo visual
+    const field = document.createElement("div");
+    field.style.display = "flex";
+    field.style.alignItems = "center";
+    field.style.justifyContent = "space-between";
+    field.style.background = "#1e1e1e";
+    field.style.border = "1px solid #444";
+    field.style.padding = "10px";
+    field.style.borderRadius = "5px";
+    field.style.color = "#fff";
 
-    // dropdown lista
-    const dropdown = document.createElement("div");
-    dropdown.style.position = "absolute";
-    dropdown.style.top = "100%";
-    dropdown.style.left = "0";
-    dropdown.style.right = "0";
-    dropdown.style.background = "#1e1e1e";
-    dropdown.style.border = "1px solid #444";
-    dropdown.style.borderRadius = "5px";
-    dropdown.style.marginTop = "4px";
-    dropdown.style.maxHeight = "180px";
-    dropdown.style.overflowY = "auto";
-    dropdown.style.display = "none";
-    dropdown.style.zIndex = "1000";
+    const text = document.createElement("span");
+    text.textContent = "Selecionar monitores";
 
-    // toggle
-    display.addEventListener("click", () => {
-      dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+    const arrow = document.createElement("span");
+    arrow.textContent = "▼";
+    arrow.style.cursor = "pointer";
+    arrow.style.marginLeft = "10px";
+
+    field.appendChild(text);
+    field.appendChild(arrow);
+
+    // lista dropdown
+    const list = document.createElement("div");
+    list.style.position = "absolute";
+    list.style.top = "100%";
+    list.style.left = "0";
+    list.style.right = "0";
+    list.style.background = "#1e1e1e";
+    list.style.border = "1px solid #444";
+    list.style.borderRadius = "5px";
+    list.style.marginTop = "4px";
+    list.style.display = "none";
+    list.style.zIndex = "1000";
+
+    // toggle SOMENTE na seta
+    arrow.addEventListener("click", (e) => {
+      e.stopPropagation();
+      list.style.display = list.style.display === "none" ? "block" : "none";
     });
 
     // opções
@@ -434,13 +444,13 @@ async function carregarMonitores() {
 
       chk.addEventListener("change", () => {
         const selecionados = Array.from(
-          dropdown.querySelectorAll(".chk-monitor:checked")
+          list.querySelectorAll(".chk-monitor:checked")
         ).map(i => {
           const mon = STATE.monitores.find(x => x.id === i.value);
           return mon ? (mon.nome || mon.name || mon.id) : "";
-        }).filter(Boolean);
+        });
 
-        display.textContent = selecionados.length
+        text.textContent = selecionados.length
           ? selecionados.join(", ")
           : "Selecionar monitores";
       });
@@ -450,18 +460,16 @@ async function carregarMonitores() {
 
       line.appendChild(chk);
       line.appendChild(span);
-      dropdown.appendChild(line);
+      list.appendChild(line);
     });
 
-    wrapper.appendChild(display);
-    wrapper.appendChild(dropdown);
+    wrapper.appendChild(field);
+    wrapper.appendChild(list);
     containerMonitores.appendChild(wrapper);
 
     // fecha ao clicar fora
-    document.addEventListener("click", (e) => {
-      if (!wrapper.contains(e.target)) {
-        dropdown.style.display = "none";
-      }
+    document.addEventListener("click", () => {
+      list.style.display = "none";
     });
 
   } catch (err) {
