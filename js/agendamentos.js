@@ -849,20 +849,32 @@ async function salvarAgendamento() {
     console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
   }
   
+// pega o ID do agendamento em edição (vazio se for novo)
 const agendamentoId = (document.getElementById('ag-id').value || "").toString();
+
+// pega valores do formulário
+const telefoneForm = inputTelefone.value.replace(/\D/g,"");
+const horaInicioForm = inputHoraInicio.value;
+const ruaForm = inputEndRua.value.toLowerCase();
+const numeroForm = inputEndNumero.value;
+const bairroForm = inputEndBairro.value.toLowerCase();
+const cidadeForm = inputEndCidade.value.toLowerCase();
 
 // ---------- CHECAR DUPLICIDADE (ignora o próprio agendamento) ----------
 const agendamentoDuplicado = existingBookings.find(b => {
   const bId = (b.id || "").toString();
-  const mesmaPessoa = (b.telefone || "").replace(/\D/g,"") === inputTelefone.value.replace(/\D/g,"");
-  const mesmoHorario = (b.horario || "") === inputHoraInicio.value;
-  const mesmoEndereco = 
-    (b.endereco?.rua || "").toLowerCase() === inputEndRua.value.toLowerCase() &&
-    (b.endereco?.numero || "") === inputEndNumero.value &&
-    (b.endereco?.bairro || "").toLowerCase() === inputEndBairro.value.toLowerCase() &&
-    (b.endereco?.cidade || "").toLowerCase() === inputEndCidade.value.toLowerCase();
 
-  return (bId !== agendamentoId) && mesmaPessoa && mesmoHorario && mesmoEndereco;
+  if(bId === agendamentoId) return false; // ignora o próprio agendamento em edição
+
+  const mesmaPessoa = (b.telefone || "").replace(/\D/g,"") === telefoneForm;
+  const mesmoHorario = (b.horario || "") === horaInicioForm;
+  const mesmoEndereco = 
+    (b.endereco?.rua || "").toLowerCase() === ruaForm &&
+    (b.endereco?.numero || "") === numeroForm &&
+    (b.endereco?.bairro || "").toLowerCase() === bairroForm &&
+    (b.endereco?.cidade || "").toLowerCase() === cidadeForm;
+
+  return mesmaPessoa && mesmoHorario && mesmoEndereco;
 });
 
 if (agendamentoDuplicado) {
@@ -872,7 +884,7 @@ if (agendamentoDuplicado) {
     icon: "warning",
     customClass: { popup: 'swal-high-z' }
   });
-  return;
+  return; // bloqueia salvar
 }
   
   // CALL ASYNC CHECK
