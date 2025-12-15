@@ -496,3 +496,12 @@ label {
   line-height: 1.4 !important;
   font-family: inherit !important;
 }
+
+/* sweetalert acima de tudo */
+.swal-high-z {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 2147483647 !important;
+}
