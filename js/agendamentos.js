@@ -764,10 +764,18 @@ if (inputComprovantes) {
   });
 }
 
+/**
+ * Checa duplicidade de agendamento
+ * 
+ * @param {Array} existingBookings - Lista de agendamentos existentes no mesmo dia
+ * @param {Object} formData - Dados do agendamento atual do formulário
+ *        { id, cliente, horario, endereco: { rua, numero, bairro, cidade } }
+ * @returns {Object|null} - Retorna o agendamento duplicado encontrado ou null se não houver
+ */
 function checarDuplicidade(existingBookings, formData) {
   const agendamentoId = String(formData.id || "");
-  const telefoneForm = (formData.telefone || "").replace(/\D/g, "");
-  const horaForm = String(formData.horario || "").padEnd(5, "0");
+  const clienteForm = (formData.cliente || "").trim().toLowerCase();
+  const horaForm = String(formData.horario || "").padEnd(5, "0"); // HH:MM
   const ruaForm = (formData.endereco?.rua || "").trim().toLowerCase();
   const numeroForm = String(formData.endereco?.numero || "").trim();
   const bairroForm = (formData.endereco?.bairro || "").trim().toLowerCase();
@@ -775,9 +783,9 @@ function checarDuplicidade(existingBookings, formData) {
 
   const duplicado = existingBookings.find(b => {
     const bId = String(b.id || "");
-    if (bId === agendamentoId) return false;
+    if (bId === agendamentoId) return false; // ignora próprio agendamento
 
-    const mesmaPessoa = (b.telefone || "").replace(/\D/g, "") === telefoneForm;
+    const mesmoCliente = (b.cliente || "").trim().toLowerCase() === clienteForm;
     const mesmoHorario = String(b.horario || "").padEnd(5, "0") === horaForm;
     const mesmoEndereco =
       (b.endereco?.rua || "").trim().toLowerCase() === ruaForm &&
@@ -785,7 +793,7 @@ function checarDuplicidade(existingBookings, formData) {
       (b.endereco?.bairro || "").trim().toLowerCase() === bairroForm &&
       (b.endereco?.cidade || "").trim().toLowerCase() === cidadeForm;
 
-    return mesmaPessoa && mesmoHorario && mesmoEndereco;
+    return mesmoCliente && mesmoHorario && mesmoEndereco;
   });
 
   return duplicado || null;
@@ -879,7 +887,7 @@ async function salvarAgendamento() {
   if (agendamentoDuplicado) {
     Swal.fire({
       title: "Duplicidade detectada",
-      text: "Já existe um agendamento para esta pessoa, endereço e horário.",
+      text: "Este agendamento ja existe.",
       icon: "warning",
       customClass: { popup: 'swal-high-z' }
     });
