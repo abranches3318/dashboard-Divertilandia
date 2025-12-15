@@ -480,3 +480,11 @@ label {
 .monitor-item input[type="checkbox"] {
   cursor: pointer;
 }
+.dropdown-selected {
+  font-size: 14px; /* mesmo dos outros inputs */
+}
+
+.dropdown-selected span {
+  font-size: 14px;
+  line-height: 1.4;
+}
