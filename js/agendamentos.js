@@ -1117,6 +1117,33 @@ function abrirModalDetalhes(id) {
   });
 }
 
+function carregarImagem(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous"; // importante se for de outro domínio
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Não foi possível carregar a imagem: " + url));
+    img.src = url;
+  });
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + ' ';
+    const testWidth = ctx.measureText(testLine).width;
+    if (testWidth > maxWidth && n > 0) {
+      ctx.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, x, y);
+}
+
 // ---------- GERAR COMPROVANTE (PNG) ----------
 async function gerarComprovantePNG(agendamentoData) {
 
@@ -1142,7 +1169,7 @@ async function gerarComprovantePNG(agendamentoData) {
   const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/dashdivert.firebasestorage.app/o/logo.png?alt=media&token=656b876c-f07a-4d77-b78f-3914520c45f3";
 
   try {
-    const logo = await loadImage(LOGO_URL);
+    const logo = await carregarImagem(LOGO_URL);
     const logoW = 180;
     const logoH = Math.round(logo.height * (logoW / logo.width));
     ctx.drawImage(logo, W - logoW - MARGIN, MARGIN, logoW, logoH);
