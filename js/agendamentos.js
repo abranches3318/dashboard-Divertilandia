@@ -849,8 +849,9 @@ async function salvarAgendamento() {
     console.warn("Erro ao buscar agendamentos existentes para checagem de estoque", err);
   }
 
-  // ---------- CHECAR DUPLICIDADE ----------
+  // ---------- CHECAR DUPLICIDADE (ignorando edição) ----------
 const agendamentoDuplicado = existingBookings.find(b => 
+  b.id !== agendamentoId && // ignora o próprio agendamento em edição
   (b.horario || "") === horaInicio &&
   (b.telefone || "").replace(/\D/g,"") === telefone.replace(/\D/g,"") &&
   (b.endereco?.rua || "").toLowerCase() === rua.toLowerCase() &&
