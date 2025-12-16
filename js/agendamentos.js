@@ -764,19 +764,16 @@ if (inputComprovantes) {
   });
 }
 
-
 /**
  * Checa duplicidade de agendamento
  * 
  * @param {Array} existingBookings - Lista de agendamentos existentes no mesmo dia
  * @param {Object} formData - Dados do agendamento atual do formulário
- *        { id, telefone, data, horario, endereco: { rua, numero, bairro, cidade } }
- * @param {boolean} ignorarTelefone - Se true, verifica apenas data+hora+endereço, ignorando telefone
+ *        { id, data, horario, endereco: { rua, numero, bairro, cidade } }
  * @returns {Object|null} - Retorna o agendamento duplicado encontrado ou null se não houver
  */
-function checarDuplicidade(existingBookings, formData, ignorarTelefone = false) {
+function checarDuplicidade(existingBookings, formData) {
   const agendamentoId = String(formData.id || "");
-  const telefoneForm = (formData.telefone || "").replace(/\D/g,"");
   const dataForm = String(formData.data || "").trim(); // YYYY-MM-DD
   const horaForm = String(formData.horario || "").padEnd(5, "0"); // HH:MM
   const ruaForm = (formData.endereco?.rua || "").trim().toLowerCase();
@@ -796,14 +793,8 @@ function checarDuplicidade(existingBookings, formData, ignorarTelefone = false) 
       (b.endereco?.bairro || "").trim().toLowerCase() === bairroForm &&
       (b.endereco?.cidade || "").trim().toLowerCase() === cidadeForm;
 
-    if (ignorarTelefone) {
-      // Apenas data + horário + endereço
-      return mesmaData && mesmoHorario && mesmoEndereco;
-    } else {
-      const mesmaPessoa = (b.telefone || "").replace(/\D/g,"") === telefoneForm;
-      // Telefone + horário + endereço
-      return mesmaPessoa && mesmoHorario && mesmoEndereco;
-    }
+    // bloqueia se data + horário + endereço forem iguais, independente do telefone
+    return mesmaData && mesmoHorario && mesmoEndereco;
   });
 
   return duplicado || null;
