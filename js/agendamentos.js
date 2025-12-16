@@ -765,15 +765,15 @@ if (inputComprovantes) {
 }
 
 /**
- * Checa duplicidade de agendamento
+ * Checa duplicidade de agendamento (novo ou edição)
  * 
  * @param {Array} existingBookings - Lista de agendamentos existentes no mesmo dia
  * @param {Object} formData - Dados do agendamento atual do formulário
- *        { id, data, horario, endereco: { rua, numero, bairro, cidade }, cliente }
+ *        { id, data, horario, endereco: { rua, numero, bairro, cidade } }
  * @returns {Object|null} - Retorna o agendamento duplicado encontrado ou null se não houver
  */
 function checarDuplicidade(existingBookings, formData) {
-  const agendamentoId = String(formData.id || "");
+  const agendamentoId = String(formData.id || "").trim();
   const dataForm = String(formData.data || "").trim(); // YYYY-MM-DD
   const horaForm = String(formData.horario || "").padEnd(5, "0"); // HH:MM
   const ruaForm = (formData.endereco?.rua || "").trim().toLowerCase();
@@ -781,9 +781,11 @@ function checarDuplicidade(existingBookings, formData) {
   const bairroForm = (formData.endereco?.bairro || "").trim().toLowerCase();
   const cidadeForm = (formData.endereco?.cidade || "").trim().toLowerCase();
 
-  const duplicado = existingBookings.find(b => {
-    const bId = String(b.id || "");
-    if (bId === agendamentoId) return false; // ignora próprio agendamento
+  return existingBookings.find(b => {
+    const bId = String(b.id || "").trim();
+
+    // ignora o próprio agendamento
+    if (bId && agendamentoId && bId === agendamentoId) return false;
 
     const mesmaData = String(b.data || "").trim() === dataForm;
     const mesmoHorario = String(b.horario || "").padEnd(5, "0") === horaForm;
@@ -793,11 +795,8 @@ function checarDuplicidade(existingBookings, formData) {
       (b.endereco?.bairro || "").trim().toLowerCase() === bairroForm &&
       (b.endereco?.cidade || "").trim().toLowerCase() === cidadeForm;
 
-    // Bloqueia duplicidade por data+horário+endereço, independente do telefone
     return mesmaData && mesmoHorario && mesmoEndereco;
-  });
-
-  return duplicado || null;
+  }) || null;
 }
 
 // ---------- SALVAR AGENDAMENTO (inclui upload de comprovantes) ----------
