@@ -520,7 +520,7 @@ function aplicarFiltros() {
   if (!dataVal && !clienteVal && !telefoneVal) {
     Swal.fire({
       title: "Atenção",
-      text: "Para buscar agendamentos, preencha ao menos um dos campos: Data, Cliente ou Telefone.",
+      text: "Preencha ao menos um dos campos: Data, Cliente ou Telefone.",
       icon: "info",
       customClass: { popup: 'swal-high-z' }
     });
