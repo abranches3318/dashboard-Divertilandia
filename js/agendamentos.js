@@ -1066,6 +1066,7 @@ try {
     customClass: { popup: "swal-high-z" }
   });
 }
+  }
 
 // ---------- EVENTOS UI / MÁSCARAS ----------
 function safeAttach(el, ev, fn) { if (el) el.addEventListener(ev, fn); }
