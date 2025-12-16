@@ -879,11 +879,11 @@ async function salvarAgendamento() {
 
   // ---------- CHECAR DUPLICIDADE ----------
   const formData = {
-    id,
-    telefone,
-    horario: horaInicio,
-    endereco: { rua, numero, bairro, cidade }
-  };
+  id,
+  data: dataVal,           // <<<<<< ADICIONADO
+  horario: horaInicio,
+  endereco: { rua, numero, bairro, cidade }
+};
   const agendamentoDuplicado = checarDuplicidade(existingBookings, formData);
   if (agendamentoDuplicado) {
     Swal.fire({
