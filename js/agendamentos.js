@@ -291,8 +291,11 @@ async function cancelarAgendamento(id) {
   try {
     await db.collection("agendamentos").doc(id).update({ status: "cancelado", atualizado_em: firebase.firestore.FieldValue.serverTimestamp() });
     Swal.fire({ title: "OK", text: "Agendamento cancelado.", icon: "success", customClass: { popup: 'swal-high-z' } });
-    // reload preserving filters
+    
+    // aqui a mudança
+    window._ag_show_no_results_alert = true;
     await carregarAgendamentosPreservandoFiltro();
+    
   } catch (err) {
     console.error("cancelarAgendamento:", err);
     Swal.fire({ title: "Erro", text: "Não foi possível cancelar.", icon: "error", customClass: { popup: 'swal-high-z' } });
@@ -311,20 +314,23 @@ async function excluirPermanente(id) {
   });
   if (!res.isConfirmed) return;
   try {
-    // delete any comprovantes in storage first (best-effort)
     if (db && storage) {
       const snap = await db.collection("agendamentos").doc(id).get();
       if (snap.exists) {
         const data = snap.data() || {};
         const comps = data.comprovantes || [];
         for (const c of comps) {
-          try { if (c.path) await storage.ref(c.path).delete(); } catch (_) { /* ignore individual failures */ }
+          try { if (c.path) await storage.ref(c.path).delete(); } catch (_) { }
         }
       }
     }
     await db.collection("agendamentos").doc(id).delete();
     Swal.fire({ title: "OK", text: "Agendamento excluído.", icon: "success", customClass: { popup: 'swal-high-z' } });
+    
+    // aqui a mudança
+    window._ag_show_no_results_alert = true;
     await carregarAgendamentosPreservandoFiltro();
+    
   } catch (err) {
     console.error("excluirPermanente:", err);
     Swal.fire({ title: "Erro", text: "Não foi possível excluir.", icon: "error", customClass: { popup: 'swal-high-z' } });
@@ -983,6 +989,7 @@ async function salvarAgendamento() {
 
     Swal.fire({ title: "OK", text: id ? "Agendamento atualizado." : "Agendamento criado.", icon: "success", customClass: { popup: 'swal-high-z' } });
     fecharModal();
+    window._ag_show_no_results_alert = true;
     await carregarAgendamentosPreservandoFiltro();
   } catch (err) {
     console.error("salvarAgendamento:", err);
