@@ -64,7 +64,9 @@ const STATE = {
   todos: [],
   pacotes: [],
   itens: [],
-  monitores: []
+  monitores: [],
+  comprovantesExistentes: [],
+  comprovantesNovos: []
 };
 
 // ---------- FILTER STATE (to preserve filters across updates) ----------
@@ -576,9 +578,12 @@ function abrirModalNovo(dateInitial = null) {
     inputData, inputHoraInicio, inputHoraFim, selectItem, inputPreco, inputDesconto, inputEntrada, inputValorFinal, inputRestante, inputObservacao
   ].forEach(el => { if (el) el.value = ""; });
 
-  // clear comprovantes input + preview
-  if (inputComprovantes) inputComprovantes.value = "";
-  if (listaComprovantesEl) listaComprovantesEl.innerHTML = "";
+  // ---------- COMPROVANTES (NOVO AGENDAMENTO) ----------
+STATE.comprovantesExistentes = [];
+STATE.comprovantesNovos = [];
+
+if (inputComprovantes) inputComprovantes.value = "";
+if (listaComprovantesEl) listaComprovantesEl.innerHTML = "";
 
   if (dateInitial && inputData) inputData.value = toYMD(dateInitial);
 
@@ -649,8 +654,18 @@ async function abrirModalEditar(id) {
       cb.checked = Array.isArray(a.monitores) ? a.monitores.includes(cb.value) : false;
     });
 
-    // render comprovantes (array of {url, name, path})
-    renderComprovantesPreview(a.comprovantes || [], id, false);
+    // ---------- COMPROVANTES (EDITAR AGENDAMENTO) ----------
+STATE.comprovantesExistentes = Array.isArray(a.comprovantes)
+  ? a.comprovantes.slice()
+  : [];
+
+STATE.comprovantesNovos = [];
+
+renderComprovantesPreview(
+  STATE.comprovantesExistentes,
+  id,
+  false
+);
 
     if (modal) modal.classList.add("active");
   } catch (err) {
@@ -664,22 +679,27 @@ function fecharModal() {
 }
 
 // ---------- COMPROVANTES UI & UPLOAD ----------
-// render preview list (array of objects {url,name,path})
+// render preview list (array of objects {url,name,path,__local})
 // readOnly=true -> no delete buttons, click opens link
 function renderComprovantesPreview(comprovantesArray, agId, readOnly = false) {
   if (!listaComprovantesEl) return;
+
   listaComprovantesEl.innerHTML = "";
 
   if (!Array.isArray(comprovantesArray) || comprovantesArray.length === 0) return;
 
-  comprovantesArray.forEach((c) => {
+  comprovantesArray.forEach((c, idx) => {
     const wrapper = document.createElement("div");
     wrapper.className = "comp-wrapper";
+    wrapper.dataset.index = idx;
     wrapper.dataset.agId = agId || "";
+
     if (c.path) wrapper.dataset.path = c.path;
+    if (c.__local) wrapper.dataset.local = "1";
 
     const img = document.createElement("img");
     img.src = c.url;
+    img.title = c.name || "Comprovante";
     img.style.cursor = "pointer";
     img.onclick = () => window.open(c.url, "_blank");
 
@@ -692,20 +712,30 @@ function renderComprovantesPreview(comprovantesArray, agId, readOnly = false) {
 
       del.onclick = async (ev) => {
         ev.stopPropagation();
+
         const confirm = await Swal.fire({
           title: "Excluir comprovante?",
           icon: "warning",
           showCancelButton: true,
           confirmButtonText: "Excluir",
-          customClass: { popup: 'swal-high-z' }
+          customClass: { popup: "swal-high-z" }
         });
         if (!confirm.isConfirmed) return;
 
         try {
-          // delete from storage (if path) and then update firestore doc
-          if (wrapper.dataset.path && storage) {
-            await storage.ref(wrapper.dataset.path).delete();
+          // COMPROVANTE LOCAL (ainda não salvo)
+          if (c.__local) {
+            STATE.comprovantesNovos =
+              STATE.comprovantesNovos.filter(f => f.__uid !== c.__uid);
+            wrapper.remove();
+            return;
           }
+
+          // COMPROVANTE JÁ SALVO
+          if (c.path && storage) {
+            await storage.ref(c.path).delete();
+          }
+
           if (agId && db) {
             const ref = db.collection("agendamentos").doc(agId);
             const snap = await ref.get();
@@ -713,14 +743,19 @@ function renderComprovantesPreview(comprovantesArray, agId, readOnly = false) {
               const atual = snap.data().comprovantes || [];
               const novo = atual.filter(x => x.url !== c.url);
               await ref.update({ comprovantes: novo });
+              STATE.comprovantesExistentes = novo;
             }
           }
+
           wrapper.remove();
-          // reset file input to allow reupload same file if needed
-          if (inputComprovantes) inputComprovantes.value = "";
         } catch (err) {
-          console.error("Erro excluindo comprovante (modal):", err);
-          Swal.fire({ title: "Erro", text: "Não foi possível excluir o comprovante.", icon: "error", customClass: { popup: 'swal-high-z' } });
+          console.error("Erro excluindo comprovante:", err);
+          Swal.fire({
+            title: "Erro",
+            text: "Não foi possível excluir o comprovante.",
+            icon: "error",
+            customClass: { popup: "swal-high-z" }
+          });
         }
       };
 
@@ -737,55 +772,57 @@ async function uploadComprovantesFiles(files, agId) {
   if (!files || files.length === 0) return [];
 
   const uploaded = [];
-  for (let i = 0; i < files.length; i++) {
-    const f = files[i];
+
+  for (const f of files) {
     const safeName = f.name.replace(/[^a-z0-9.\-_]/gi, "_");
     const path = `comprovantes/${agId}/${Date.now()}_${safeName}`;
     const ref = storage.ref(path);
-    try {
-      await ref.put(f);
-      const url = await ref.getDownloadURL();
-      uploaded.push({ url, name: f.name, path });
-    } catch (err) {
-      console.error("uploadComprovantesFiles error:", err);
-    }
+
+    await ref.put(f);
+    const url = await ref.getDownloadURL();
+
+    uploaded.push({
+      url,
+      name: f.name,
+      path
+    });
   }
+
   return uploaded;
 }
 
-// when user selects files in inputComprovantes, show local preview (before upload)
+// seleção de arquivos — preview local + múltiplos
 if (inputComprovantes) {
   inputComprovantes.addEventListener("change", (e) => {
     const files = Array.from(e.target.files || []);
-    if (!listaComprovantesEl) return;
+    if (!files.length) return;
 
-    listaComprovantesEl.innerHTML = "";
-    files.forEach(f => {
-      const wrapper = document.createElement("div");
-      wrapper.className = "comp-wrapper";
-      wrapper.dataset.agId = inputId ? inputId.value : "";
+    files.forEach((f) => {
+      // evita duplicar o mesmo arquivo local
+      const exists = STATE.comprovantesNovos.some(
+        x => x.name === f.name && x.file?.size === f.size
+      );
+      if (exists) return;
 
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(f);
-      img.title = f.name;
-      img.onclick = () => window.open(img.src, "_blank");
+      const uid = crypto.randomUUID();
 
-      wrapper.appendChild(img);
-
-      // botão X no preview local também
-      const del = document.createElement("button");
-      del.className = "comp-del-btn";
-      del.textContent = "X";
-      del.onclick = (ev) => {
-        ev.stopPropagation();
-        wrapper.remove();
-        // reset input so same file can be re-selected
-        inputComprovantes.value = "";
-      };
-
-      wrapper.appendChild(del);
-      listaComprovantesEl.appendChild(wrapper);
+      STATE.comprovantesNovos.push({
+        __uid: uid,
+        __local: true,
+        file: f,
+        name: f.name,
+        url: URL.createObjectURL(f)
+      });
     });
+
+    renderComprovantesPreview(
+      [...STATE.comprovantesExistentes, ...STATE.comprovantesNovos],
+      inputId ? inputId.value : "",
+      false
+    );
+
+    // permite selecionar o mesmo arquivo novamente
+    inputComprovantes.value = "";
   });
 }
 
@@ -957,45 +994,77 @@ async function salvarAgendamento() {
     atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  try {
-    let docRef;
-    if (id) {
-      docRef = db.collection("agendamentos").doc(id);
-      await docRef.set(dados, { merge: true });
-    } else {
-      docRef = await db.collection("agendamentos").add(dados);
-    }
+  let comprovantesFinal = [...STATE.comprovantesExistentes];
 
-    const docId = id || docRef.id;
+  dados.comprovantes = comprovantesFinal;
 
-    // upload comprovantes
-    if (inputComprovantes && inputComprovantes.files && inputComprovantes.files.length > 0 && storage) {
-      Swal.fire({ title: "Enviando comprovantes...", didOpen: () => Swal.showLoading(), customClass: { popup: 'swal-high-z' } });
-      const files = Array.from(inputComprovantes.files);
-      const uploaded = await uploadComprovantesFiles(files, docId);
-      if (uploaded.length > 0) {
-        const snap = await db.collection("agendamentos").doc(docId).get();
-        const prev = snap.exists ? (snap.data().comprovantes || []) : [];
-        const novo = prev.concat(uploaded);
-        await db.collection("agendamentos").doc(docId).update({ comprovantes: novo });
-      }
-      Swal.close();
-    }
+try {
+  let docRef;
+  if (id) {
+    docRef = db.collection("agendamentos").doc(id);
+    await docRef.set(dados, { merge: true });
+  } else {
+    docRef = await db.collection("agendamentos").add(dados);
+  }
 
-    // final update
-    await db.collection("agendamentos").doc(docId).update({
-      observacao,
-      atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
+  // 🔹 AGORA o docId existe de verdade
+  const docId = id || docRef.id;
+
+  // =====================================================
+  // 🔹 UPLOAD DE COMPROVANTES (LOCAL CORRETO)
+  // =====================================================
+  if (STATE.comprovantesNovos.length > 0) {
+    Swal.fire({
+      title: "Enviando comprovantes...",
+      didOpen: () => Swal.showLoading(),
+      customClass: { popup: "swal-high-z" }
     });
 
-    Swal.fire({ title: "OK", text: id ? "Agendamento atualizado." : "Agendamento criado.", icon: "success", customClass: { popup: 'swal-high-z' } });
-    fecharModal();
-   
-    await carregarAgendamentosPreservandoFiltro();
-  } catch (err) {
-    console.error("salvarAgendamento:", err);
-    Swal.fire({ title: "Erro", text: "Não foi possível salvar o agendamento.", icon: "error", customClass: { popup: 'swal-high-z' } });
+    const files = STATE.comprovantesNovos.map(o => o.file);
+    const uploaded = await uploadComprovantesFiles(files, docId);
+
+    const comprovantesFinal = [
+      ...STATE.comprovantesExistentes,
+      ...uploaded
+    ];
+
+    await db.collection("agendamentos")
+      .doc(docId)
+      .update({ comprovantes: comprovantesFinal });
+
+    // 🔹 LIMPA ESTADO (evita duplicação futura)
+    STATE.comprovantesExistentes = comprovantesFinal;
+    STATE.comprovantesNovos = [];
+
+    Swal.close();
   }
+
+  // =====================================================
+  // 🔹 UPDATE FINAL (metadata)
+  // =====================================================
+  await db.collection("agendamentos").doc(docId).update({
+    observacao,
+    atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  Swal.fire({
+    title: "OK",
+    text: id ? "Agendamento atualizado." : "Agendamento criado.",
+    icon: "success",
+    customClass: { popup: "swal-high-z" }
+  });
+
+  fecharModal();
+  await carregarAgendamentosPreservandoFiltro();
+
+} catch (err) {
+  console.error("salvarAgendamento:", err);
+  Swal.fire({
+    title: "Erro",
+    text: "Não foi possível salvar o agendamento.",
+    icon: "error",
+    customClass: { popup: "swal-high-z" }
+  });
 }
 
 // ---------- EVENTOS UI / MÁSCARAS ----------
