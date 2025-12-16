@@ -132,16 +132,15 @@ function setCurrencyInput(el, n) {
 }
 
 // ---------- TABELA ----------
-// renderTabela: mostra painel apenas se lista tiver elementos.
-// se vazio: oculta painelTabela e mostra SweetAlert com opção criar novo.
-function renderTabela(lista) {
+function renderTabela(lista, origem = "auto") {
   if (!listaEl || !painelTabela) return;
   listaEl.innerHTML = "";
 
   if (!Array.isArray(lista) || lista.length === 0) {
     painelTabela.style.display = "none";
-    if (window._ag_show_no_results_alert) {
-      window._ag_show_no_results_alert = false;
+
+    // ALERTA SÓ SE VIER DE FILTRO MANUAL
+    if (origem === "filtro") {
       Swal.fire({
         title: "Nenhum agendamento encontrado",
         text: "Deseja criar um novo agendamento?",
@@ -151,12 +150,17 @@ function renderTabela(lista) {
         cancelButtonText: "Fechar",
         customClass: { popup: 'swal-high-z' }
       }).then(res => {
-        if (res.isConfirmed) abrirModalNovo(filtroData && filtroData.value ? new Date(filtroData.value + "T00:00:00") : null);
+        if (res.isConfirmed) {
+          abrirModalNovo(
+            filtroData && filtroData.value
+              ? new Date(filtroData.value + "T00:00:00")
+              : null
+          );
+        }
       });
     }
     return;
   }
-
   painelTabela.style.display = "block";
 
   lista.forEach(a => {
@@ -292,8 +296,6 @@ async function cancelarAgendamento(id) {
     await db.collection("agendamentos").doc(id).update({ status: "cancelado", atualizado_em: firebase.firestore.FieldValue.serverTimestamp() });
     Swal.fire({ title: "OK", text: "Agendamento cancelado.", icon: "success", customClass: { popup: 'swal-high-z' } });
     
-    // aqui a mudança
-    window._ag_show_no_results_alert = true;
     await carregarAgendamentosPreservandoFiltro();
     
   } catch (err) {
@@ -327,8 +329,6 @@ async function excluirPermanente(id) {
     await db.collection("agendamentos").doc(id).delete();
     Swal.fire({ title: "OK", text: "Agendamento excluído.", icon: "success", customClass: { popup: 'swal-high-z' } });
     
-    // aqui a mudança
-    window._ag_show_no_results_alert = true;
     await carregarAgendamentosPreservandoFiltro();
     
   } catch (err) {
@@ -514,7 +514,7 @@ async function carregarAgendamentosPreservandoFiltro() {
 }
 
 // ---------- FILTRAR ----------
-window._ag_show_no_results_alert = false;
+
 function aplicarFiltros() {
   // coleta valores dos filtros
   const dataVal = filtroData ? filtroData.value.trim() : "";
@@ -530,7 +530,7 @@ function aplicarFiltros() {
       icon: "info",
       customClass: { popup: 'swal-high-z' }
     });
-    return; // interrompe a função
+    return;
   }
 
   // começa com todos os agendamentos carregados
@@ -545,7 +545,9 @@ function aplicarFiltros() {
   }
   if (telefoneVal) {
     const q = telefoneVal.replace(/\D/g, "");
-    lista = lista.filter(a => ((a.telefone || "") + "").replace(/\D/g, "").includes(q));
+    lista = lista.filter(a =>
+      ((a.telefone || "") + "").replace(/\D/g, "").includes(q)
+    );
   }
   if (statusVal) {
     lista = lista.filter(a => (a.status || "") === statusVal);
@@ -559,8 +561,7 @@ function aplicarFiltros() {
     status: statusVal
   };
 
-  window._ag_show_no_results_alert = true;
-  renderTabela(lista);
+  renderTabela(lista, "filtro");
 }
 
 // ---------- MODAL: abrir / editar / fechar ----------
@@ -989,7 +990,7 @@ async function salvarAgendamento() {
 
     Swal.fire({ title: "OK", text: id ? "Agendamento atualizado." : "Agendamento criado.", icon: "success", customClass: { popup: 'swal-high-z' } });
     fecharModal();
-    window._ag_show_no_results_alert = true;
+   
     await carregarAgendamentosPreservandoFiltro();
   } catch (err) {
     console.error("salvarAgendamento:", err);
