@@ -927,6 +927,8 @@ async function salvarAgendamento() {
     requestedItems = [];
   }
 
+  const itens_reservados = [...requestedItems];
+
   // get existing bookings in same date
   let existingBookings = [];
   try {
@@ -984,6 +986,8 @@ async function salvarAgendamento() {
     endereco: { rua, numero, bairro, cidade },
     pacoteId: pacoteSelection,
     pacoteNome: (selectItem && selectItem.selectedOptions[0]) ? selectItem.selectedOptions[0].textContent : "",
+
+    itens_reservados,
     preco,
     desconto,
     entrada,
