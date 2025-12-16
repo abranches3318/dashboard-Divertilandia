@@ -510,29 +510,47 @@ async function carregarAgendamentosPreservandoFiltro() {
 // ---------- FILTRAR ----------
 window._ag_show_no_results_alert = false;
 function aplicarFiltros() {
+  // coleta valores dos filtros
+  const dataVal = filtroData ? filtroData.value.trim() : "";
+  const clienteVal = filtroCliente ? filtroCliente.value.trim() : "";
+  const telefoneVal = filtroTelefone ? filtroTelefone.value.trim() : "";
+  const statusVal = filtroStatus ? filtroStatus.value.trim() : "";
+
+  // checa se nenhum dos filtros obrigatórios foi informado
+  if (!dataVal && !clienteVal && !telefoneVal) {
+    Swal.fire({
+      title: "Atenção",
+      text: "Para buscar agendamentos, preencha ao menos um dos campos: Data, Cliente ou Telefone.",
+      icon: "info",
+      customClass: { popup: 'swal-high-z' }
+    });
+    return; // interrompe a função
+  }
+
+  // começa com todos os agendamentos carregados
   let lista = Array.isArray(STATE.todos) ? [...STATE.todos] : [];
 
-  if (filtroData && filtroData.value) {
-    lista = lista.filter(a => toYMD(parseDateField(a.data)) === filtroData.value);
+  if (dataVal) {
+    lista = lista.filter(a => toYMD(parseDateField(a.data)) === dataVal);
   }
-  if (filtroCliente && filtroCliente.value) {
-    const q = filtroCliente.value.toLowerCase();
+  if (clienteVal) {
+    const q = clienteVal.toLowerCase();
     lista = lista.filter(a => (a.cliente || "").toLowerCase().includes(q));
   }
-  if (filtroTelefone && filtroTelefone.value) {
-    const q = filtroTelefone.value.replace(/\D/g, "");
+  if (telefoneVal) {
+    const q = telefoneVal.replace(/\D/g, "");
     lista = lista.filter(a => ((a.telefone || "") + "").replace(/\D/g, "").includes(q));
   }
-  if (filtroStatus && filtroStatus.value) {
-    lista = lista.filter(a => (a.status || "") === filtroStatus.value);
+  if (statusVal) {
+    lista = lista.filter(a => (a.status || "") === statusVal);
   }
 
-  // save last filters
+  // salva filtros atuais
   LAST_FILTERS = {
-    data: filtroData ? filtroData.value : "",
-    cliente: filtroCliente ? filtroCliente.value : "",
-    telefone: filtroTelefone ? filtroTelefone.value : "",
-    status: filtroStatus ? filtroStatus.value : ""
+    data: dataVal,
+    cliente: clienteVal,
+    telefone: telefoneVal,
+    status: statusVal
   };
 
   window._ag_show_no_results_alert = true;
