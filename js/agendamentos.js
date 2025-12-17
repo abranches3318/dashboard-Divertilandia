@@ -966,8 +966,8 @@ async function salvarAgendamento() {
         );
       if (!result.ok) {
   const p = result.problems && result.problems[0];
-  const itemName = p ? p.item : "um item";
-
+  const itemName = p && p.item ? p.item : (result.warningItem || "um item");
+        
   let msg = `Ops — não é possível realizar este agendamento. O brinquedo "${itemName}" não está disponível neste horário.`;
 
   if (p && p.reason === "INTERVALO_MENOR_1H") {
