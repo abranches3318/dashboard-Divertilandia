@@ -1,6 +1,6 @@
 // =====================================================
 // regras_negocio.js
-// Regras de negócio de estoque + logística por UNIDADE
+// Regras de negócio de estoque + logística (CORRETO)
 // Baseado EXCLUSIVAMENTE em IDs (itemId)
 // COMPATÍVEL com agendamentos.js atual
 // =====================================================
@@ -31,7 +31,7 @@
   }
 
   // -----------------------------------------------------
-  // Pacote → itens
+  // Pacote → itens (ARRAY DE itemId)
   // -----------------------------------------------------
 
   regrasNegocio.pacoteToItens = function (pacoteDoc) {
@@ -40,12 +40,7 @@
   };
 
   // -----------------------------------------------------
-  // Estoque + Logística (POR UNIDADE)
-  // -----------------------------------------------------
-  // requestedItems: [itemId]
-  // existingBookings: agendamentos da mesma data
-  // currentId: id do agendamento sendo editado (ou null)
-  // novoHorarioIni / novoHorarioFim: "HH:MM"
+  // Checagem de conflito por estoque + logística (FINAL)
   // -----------------------------------------------------
 
   regrasNegocio.checkConflitoPorEstoqueAsync = async function (
@@ -62,11 +57,10 @@
 
       const iniNovo = parseHora(novoHorarioIni);
       const fimNovo = parseHora(novoHorarioFim);
-      if (iniNovo === null || fimNovo === null) {
+
+      if (iniNovo === null || fimNovo === null || fimNovo <= iniNovo) {
         return { ok: false, error: "HORARIO_INVALIDO" };
       }
-
-      let alertaLogistico = false;
 
       // =================================================
       // PROCESSA ITEM POR ITEM
@@ -99,71 +93,82 @@
           };
         }
 
-        // =================================================
-        // 1️⃣ CONFLITO DE ESTOQUE (SIMULTANEIDADE)
-        // =================================================
+        // -------------------------------------------------
+        // Coleta reservas do item
+        // -------------------------------------------------
 
-        let conflitosSimultaneos = 0;
+        const reservas = [];
 
         for (const ag of existingBookings) {
+          if (currentId && ag.id === currentId) continue;
           if (!Array.isArray(ag.itens_reservados)) continue;
           if (!ag.itens_reservados.includes(itemId)) continue;
-          if (currentId && ag.id === currentId) continue;
 
           const iniAg = parseHora(ag.horario);
           const fimAg = parseHora(ag.hora_fim);
           if (iniAg === null || fimAg === null) continue;
 
-          if (intervalosConflitam(iniNovo, fimNovo, iniAg, fimAg)) {
-            conflitosSimultaneos++;
+          reservas.push({ ini: iniAg, fim: fimAg });
+        }
+
+        // -------------------------------------------------
+        // Se não há reservas, está livre
+        // -------------------------------------------------
+
+        if (reservas.length === 0) continue;
+
+        // -------------------------------------------------
+        // Se ainda há estoque sobrando SEM conflito de horário
+        // -------------------------------------------------
+
+        let conflitosHorario = 0;
+        for (const r of reservas) {
+          if (intervalosConflitam(iniNovo, fimNovo, r.ini, r.fim)) {
+            conflitosHorario++;
           }
         }
 
-        if (conflitosSimultaneos + 1 > quantidadeTotal) {
+        if (conflitosHorario < quantidadeTotal) {
+          // Ainda existe unidade totalmente livre
+          continue;
+        }
+
+        // =================================================
+        // A PARTIR DAQUI: ESTOQUE TOTALMENTE COMPROMETIDO
+        // → APLICA REGRA LOGÍSTICA
+        // =================================================
+
+        let melhorIntervalo = null;
+
+        for (const r of reservas) {
+          // antes
+          if (fimNovo <= r.ini) {
+            const diff = r.ini - fimNovo;
+            melhorIntervalo =
+              melhorIntervalo === null ? diff : Math.min(melhorIntervalo, diff);
+          }
+
+          // depois
+          if (iniNovo >= r.fim) {
+            const diff = iniNovo - r.fim;
+            melhorIntervalo =
+              melhorIntervalo === null ? diff : Math.min(melhorIntervalo, diff);
+          }
+        }
+
+        // Nenhuma unidade comporta o agendamento
+        if (melhorIntervalo === null) {
           return {
             ok: false,
             problems: [{
               item: itemData.nome || itemId,
-              reason: "ESTOQUE_INSUFICIENTE",
-              quantidade: quantidadeTotal
+              reason: "ESTOQUE_INSUFICIENTE"
             }]
           };
         }
 
-        // =================================================
-        // 2️⃣ LOGÍSTICA POR UNIDADE
-        // =================================================
-        // Cada unidade só pode ser reutilizada após
-        // (hora_fim + 60 minutos)
-        // =================================================
-
-        const disponibilidades = [];
-
-        for (const ag of existingBookings) {
-          if (!Array.isArray(ag.itens_reservados)) continue;
-          if (!ag.itens_reservados.includes(itemId)) continue;
-          if (currentId && ag.id === currentId) continue;
-
-          const fimAg = parseHora(ag.hora_fim);
-          if (fimAg === null) continue;
-
-          // +60 min logística
-          disponibilidades.push(fimAg + 60);
-        }
-
-        // Se há menos reservas que estoque,
-        // existem unidades livres desde o início do dia
-        while (disponibilidades.length < quantidadeTotal) {
-          disponibilidades.push(0);
-        }
-
-        disponibilidades.sort((a, b) => a - b);
-
-        const primeiraDisponivel = disponibilidades[0];
-        const diff = iniNovo - primeiraDisponivel;
-
-        // ❌ BLOQUEIA
-        if (diff < 60) {
+        // < 60 min → BLOQUEIA
+        if (melhorIntervalo < 60) {
           return {
             ok: false,
             problems: [{
@@ -173,18 +178,15 @@
           };
         }
 
-        // ⚠️ ALERTA
-        if (diff >= 60 && diff < 90) {
-          alertaLogistico = true;
+        // 60–89 min → ALERTA
+        if (melhorIntervalo < 90) {
+          return {
+            ok: true,
+            warning: true
+          };
         }
-      }
 
-      // =================================================
-      // RESULTADO FINAL
-      // =================================================
-
-      if (alertaLogistico) {
-        return { ok: true, warning: true };
+        // ≥ 90 min → OK
       }
 
       return { ok: true };
@@ -196,7 +198,7 @@
   };
 
   // -----------------------------------------------------
-  // Duplicidade (endereço + data + horário)
+  // Checagem de duplicidade
   // -----------------------------------------------------
 
   regrasNegocio.checarDuplicidade = function (existingBookings, formData) {
@@ -236,3 +238,4 @@
   window.regrasNegocio = regrasNegocio;
 
 })();
+
