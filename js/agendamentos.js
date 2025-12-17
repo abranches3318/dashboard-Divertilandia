@@ -961,7 +961,9 @@ async function salvarAgendamento() {
   // CALL ASYNC CHECK for estoque
   try {
     if (window.regrasNegocio && window.regrasNegocio.checkConflitoPorEstoqueAsync) {
-      const result = await window.regrasNegocio.checkConflitoPorEstoqueAsync(requestedItems, existingBookings, id || null);
+      const result = await window.regrasNegocio.checkConflitoPorEstoqueAsync(requestedItems, existingBookings, id || null, horaInicio,
+  horaFim 
+        );
       if (!result.ok) {
         const p = result.problems && result.problems[0];
         const itemName = p ? p.item : "um item";
