@@ -1,6 +1,6 @@
 // =====================================================
 // regras_negocio.js
-// Regras de negócio de estoque e conflitos de agendamento
+// Regras de negócio de estoque + logística por UNIDADE
 // Baseado EXCLUSIVAMENTE em IDs (itemId)
 // COMPATÍVEL com agendamentos.js atual
 // =====================================================
@@ -27,13 +27,11 @@
 
   function normalizarArray(arr) {
     if (!Array.isArray(arr)) return [];
-    return arr
-      .map(v => String(v).trim())
-      .filter(v => v.length > 0);
+    return arr.map(v => String(v).trim()).filter(Boolean);
   }
 
   // -----------------------------------------------------
-  // Pacote → itens (ARRAY DE itemId)
+  // Pacote → itens
   // -----------------------------------------------------
 
   regrasNegocio.pacoteToItens = function (pacoteDoc) {
@@ -42,7 +40,12 @@
   };
 
   // -----------------------------------------------------
-  // Checagem de conflito por estoque + logística
+  // Estoque + Logística (POR UNIDADE)
+  // -----------------------------------------------------
+  // requestedItems: [itemId]
+  // existingBookings: agendamentos da mesma data
+  // currentId: id do agendamento sendo editado (ou null)
+  // novoHorarioIni / novoHorarioFim: "HH:MM"
   // -----------------------------------------------------
 
   regrasNegocio.checkConflitoPorEstoqueAsync = async function (
@@ -59,47 +62,14 @@
 
       const iniNovo = parseHora(novoHorarioIni);
       const fimNovo = parseHora(novoHorarioFim);
-
       if (iniNovo === null || fimNovo === null) {
         return { ok: false, error: "HORARIO_INVALIDO" };
       }
 
-      // =================================================
-      // REGRA LOGÍSTICA (ANTES DO ESTOQUE)
-      // =================================================
-
       let alertaLogistico = false;
 
-      for (const ag of existingBookings) {
-        if (currentId && ag.id === currentId) continue;
-
-        const iniAg = parseHora(ag.horario);
-        const fimAg = parseHora(ag.hora_fim);
-        if (iniAg === null || fimAg === null) continue;
-
-        const diffInicio = Math.abs(iniNovo - fimAg);
-        const diffFim = Math.abs(iniAg - fimNovo);
-
-        const menorDiferenca = Math.min(diffInicio, diffFim);
-
-        // < 1h → BLOQUEIA
-        if (menorDiferenca < 60) {
-          return {
-            ok: false,
-            problems: [{
-              reason: "INTERVALO_MENOR_1H"
-            }]
-          };
-        }
-
-        // >= 1h e < 1h30 → ALERTA
-       if (menorDiferenca >= 60 && menorDiferenca <= 90) {
-          alertaLogistico = true;
-        }
-      }
-
       // =================================================
-      // ESTOQUE (LÓGICA ORIGINAL — NÃO ALTERADA)
+      // PROCESSA ITEM POR ITEM
       // =================================================
 
       for (const itemId of itensSolicitados) {
@@ -129,7 +99,11 @@
           };
         }
 
-        let conflitos = 0;
+        // =================================================
+        // 1️⃣ CONFLITO DE ESTOQUE (SIMULTANEIDADE)
+        // =================================================
+
+        let conflitosSimultaneos = 0;
 
         for (const ag of existingBookings) {
           if (!Array.isArray(ag.itens_reservados)) continue;
@@ -141,29 +115,76 @@
           if (iniAg === null || fimAg === null) continue;
 
           if (intervalosConflitam(iniNovo, fimNovo, iniAg, fimAg)) {
-            conflitos++;
+            conflitosSimultaneos++;
           }
         }
 
-        if (conflitos + 1 > quantidadeTotal) {
+        if (conflitosSimultaneos + 1 > quantidadeTotal) {
           return {
             ok: false,
             problems: [{
               item: itemData.nome || itemId,
               reason: "ESTOQUE_INSUFICIENTE",
-              quantidade: quantidadeTotal,
-              usados: conflitos
+              quantidade: quantidadeTotal
             }]
           };
         }
+
+        // =================================================
+        // 2️⃣ LOGÍSTICA POR UNIDADE
+        // =================================================
+        // Cada unidade só pode ser reutilizada após
+        // (hora_fim + 60 minutos)
+        // =================================================
+
+        const disponibilidades = [];
+
+        for (const ag of existingBookings) {
+          if (!Array.isArray(ag.itens_reservados)) continue;
+          if (!ag.itens_reservados.includes(itemId)) continue;
+          if (currentId && ag.id === currentId) continue;
+
+          const fimAg = parseHora(ag.hora_fim);
+          if (fimAg === null) continue;
+
+          // +60 min logística
+          disponibilidades.push(fimAg + 60);
+        }
+
+        // Se há menos reservas que estoque,
+        // existem unidades livres desde o início do dia
+        while (disponibilidades.length < quantidadeTotal) {
+          disponibilidades.push(0);
+        }
+
+        disponibilidades.sort((a, b) => a - b);
+
+        const primeiraDisponivel = disponibilidades[0];
+        const diff = iniNovo - primeiraDisponivel;
+
+        // ❌ BLOQUEIA
+        if (diff < 60) {
+          return {
+            ok: false,
+            problems: [{
+              item: itemData.nome || itemId,
+              reason: "INTERVALO_MENOR_1H"
+            }]
+          };
+        }
+
+        // ⚠️ ALERTA
+        if (diff >= 60 && diff < 90) {
+          alertaLogistico = true;
+        }
       }
 
-      // ALERTA LOGÍSTICO (SE APLICÁVEL)
+      // =================================================
+      // RESULTADO FINAL
+      // =================================================
+
       if (alertaLogistico) {
-        return {
-          ok: true,
-          warning: true
-        };
+        return { ok: true, warning: true };
       }
 
       return { ok: true };
@@ -175,7 +196,7 @@
   };
 
   // -----------------------------------------------------
-  // Checagem de duplicidade
+  // Duplicidade (endereço + data + horário)
   // -----------------------------------------------------
 
   regrasNegocio.checarDuplicidade = function (existingBookings, formData) {
