@@ -83,7 +83,7 @@
         const menorDiferenca = Math.min(diffInicio, diffFim);
 
         // < 1h → BLOQUEIA
-        if (menorDiferenca < 60 && menorDiferenca > 0) {
+        if (menorDiferenca < 60) {
           return {
             ok: false,
             problems: [{
@@ -93,7 +93,7 @@
         }
 
         // >= 1h e < 1h30 → ALERTA
-        if (menorDiferenca >= 60 && menorDiferenca < 90) {
+       if (menorDiferenca >= 60 && menorDiferenca <= 90) {
           alertaLogistico = true;
         }
       }
