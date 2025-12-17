@@ -111,52 +111,55 @@
       // -----------------------------------------
       // Verifica se alguma linha aceita o novo
       // -----------------------------------------
-      let menorIntervalo = null;
+    let existeFolga = false;
+let existeAlerta = false;
+let existeInviavel = false;
 
-      for (const linha of linhas) {
-        let conflito = false;
-        let diff = null;
+for (const linha of linhas) {
+  let conflita = false;
+  let menorDiffLinha = null;
 
-        for (const r of linha) {
-          if (intervalosConflitam(iniNovo, fimNovo, r.ini, r.fim)) {
-            conflito = true;
-            break;
-          }
+  for (const r of linha) {
+    if (intervalosConflitam(iniNovo, fimNovo, r.ini, r.fim)) {
+      conflita = true;
+      break;
+    }
 
-          if (fimNovo <= r.ini) {
-            diff = r.ini - fimNovo;
-          }
+    let diff = null;
+    if (fimNovo <= r.ini) diff = r.ini - fimNovo;
+    if (iniNovo >= r.fim) diff = iniNovo - r.fim;
 
-          if (iniNovo >= r.fim) {
-            diff = iniNovo - r.fim;
-          }
-        }
-
-        if (!conflito) {
-          // unidade totalmente livre
-          if (diff === null || diff >= 90) {
-            return { ok: true };
-          }
-
-          if (diff >= 60) {
-            menorIntervalo = diff;
-          }
-        }
-      }
-
-      // Se nenhuma unidade aceita o novo agendamento
-// precisamos decidir SE é estoque ou logística
-if (menorIntervalo !== null) {
-  // existe unidade, mas logística curta
-  if (menorIntervalo >= 60) {
-    return {
-      ok: true,
-      warning: true,
-      warningItem: item.nome
-    };
+    if (diff !== null) {
+      menorDiffLinha =
+        menorDiffLinha === null ? diff : Math.min(menorDiffLinha, diff);
+    }
   }
 
-  // logística inviável
+  if (!conflita) {
+    if (menorDiffLinha === null || menorDiffLinha >= 90) {
+      existeFolga = true;
+    } else if (menorDiffLinha >= 60) {
+      existeAlerta = true;
+    } else {
+      existeInviavel = true;
+    }
+  }
+}
+
+// DECISÃO FINAL
+if (existeFolga) {
+  return { ok: true };
+}
+
+if (existeAlerta) {
+  return {
+    ok: true,
+    warning: true,
+    warningItem: item.nome
+  };
+}
+
+if (existeInviavel) {
   return {
     ok: false,
     problems: [{
@@ -166,7 +169,7 @@ if (menorIntervalo !== null) {
   };
 }
 
-// nenhuma unidade livre em nenhum momento → estoque indisponível
+// nenhuma unidade conseguiu aceitar
 return {
   ok: false,
   problems: [{
