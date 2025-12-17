@@ -144,21 +144,37 @@
         }
       }
 
-      if (menorIntervalo !== null) {
-        return {
-          ok: true,
-          warning: true,
-          warningItem: item.nome
-        };
-      }
+      // Se nenhuma unidade aceita o novo agendamento
+// precisamos decidir SE é estoque ou logística
+if (menorIntervalo !== null) {
+  // existe unidade, mas logística curta
+  if (menorIntervalo >= 60) {
+    return {
+      ok: true,
+      warning: true,
+      warningItem: item.nome
+    };
+  }
 
-      return {
-        ok: false,
-        problems: [{
-          item: item.nome,
-          reason: "INTERVALO_MENOR_1H"
-        }]
-      };
+  // logística inviável
+  return {
+    ok: false,
+    problems: [{
+      item: item.nome,
+      reason: "INTERVALO_MENOR_1H"
+    }]
+  };
+}
+
+// nenhuma unidade livre em nenhum momento → estoque indisponível
+return {
+  ok: false,
+  problems: [{
+    item: item.nome,
+    reason: "ESTOQUE_INDISPONIVEL"
+  }]
+};
+
     }
 
     return { ok: true };
