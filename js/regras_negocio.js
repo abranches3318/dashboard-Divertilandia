@@ -89,6 +89,10 @@
         }))
         .filter(r => r.ini !== null && r.fim !== null);
 
+      if (reservas.length === 0) {
+  return { ok: true };
+}
+
       // Distribui reservas nas linhas
       reservas.sort((a, b) => a.ini - b.ini);
       for (const r of reservas) {
@@ -151,15 +155,15 @@ for (const linha of linhas) {
 }
 
 // -----------------------------------------
-// DECISÃO FINAL (CORRIGIDA)
+// DECISÃO FINAL (CORRIGIDA DEFINITIVA)
 // -----------------------------------------
 
-// Libera sem restrição
+// Existe unidade com folga total
 if (existeFolga) {
   return { ok: true };
 }
 
-// Libera com alerta logístico
+// Existe unidade, mas logística curta
 if (existeAlerta) {
   return {
     ok: true,
@@ -168,7 +172,7 @@ if (existeAlerta) {
   };
 }
 
-// Existe unidade livre, mas logística inviável
+// Existe unidade, mas logística inviável
 if (existeLinhaSemConflito && existeInviavel) {
   return {
     ok: false,
@@ -179,7 +183,8 @@ if (existeLinhaSemConflito && existeInviavel) {
   };
 }
 
-// Nenhuma unidade livre em horário → estoque indisponível
+// Aqui SIM é estoque indisponível:
+// todas as unidades estão ocupadas no horário
 return {
   ok: false,
   problems: [{
@@ -187,7 +192,6 @@ return {
     reason: "ESTOQUE_INDISPONIVEL"
   }]
 };
-
     }
 
     return { ok: true };
