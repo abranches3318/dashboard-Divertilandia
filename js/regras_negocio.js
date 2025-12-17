@@ -44,159 +44,130 @@
   // -----------------------------------------------------
 
   regrasNegocio.checkConflitoPorEstoqueAsync = async function (
-    requestedItems,
-    existingBookings,
-    currentId = null,
-    novoHorarioIni,
-    novoHorarioFim
-  ) {
-    try {
-      const itensSolicitados = normalizarArray(requestedItems);
-      if (itensSolicitados.length === 0) return { ok: true };
-      if (!Array.isArray(existingBookings)) return { ok: true };
+  requestedItems,
+  existingBookings,
+  currentId = null,
+  novoHorarioIni,
+  novoHorarioFim
+) {
+  try {
+    const itensSolicitados = normalizarArray(requestedItems);
+    if (!Array.isArray(existingBookings)) return { ok: true };
 
-      const iniNovo = parseHora(novoHorarioIni);
-      const fimNovo = parseHora(novoHorarioFim);
-
-      if (iniNovo === null || fimNovo === null || fimNovo <= iniNovo) {
-        return { ok: false, error: "HORARIO_INVALIDO" };
-      }
-
-      // =================================================
-      // PROCESSA ITEM POR ITEM
-      // =================================================
-
-      for (const itemId of itensSolicitados) {
-        const snap = await firebase
-          .firestore()
-          .collection("item")
-          .doc(itemId)
-          .get();
-
-        if (!snap.exists) {
-          return {
-            ok: false,
-            problems: [{ item: itemId, reason: "ITEM_NAO_EXISTE" }]
-          };
-        }
-
-        const itemData = snap.data();
-        const quantidadeTotal = Number(itemData.quantidade || 0);
-
-        if (quantidadeTotal <= 0) {
-          return {
-            ok: false,
-            problems: [{
-              item: itemData.nome || itemId,
-              reason: "SEM_ESTOQUE"
-            }]
-          };
-        }
-
-        // -------------------------------------------------
-        // Coleta reservas do item
-        // -------------------------------------------------
-
-        const reservas = [];
-
-        for (const ag of existingBookings) {
-          if (currentId && ag.id === currentId) continue;
-          if (!Array.isArray(ag.itens_reservados)) continue;
-          if (!ag.itens_reservados.includes(itemId)) continue;
-
-          const iniAg = parseHora(ag.horario);
-          const fimAg = parseHora(ag.hora_fim);
-          if (iniAg === null || fimAg === null) continue;
-
-          reservas.push({ ini: iniAg, fim: fimAg });
-        }
-
-        // -------------------------------------------------
-        // Se não há reservas, está livre
-        // -------------------------------------------------
-
-        if (reservas.length === 0) continue;
-
-        // -------------------------------------------------
-        // Se ainda há estoque sobrando SEM conflito de horário
-        // -------------------------------------------------
-
-        let conflitosHorario = 0;
-        for (const r of reservas) {
-          if (intervalosConflitam(iniNovo, fimNovo, r.ini, r.fim)) {
-            conflitosHorario++;
-          }
-        }
-
-        if (conflitosHorario < quantidadeTotal) {
-          // Ainda existe unidade totalmente livre
-          continue;
-        }
-
-        // =================================================
-        // A PARTIR DAQUI: ESTOQUE TOTALMENTE COMPROMETIDO
-        // → APLICA REGRA LOGÍSTICA
-        // =================================================
-
-        let melhorIntervalo = null;
-
-        for (const r of reservas) {
-          // antes
-          if (fimNovo <= r.ini) {
-            const diff = r.ini - fimNovo;
-            melhorIntervalo =
-              melhorIntervalo === null ? diff : Math.min(melhorIntervalo, diff);
-          }
-
-          // depois
-          if (iniNovo >= r.fim) {
-            const diff = iniNovo - r.fim;
-            melhorIntervalo =
-              melhorIntervalo === null ? diff : Math.min(melhorIntervalo, diff);
-          }
-        }
-
-        // Nenhuma unidade comporta o agendamento
-        if (melhorIntervalo === null) {
-          return {
-            ok: false,
-            problems: [{
-              item: itemData.nome || itemId,
-              reason: "ESTOQUE_INSUFICIENTE"
-            }]
-          };
-        }
-
-        // < 60 min → BLOQUEIA
-        if (melhorIntervalo < 60) {
-          return {
-            ok: false,
-            problems: [{
-              item: itemData.nome || itemId,
-              reason: "INTERVALO_MENOR_1H"
-            }]
-          };
-        }
-
-        // 60–89 min → ALERTA
-        if (melhorIntervalo < 90) {
-          return {
-            ok: true,
-            warning: true
-          };
-        }
-
-        // ≥ 90 min → OK
-      }
-
-      return { ok: true };
-
-    } catch (err) {
-      console.error("checkConflitoPorEstoqueAsync:", err);
-      return { ok: false, error: true };
+    const iniNovo = parseHora(novoHorarioIni);
+    const fimNovo = parseHora(novoHorarioFim);
+    if (iniNovo === null || fimNovo === null || fimNovo <= iniNovo) {
+      return { ok: false, error: "HORARIO_INVALIDO" };
     }
-  };
 
+    for (const itemId of itensSolicitados) {
+      const snap = await firebase.firestore().collection("item").doc(itemId).get();
+      if (!snap.exists) {
+        return { ok: false, problems: [{ item: itemId, reason: "ITEM_NAO_EXISTE" }] };
+      }
+
+      const item = snap.data();
+      const qtd = Number(item.quantidade || 0);
+      if (qtd <= 0) {
+        return { ok: false, problems: [{ item: item.nome, reason: "SEM_ESTOQUE" }] };
+      }
+
+      // -----------------------------------------
+      // Monta linhas de tempo (1 por unidade)
+      // -----------------------------------------
+      const linhas = Array.from({ length: qtd }, () => []);
+
+      const reservas = existingBookings
+        .filter(a =>
+          (!currentId || a.id !== currentId) &&
+          Array.isArray(a.itens_reservados) &&
+          a.itens_reservados.includes(itemId)
+        )
+        .map(a => ({
+          ini: parseHora(a.horario),
+          fim: parseHora(a.hora_fim)
+        }))
+        .filter(r => r.ini !== null && r.fim !== null);
+
+      // Distribui reservas nas linhas
+      reservas.sort((a, b) => a.ini - b.ini);
+      for (const r of reservas) {
+        let alocada = false;
+        for (const linha of linhas) {
+          if (
+            linha.length === 0 ||
+            linha[linha.length - 1].fim <= r.ini
+          ) {
+            linha.push(r);
+            alocada = true;
+            break;
+          }
+        }
+        if (!alocada) {
+          // todas ocupadas nesse horário
+        }
+      }
+
+      // -----------------------------------------
+      // Verifica se alguma linha aceita o novo
+      // -----------------------------------------
+      let menorIntervalo = null;
+
+      for (const linha of linhas) {
+        let conflito = false;
+        let diff = null;
+
+        for (const r of linha) {
+          if (intervalosConflitam(iniNovo, fimNovo, r.ini, r.fim)) {
+            conflito = true;
+            break;
+          }
+
+          if (fimNovo <= r.ini) {
+            diff = r.ini - fimNovo;
+          }
+
+          if (iniNovo >= r.fim) {
+            diff = iniNovo - r.fim;
+          }
+        }
+
+        if (!conflito) {
+          // unidade totalmente livre
+          if (diff === null || diff >= 90) {
+            return { ok: true };
+          }
+
+          if (diff >= 60) {
+            menorIntervalo = diff;
+          }
+        }
+      }
+
+      if (menorIntervalo !== null) {
+        return {
+          ok: true,
+          warning: true,
+          warningItem: item.nome
+        };
+      }
+
+      return {
+        ok: false,
+        problems: [{
+          item: item.nome,
+          reason: "INTERVALO_MENOR_1H"
+        }]
+      };
+    }
+
+    return { ok: true };
+
+  } catch (err) {
+    console.error(err);
+    return { ok: false, error: true };
+  }
+};
   // -----------------------------------------------------
   // Checagem de duplicidade
   // -----------------------------------------------------
