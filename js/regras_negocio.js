@@ -101,11 +101,17 @@
         const linhas = Array.from({ length: qtd }, () => []);
 
         const reservas = existingBookings
-          .filter(a =>
-            (!currentId || a.id !== currentId) &&
-            Array.isArray(a.itens_reservados) &&
-            a.itens_reservados.includes(itemId)
-          )
+       .filter(a => {
+  if (currentId && a.id === currentId) return false;
+
+  const itens = Array.isArray(a.itens_reservados)
+    ? a.itens_reservados
+    : (typeof a.itens_reservados === "string"
+        ? [a.itens_reservados]
+        : []);
+
+  return itens.includes(itemId);
+})
           .map(a => ({
             ini: parseHora(a.horario),
             fim: parseHora(a.hora_fim)
