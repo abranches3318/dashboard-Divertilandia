@@ -22,7 +22,6 @@
   }
 
   function intervalosConflitam(aIni, aFim, bIni, bFim) {
-    // [aIni, aFim) conflita com [bIni, bFim)
     return aIni < bFim && bIni < aFim;
   }
 
@@ -43,11 +42,7 @@
   };
 
   // -----------------------------------------------------
-  // Checagem de conflito por estoque (CORRETA)
-  // -----------------------------------------------------
-  // requestedItems: [itemId]
-  // existingBookings: agendamentos da mesma data
-  // currentId: id do agendamento sendo editado (ou null)
+  // Checagem de conflito por estoque + logística
   // -----------------------------------------------------
 
   regrasNegocio.checkConflitoPorEstoqueAsync = async function (
@@ -60,7 +55,6 @@
     try {
       const itensSolicitados = normalizarArray(requestedItems);
       if (itensSolicitados.length === 0) return { ok: true };
-
       if (!Array.isArray(existingBookings)) return { ok: true };
 
       const iniNovo = parseHora(novoHorarioIni);
@@ -69,6 +63,44 @@
       if (iniNovo === null || fimNovo === null) {
         return { ok: false, error: "HORARIO_INVALIDO" };
       }
+
+      // =================================================
+      // REGRA LOGÍSTICA (ANTES DO ESTOQUE)
+      // =================================================
+
+      let alertaLogistico = false;
+
+      for (const ag of existingBookings) {
+        if (currentId && ag.id === currentId) continue;
+
+        const iniAg = parseHora(ag.horario);
+        const fimAg = parseHora(ag.hora_fim);
+        if (iniAg === null || fimAg === null) continue;
+
+        const diffInicio = Math.abs(iniNovo - fimAg);
+        const diffFim = Math.abs(iniAg - fimNovo);
+
+        const menorDiferenca = Math.min(diffInicio, diffFim);
+
+        // < 1h → BLOQUEIA
+        if (menorDiferenca < 60 && menorDiferenca > 0) {
+          return {
+            ok: false,
+            problems: [{
+              reason: "INTERVALO_MENOR_1H"
+            }]
+          };
+        }
+
+        // >= 1h e < 1h30 → ALERTA
+        if (menorDiferenca >= 60 && menorDiferenca < 90) {
+          alertaLogistico = true;
+        }
+      }
+
+      // =================================================
+      // ESTOQUE (LÓGICA ORIGINAL — NÃO ALTERADA)
+      // =================================================
 
       for (const itemId of itensSolicitados) {
         const snap = await firebase
@@ -102,12 +134,10 @@
         for (const ag of existingBookings) {
           if (!Array.isArray(ag.itens_reservados)) continue;
           if (!ag.itens_reservados.includes(itemId)) continue;
-
           if (currentId && ag.id === currentId) continue;
 
           const iniAg = parseHora(ag.horario);
           const fimAg = parseHora(ag.hora_fim);
-
           if (iniAg === null || fimAg === null) continue;
 
           if (intervalosConflitam(iniNovo, fimNovo, iniAg, fimAg)) {
@@ -115,7 +145,6 @@
           }
         }
 
-        // +1 é o novo agendamento
         if (conflitos + 1 > quantidadeTotal) {
           return {
             ok: false,
@@ -127,6 +156,14 @@
             }]
           };
         }
+      }
+
+      // ALERTA LOGÍSTICO (SE APLICÁVEL)
+      if (alertaLogistico) {
+        return {
+          ok: true,
+          warning: true
+        };
       }
 
       return { ok: true };
