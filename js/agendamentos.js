@@ -965,12 +965,41 @@ async function salvarAgendamento() {
   horaFim 
         );
       if (!result.ok) {
-        const p = result.problems && result.problems[0];
-        const itemName = p ? p.item : "um item";
-        const message = `Ops — não é possível realizar este agendamento. O brinquedo "${itemName}" não está mais disponível neste horário.`;
-        await Swal.fire({ title: "Conflito de estoque", text: message, icon: "warning", customClass: { popup: 'swal-high-z' } });
-        return;
-      }
+  const p = result.problems && result.problems[0];
+  const itemName = p ? p.item : "um item";
+
+  let msg = `Ops — não é possível realizar este agendamento. O brinquedo "${itemName}" não está disponível neste horário.`;
+
+  if (p && p.reason === "INTERVALO_MENOR_1H") {
+    msg = "Intervalo inferior a 1 hora entre agendamentos. Não é possível agendar.";
+  }
+
+  await Swal.fire({
+    title: "Conflito de agendamento",
+    text: msg,
+    icon: "warning",
+    customClass: { popup: 'swal-high-z' }
+  });
+  return;
+}
+
+/* ⚠️ ALERTA (1h até 1h30) */
+if (result.warning) {
+  const resp = await Swal.fire({
+    icon: "warning",
+    title: "Intervalo curto entre agendamentos",
+    html: `
+      Existe apenas um curto intervalo entre este agendamento e outro.<br><br>
+      <b>Observação:</b> verifique a distância entre os eventos.
+    `,
+    showCancelButton: true,
+    confirmButtonText: "Agendar mesmo assim",
+    cancelButtonText: "Cancelar",
+    customClass: { popup: 'swal-high-z' }
+  });
+
+  if (!resp.isConfirmed) return;
+}
     }
   } catch (err) {
     console.error("Erro ao validar conflito de estoque:", err);
