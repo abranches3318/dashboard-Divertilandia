@@ -1,95 +1,119 @@
-// regras_negocio.js
-// ================================
-// Regras de negócio para estoque
-// Baseado EXCLUSIVAMENTE em itemId
-// ================================
+// =====================================================
 
-(function () {
 
-  /**
-   * Converte pacote em lista de itemIds
-   * @param {Object} pacote
-   * @returns {Array<string>}
-   */
-  function pacoteToItens(pacote) {
-    if (!pacote || !Array.isArray(pacote.itens)) return [];
-    return [...pacote.itens];
-  }
+if (!snap.exists) {
+return {
+ok: false,
+problems: [{ item: itemId, reason: "ITEM_NAO_EXISTE" }]
+};
+}
 
-  /**
-   * Checa conflito de estoque de forma assíncrona
-   * @param {Array<string>} requestedItems
-   * @param {Array<Object>} existingBookings
-   * @returns {Promise<{ok: boolean, problems?: Array}>}
-   */
-  async function checkConflitoPorEstoqueAsync(requestedItems, existingBookings) {
-    if (!window.db || !Array.isArray(requestedItems)) {
-      return { ok: true };
-    }
 
-    // ================================
-    // 1. Contar uso atual por itemId
-    // ================================
-    const usageMap = {};
+const itemData = snap.data();
+const quantidadeTotal = Number(itemData.quantidade || 0);
 
-    existingBookings.forEach(ag => {
-      if (!Array.isArray(ag.itens_reservados)) return;
 
-      ag.itens_reservados.forEach(itemId => {
-        if (!itemId) return;
-        usageMap[itemId] = (usageMap[itemId] || 0) + 1;
-      });
-    });
+if (quantidadeTotal <= 0) {
+return {
+ok: false,
+problems: [{ item: itemData.nome || itemId, reason: "SEM_ESTOQUE" }]
+};
+}
 
-    // ================================
-    // 2. Adicionar novo pedido
-    // ================================
-    requestedItems.forEach(itemId => {
-      if (!itemId) return;
-      usageMap[itemId] = (usageMap[itemId] || 0) + 1;
-    });
 
-    // ================================
-    // 3. Buscar estoque no Firestore
-    // ================================
-    const problems = [];
+const reservas = mapaReservas[itemId] || [];
 
-    for (const itemId of Object.keys(usageMap)) {
-      try {
-        const snap = await window.db.collection("itens").doc(itemId).get();
-        if (!snap.exists) continue;
 
-        const data = snap.data();
-        const disponivel = Number(data.quantidade || 0);
-        const reservado = usageMap[itemId];
+// Se não há reservas, ok
+if (reservas.length === 0) continue;
 
-        if (reservado > disponivel) {
-          problems.push({
-            itemId,
-            item: data.nome || "Item",
-            reservado,
-            disponivel
-          });
-        }
 
-      } catch (err) {
-        console.warn("Erro ao verificar estoque do item:", itemId, err);
-      }
-    }
+// Contar conflitos simultâneos
+for (const r of reservas) {
+let simultaneos = 1; // inclui o novo
 
-    if (problems.length > 0) {
-      return { ok: false, problems };
-    }
 
-    return { ok: true };
-  }
+for (const r2 of reservas) {
+if (r === r2) continue;
+if (intervalosConflitam(r.ini, r.fim, r2.ini, r2.fim)) {
+simultaneos++;
+}
+}
 
-  // ================================
-  // API pública
-  // ================================
-  window.regrasNegocio = {
-    pacoteToItens,
-    checkConflitoPorEstoqueAsync
-  };
 
+if (simultaneos > quantidadeTotal) {
+return {
+ok: false,
+problems: [
+{
+item: itemData.nome || itemId,
+reason: "ESTOQUE_INSUFICIENTE",
+quantidade: quantidadeTotal
+}
+]
+};
+}
+}
+}
+
+
+return { ok: true };
+} catch (err) {
+console.error("checkConflitoPorEstoqueAsync:", err);
+return { ok: false, error: true };
+}
+};
+
+
+// -----------------------------------------------------
+// Duplicidade (mesmo endereço + data + horário)
+// -----------------------------------------------------
+
+
+regrasNegocio.checarDuplicidade = function (existingBookings, formData) {
+if (!Array.isArray(existingBookings)) return false;
+
+
+const ini = parseHora(formData.horario);
+if (ini === null) return false;
+
+
+return existingBookings.some(ag => {
+if (formData.id && ag.id === formData.id) return false;
+
+
+if (ag.data !== formData.data) return false;
+if (!ag.endereco || !formData.endereco) return false;
+
+
+const e1 = ag.endereco;
+const e2 = formData.endereco;
+
+
+const mesmoEndereco =
+String(e1.rua).trim().toLowerCase() ===
+String(e2.rua).trim().toLowerCase() &&
+String(e1.numero) === String(e2.numero) &&
+String(e1.bairro).trim().toLowerCase() ===
+String(e2.bairro).trim().toLowerCase();
+
+
+if (!mesmoEndereco) return false;
+
+
+const iniAg = parseHora(ag.horario);
+if (iniAg === null) return false;
+
+
+return ini === iniAg;
+});
+};
+
+
+// -----------------------------------------------------
+// Exporta no window
+// -----------------------------------------------------
+
+
+window.regrasNegocio = regrasNegocio;
 })();
