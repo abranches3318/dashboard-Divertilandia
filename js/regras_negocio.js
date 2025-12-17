@@ -109,11 +109,12 @@
       }
 
       // -----------------------------------------
-      // Verifica se alguma linha aceita o novo
-      // -----------------------------------------
-    let existeFolga = false;
+// Verifica se alguma linha aceita o novo
+// -----------------------------------------
+let existeFolga = false;
 let existeAlerta = false;
 let existeInviavel = false;
+let existeLinhaSemConflito = false;
 
 for (const linha of linhas) {
   let conflita = false;
@@ -135,7 +136,10 @@ for (const linha of linhas) {
     }
   }
 
+  // Linha sem conflito de horário
   if (!conflita) {
+    existeLinhaSemConflito = true;
+
     if (menorDiffLinha === null || menorDiffLinha >= 90) {
       existeFolga = true;
     } else if (menorDiffLinha >= 60) {
@@ -146,11 +150,16 @@ for (const linha of linhas) {
   }
 }
 
-// DECISÃO FINAL
+// -----------------------------------------
+// DECISÃO FINAL (CORRIGIDA)
+// -----------------------------------------
+
+// Libera sem restrição
 if (existeFolga) {
   return { ok: true };
 }
 
+// Libera com alerta logístico
 if (existeAlerta) {
   return {
     ok: true,
@@ -159,7 +168,8 @@ if (existeAlerta) {
   };
 }
 
-if (existeInviavel) {
+// Existe unidade livre, mas logística inviável
+if (existeLinhaSemConflito && existeInviavel) {
   return {
     ok: false,
     problems: [{
@@ -169,7 +179,7 @@ if (existeInviavel) {
   };
 }
 
-// nenhuma unidade conseguiu aceitar
+// Nenhuma unidade livre em horário → estoque indisponível
 return {
   ok: false,
   problems: [{
