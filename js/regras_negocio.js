@@ -57,9 +57,17 @@
       const iniNovo = parseHora(novoHorarioIni);
       const fimNovo = parseHora(novoHorarioFim);
 
-      if (iniNovo === null || fimNovo === null || fimNovo <= iniNovo) {
-        return { ok: false, error: "HORARIO_INVALIDO" };
-      }
+      if (iniNovo === null || fimNovo === null) {
+  return { ok: false, error: "HORARIO_INVALIDO" };
+}
+
+// NORMALIZA AGENDAMENTO QUE CRUZA MEIA-NOITE
+let iniNovoNorm = iniNovo;
+let fimNovoNorm = fimNovo;
+
+if (fimNovoNorm <= iniNovoNorm) {
+  fimNovoNorm += 1440; // +24h
+}
 
       // ==========================================
       // ACUMULADORES GLOBAIS (CORREÇÃO CRÍTICA)
@@ -112,10 +120,22 @@
 
   return itens.includes(itemId);
 })
-          .map(a => ({
-            ini: parseHora(a.horario),
-            fim: parseHora(a.hora_fim)
-          }))
+          .map(a => {
+  let ini = parseHora(a.horario);
+  let fim = parseHora(a.hora_fim);
+
+  // NORMALIZA AGENDAMENTO QUE CRUZA MEIA-NOITE
+  if (ini !== null && fim !== null && fim <= ini) {
+    fim += 1440; // +24h
+  }
+
+            if (fim < iniNovoNorm - 1440) {
+    ini += 1440;
+    fim += 1440;
+  }
+
+  return { ini, fim };
+})
           .filter(r => r.ini !== null && r.fim !== null);
 
         reservas.sort((a, b) => a.ini - b.ini);
@@ -145,19 +165,19 @@
           let menorDiff = null;
 
           for (const r of linha) {
-            if (intervalosConflitam(iniNovo, fimNovo, r.ini, r.fim)) {
-              conflita = true;
-              break;
-            }
+  if (intervalosConflitam(iniNovoNorm, fimNovoNorm, r.ini, r.fim)) {
+    conflita = true;
+    break;
+  }
 
-            let diff = null;
-            if (fimNovo <= r.ini) diff = r.ini - fimNovo;
-            if (iniNovo >= r.fim) diff = iniNovo - r.fim;
+  let diff = null;
+  if (fimNovoNorm <= r.ini) diff = r.ini - fimNovoNorm;
+  if (iniNovoNorm >= r.fim) diff = iniNovoNorm - r.fim;
 
-            if (diff !== null) {
-              menorDiff = menorDiff === null ? diff : Math.min(menorDiff, diff);
-            }
-          }
+  if (diff !== null) {
+    menorDiff = menorDiff === null ? diff : Math.min(menorDiff, diff);
+  }
+}
 
           if (!conflita) {
             existeLinhaSemConflito = true;
