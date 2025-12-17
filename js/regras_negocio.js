@@ -2,13 +2,12 @@
 // regras_negocio.js
 // Regras de negócio de estoque e conflitos de agendamento
 // Baseado EXCLUSIVAMENTE em IDs (itemId)
-// Compatível com agendamentos.js atual
+// COMPATÍVEL com agendamentos.js atual
 // =====================================================
 
 (function () {
   "use strict";
 
-  // Namespace global seguro
   const regrasNegocio = {};
 
   // -----------------------------------------------------
@@ -16,7 +15,6 @@
   // -----------------------------------------------------
 
   function parseHora(h) {
-    // aceita "HH:MM"
     if (!h || typeof h !== "string") return null;
     const [hh, mm] = h.split(":").map(n => parseInt(n, 10));
     if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
@@ -28,69 +26,51 @@
     return aIni < bFim && bIni < aFim;
   }
 
-  function normalizarItensArray(arr) {
+  function normalizarArray(arr) {
     if (!Array.isArray(arr)) return [];
     return arr
-      .filter(Boolean)
       .map(v => String(v).trim())
       .filter(v => v.length > 0);
   }
 
   // -----------------------------------------------------
-  // Pacote → itens (sempre retorna ARRAY DE itemId)
+  // Pacote → itens (ARRAY DE itemId)
   // -----------------------------------------------------
 
-  regrasNegocio.pacoteToItens = function pacoteToItens(pacoteDoc) {
-    if (!pacoteDoc) return [];
-
-    // Após migração: pacote.itens = [itemId, itemId]
-    if (Array.isArray(pacoteDoc.itens)) {
-      return normalizarItensArray(pacoteDoc.itens);
-    }
-
-    return [];
+  regrasNegocio.pacoteToItens = function (pacoteDoc) {
+    if (!pacoteDoc || !Array.isArray(pacoteDoc.itens)) return [];
+    return normalizarArray(pacoteDoc.itens);
   };
 
   // -----------------------------------------------------
-  // Checagem principal de conflito por estoque (ASYNC)
+  // Checagem de conflito por estoque (CORRETA)
   // -----------------------------------------------------
   // requestedItems: [itemId]
-  // existingBookings: docs de agendamentos da MESMA DATA
+  // existingBookings: agendamentos da mesma data
+  // currentId: id do agendamento sendo editado (ou null)
   // -----------------------------------------------------
 
   regrasNegocio.checkConflitoPorEstoqueAsync = async function (
     requestedItems,
-    existingBookings
+    existingBookings,
+    currentId = null,
+    novoHorarioIni,
+    novoHorarioFim
   ) {
     try {
-      const itensSolicitados = normalizarItensArray(requestedItems);
-      if (itensSolicitados.length === 0) {
-        return { ok: true };
+      const itensSolicitados = normalizarArray(requestedItems);
+      if (itensSolicitados.length === 0) return { ok: true };
+
+      if (!Array.isArray(existingBookings)) return { ok: true };
+
+      const iniNovo = parseHora(novoHorarioIni);
+      const fimNovo = parseHora(novoHorarioFim);
+
+      if (iniNovo === null || fimNovo === null) {
+        return { ok: false, error: "HORARIO_INVALIDO" };
       }
 
-      if (!Array.isArray(existingBookings) || existingBookings.length === 0) {
-        return { ok: true };
-      }
-
-      // Agrupa reservas por itemId
-      const mapaReservas = {};
-
-      for (const ag of existingBookings) {
-        if (!ag || !Array.isArray(ag.itens_reservados)) continue;
-
-        const ini = parseHora(ag.horario);
-        const fim = parseHora(ag.hora_fim);
-        if (ini === null || fim === null) continue;
-
-        for (const itemId of ag.itens_reservados) {
-          if (!mapaReservas[itemId]) mapaReservas[itemId] = [];
-          mapaReservas[itemId].push({ ini, fim, ag });
-        }
-      }
-
-      // Para cada item solicitado, validar estoque
       for (const itemId of itensSolicitados) {
-        // busca item no Firestore
         const snap = await firebase
           .firestore()
           .collection("item")
@@ -110,42 +90,47 @@
         if (quantidadeTotal <= 0) {
           return {
             ok: false,
-            problems: [{ item: itemData.nome || itemId, reason: "SEM_ESTOQUE" }]
+            problems: [{
+              item: itemData.nome || itemId,
+              reason: "SEM_ESTOQUE"
+            }]
           };
         }
 
-        const reservas = mapaReservas[itemId] || [];
+        let conflitos = 0;
 
-        // Se não há reservas, ok
-        if (reservas.length === 0) continue;
+        for (const ag of existingBookings) {
+          if (!Array.isArray(ag.itens_reservados)) continue;
+          if (!ag.itens_reservados.includes(itemId)) continue;
 
-        // Contar conflitos simultâneos
-        for (const r of reservas) {
-          let simultaneos = 1; // inclui o novo
+          if (currentId && ag.id === currentId) continue;
 
-          for (const r2 of reservas) {
-            if (r === r2) continue;
-            if (intervalosConflitam(r.ini, r.fim, r2.ini, r2.fim)) {
-              simultaneos++;
-            }
+          const iniAg = parseHora(ag.horario);
+          const fimAg = parseHora(ag.hora_fim);
+
+          if (iniAg === null || fimAg === null) continue;
+
+          if (intervalosConflitam(iniNovo, fimNovo, iniAg, fimAg)) {
+            conflitos++;
           }
+        }
 
-          if (simultaneos > quantidadeTotal) {
-            return {
-              ok: false,
-              problems: [
-                {
-                  item: itemData.nome || itemId,
-                  reason: "ESTOQUE_INSUFICIENTE",
-                  quantidade: quantidadeTotal
-                }
-              ]
-            };
-          }
+        // +1 é o novo agendamento
+        if (conflitos + 1 > quantidadeTotal) {
+          return {
+            ok: false,
+            problems: [{
+              item: itemData.nome || itemId,
+              reason: "ESTOQUE_INSUFICIENTE",
+              quantidade: quantidadeTotal,
+              usados: conflitos
+            }]
+          };
         }
       }
 
       return { ok: true };
+
     } catch (err) {
       console.error("checkConflitoPorEstoqueAsync:", err);
       return { ok: false, error: true };
@@ -153,7 +138,7 @@
   };
 
   // -----------------------------------------------------
-  // Duplicidade (mesmo endereço + data + horário)
+  // Checagem de duplicidade
   // -----------------------------------------------------
 
   regrasNegocio.checarDuplicidade = function (existingBookings, formData) {
@@ -164,7 +149,6 @@
 
     return existingBookings.some(ag => {
       if (formData.id && ag.id === formData.id) return false;
-
       if (ag.data !== formData.data) return false;
       if (!ag.endereco || !formData.endereco) return false;
 
@@ -188,8 +172,9 @@
   };
 
   // -----------------------------------------------------
-  // Exporta no window
+  // Export
   // -----------------------------------------------------
 
   window.regrasNegocio = regrasNegocio;
+
 })();
