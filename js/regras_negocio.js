@@ -31,7 +31,7 @@
   }
 
   // -----------------------------------------------------
-  // Pacote → itens
+  // Pacote → itens (itemId)
   // -----------------------------------------------------
 
   regrasNegocio.pacoteToItens = function (pacoteDoc) {
@@ -52,7 +52,6 @@
   ) {
     try {
       const itensSolicitados = normalizarArray(requestedItems);
-      if (itensSolicitados.length === 0) return { ok: true };
       if (!Array.isArray(existingBookings)) return { ok: true };
 
       const iniNovo = parseHora(novoHorarioIni);
@@ -62,28 +61,45 @@
         return { ok: false, error: "HORARIO_INVALIDO" };
       }
 
+      // ==========================================
+      // ACUMULADORES GLOBAIS (CORREÇÃO CRÍTICA)
+      // ==========================================
+      let temFolga = false;
+      let temAlerta = false;
+      let temInviavel = false;
+      let temEstoqueIndisponivel = false;
+      let itemReferencia = null;
+
+      // ==========================================
+      // LOOP POR ITEM (SEM RETURNS FATAIS)
+      // ==========================================
       for (const itemId of itensSolicitados) {
-        const snap = await firebase.firestore().collection("item").doc(itemId).get();
+        const snap = await firebase
+          .firestore()
+          .collection("item")
+          .doc(itemId)
+          .get();
+
         if (!snap.exists) {
-          return {
-            ok: false,
-            problems: [{ item: itemId, reason: "ITEM_NAO_EXISTE" }]
-          };
+          temEstoqueIndisponivel = true;
+          itemReferencia = itemId;
+          continue;
         }
 
         const item = snap.data();
         const qtd = Number(item.quantidade || 0);
 
         if (qtd <= 0) {
-          return {
-            ok: false,
-            problems: [{ item: item.nome, reason: "SEM_ESTOQUE" }]
-          };
+          temEstoqueIndisponivel = true;
+          itemReferencia = item.nome || itemId;
+          continue;
         }
 
         // -----------------------------------------
-        // Reservas existentes desse item
+        // Monta linhas de tempo (1 por unidade)
         // -----------------------------------------
+        const linhas = Array.from({ length: qtd }, () => []);
+
         const reservas = existingBookings
           .filter(a =>
             (!currentId || a.id !== currentId) &&
@@ -96,20 +112,14 @@
           }))
           .filter(r => r.ini !== null && r.fim !== null);
 
-        // 👉 SEM NENHUMA RESERVA NO DIA → estoque livre
-        if (reservas.length === 0) {
-          continue; // passa para o próximo item
-        }
-
-        // -----------------------------------------
-        // Monta linhas (1 por unidade física)
-        // -----------------------------------------
-        const linhas = Array.from({ length: qtd }, () => []);
         reservas.sort((a, b) => a.ini - b.ini);
 
         for (const r of reservas) {
           for (const linha of linhas) {
-            if (linha.length === 0 || linha[linha.length - 1].fim <= r.ini) {
+            if (
+              linha.length === 0 ||
+              linha[linha.length - 1].fim <= r.ini
+            ) {
               linha.push(r);
               break;
             }
@@ -117,7 +127,7 @@
         }
 
         // -----------------------------------------
-        // Avaliação do novo agendamento
+        // Avaliação por unidade
         // -----------------------------------------
         let existeFolga = false;
         let existeAlerta = false;
@@ -126,7 +136,7 @@
 
         for (const linha of linhas) {
           let conflita = false;
-          let menorDiffLinha = null;
+          let menorDiff = null;
 
           for (const r of linha) {
             if (intervalosConflitam(iniNovo, fimNovo, r.ini, r.fim)) {
@@ -139,17 +149,16 @@
             if (iniNovo >= r.fim) diff = iniNovo - r.fim;
 
             if (diff !== null) {
-              menorDiffLinha =
-                menorDiffLinha === null ? diff : Math.min(menorDiffLinha, diff);
+              menorDiff = menorDiff === null ? diff : Math.min(menorDiff, diff);
             }
           }
 
           if (!conflita) {
             existeLinhaSemConflito = true;
 
-            if (menorDiffLinha === null || menorDiffLinha >= 90) {
+            if (menorDiff === null || menorDiff >= 90) {
               existeFolga = true;
-            } else if (menorDiffLinha >= 60) {
+            } else if (menorDiff >= 60) {
               existeAlerta = true;
             } else {
               existeInviavel = true;
@@ -158,39 +167,61 @@
         }
 
         // -----------------------------------------
-        // DECISÃO FINAL (CORRIGIDA DEFINITIVA)
+        // Consolida resultado deste ITEM
         // -----------------------------------------
-
-        // Existe unidade com folga total
         if (existeFolga) {
+          temFolga = true;
           continue;
         }
 
-        // Existe unidade, mas logística curta
         if (existeAlerta) {
-          return {
-            ok: true,
-            warning: true,
-            warningItem: item.nome
-          };
+          temAlerta = true;
+          itemReferencia = item.nome;
+          continue;
         }
 
-        // Existe unidade, mas logística inviável
         if (existeLinhaSemConflito && existeInviavel) {
-          return {
-            ok: false,
-            problems: [{
-              item: item.nome,
-              reason: "INTERVALO_MENOR_1H"
-            }]
-          };
+          temInviavel = true;
+          itemReferencia = item.nome;
+          continue;
         }
 
-        // Todas as unidades ocupadas no horário
+        // nenhuma unidade disponível
+        temEstoqueIndisponivel = true;
+        itemReferencia = item.nome;
+      }
+
+      // ==========================================
+      // DECISÃO FINAL GLOBAL (DEFINITIVA)
+      // ==========================================
+
+      if (temFolga) {
+        return { ok: true };
+      }
+
+      if (temAlerta) {
+        return {
+          ok: true,
+          warning: true,
+          warningItem: itemReferencia
+        };
+      }
+
+      if (temInviavel) {
         return {
           ok: false,
           problems: [{
-            item: item.nome,
+            item: itemReferencia,
+            reason: "INTERVALO_MENOR_1H"
+          }]
+        };
+      }
+
+      if (temEstoqueIndisponivel) {
+        return {
+          ok: false,
+          problems: [{
+            item: itemReferencia,
             reason: "ESTOQUE_INDISPONIVEL"
           }]
         };
@@ -205,10 +236,43 @@
   };
 
   // -----------------------------------------------------
+  // Checagem de duplicidade (inalterada)
+  // -----------------------------------------------------
+
+  regrasNegocio.checarDuplicidade = function (existingBookings, formData) {
+    if (!Array.isArray(existingBookings)) return false;
+
+    const ini = parseHora(formData.horario);
+    if (ini === null) return false;
+
+    return existingBookings.some(ag => {
+      if (formData.id && ag.id === formData.id) return false;
+      if (ag.data !== formData.data) return false;
+      if (!ag.endereco || !formData.endereco) return false;
+
+      const e1 = ag.endereco;
+      const e2 = formData.endereco;
+
+      const mesmoEndereco =
+        String(e1.rua).trim().toLowerCase() ===
+          String(e2.rua).trim().toLowerCase() &&
+        String(e1.numero) === String(e2.numero) &&
+        String(e1.bairro).trim().toLowerCase() ===
+          String(e2.bairro).trim().toLowerCase();
+
+      if (!mesmoEndereco) return false;
+
+      const iniAg = parseHora(ag.horario);
+      if (iniAg === null) return false;
+
+      return ini === iniAg;
+    });
+  };
+
+  // -----------------------------------------------------
   // Export
   // -----------------------------------------------------
 
   window.regrasNegocio = regrasNegocio;
 
 })();
-
