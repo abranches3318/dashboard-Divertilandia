@@ -72,11 +72,13 @@ if (fimNovoNorm <= iniNovoNorm) {
       // ==========================================
       // ACUMULADORES GLOBAIS (CORREÇÃO CRÍTICA)
       // ==========================================
-      let temFolga = false;
-      let temAlerta = false;
-      let temInviavel = false;
-      let temEstoqueIndisponivel = false;
-      let itemReferencia = null;
+    let itensComFolga = 0;
+let itensComAlerta = 0;
+let itensComInviavel = 0;
+let itensSemEstoque = 0;
+
+let itemReferencia = null;
+const totalItens = itensSolicitados.length;
 
       // ==========================================
       // LOOP POR ITEM (SEM RETURNS FATAIS)
@@ -195,63 +197,73 @@ if (fimNovoNorm <= iniNovoNorm) {
         // -----------------------------------------
         // Consolida resultado deste ITEM
         // -----------------------------------------
-        if (existeFolga) {
-          temFolga = true;
-          continue;
-        }
+    if (existeFolga) {
+  itensComFolga++;
+  continue;
+}
 
-        if (existeAlerta) {
-          temAlerta = true;
-          itemReferencia = item.nome;
-          continue;
-        }
+if (existeAlerta) {
+  itensComAlerta++;
+  itemReferencia = item.nome;
+  continue;
+}
 
-        if (existeLinhaSemConflito && existeInviavel) {
-          temInviavel = true;
-          itemReferencia = item.nome;
-          continue;
-        }
+if (existeLinhaSemConflito && existeInviavel) {
+  itensComInviavel++;
+  itemReferencia = item.nome;
+  continue;
+}
 
-        // nenhuma unidade disponível
-        temEstoqueIndisponivel = true;
-        itemReferencia = item.nome;
-      }
+// nenhuma unidade disponível
+itensSemEstoque++;
+itemReferencia = item.nome;
 
       // ==========================================
       // DECISÃO FINAL GLOBAL (DEFINITIVA)
       // ==========================================
+if (itensSemEstoque > 0) {
+  return {
+    ok: false,
+    problems: [{
+      item: itemReferencia,
+      reason: "ESTOQUE_INDISPONIVEL"
+    }]
+  };
+}
 
-      if (temFolga) {
-        return { ok: true };
-      }
+// ❌ Logística inviável em qualquer item bloqueia
+if (itensComInviavel > 0) {
+  return {
+    ok: false,
+    problems: [{
+      item: itemReferencia,
+      reason: "INTERVALO_MENOR_1H"
+    }]
+  };
+}
 
-      if (temAlerta) {
-        return {
-          ok: true,
-          warning: true,
-          warningItem: itemReferencia
-        };
-      }
+// ⚠️ ALERTA só se TODOS os itens puderem
+if (itensComFolga + itensComAlerta === totalItens && itensComAlerta > 0) {
+  return {
+    ok: true,
+    warning: true,
+    warningItem: itemReferencia
+  };
+}
 
-      if (temInviavel) {
-        return {
-          ok: false,
-          problems: [{
-            item: itemReferencia,
-            reason: "INTERVALO_MENOR_1H"
-          }]
-        };
-      }
+// ✔ TODOS com folga
+if (itensComFolga === totalItens) {
+  return { ok: true };
+}
 
-      if (temEstoqueIndisponivel) {
-        return {
-          ok: false,
-          problems: [{
-            item: itemReferencia,
-            reason: "ESTOQUE_INDISPONIVEL"
-          }]
-        };
-      }
+// fallback seguro
+return {
+  ok: false,
+  problems: [{
+    item: itemReferencia,
+    reason: "ESTOQUE_INDISPONIVEL"
+  }]
+};
 
       return { ok: true };
 
