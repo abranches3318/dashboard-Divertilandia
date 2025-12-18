@@ -111,17 +111,23 @@
         const linhas = Array.from({ length: qtd }, () => []);
 
         const reservas = existingBookings
-          .filter(a => {
-            if (currentId && a.id === currentId) return false;
+  .filter(a => {
+    if (currentId && a.id === currentId) return false;
 
-            const itens = Array.isArray(a.itens_reservados)
-              ? a.itens_reservados
-              : (typeof a.itens_reservados === "string"
-                ? [a.itens_reservados]
-                : []);
+    // ❌ ignora cancelados (LIBERA ESTOQUE)
+    if (a.status === "cancelado") return false;
 
-            return itens.includes(itemId);
-          })
+    // se no futuro existir outros estados inválidos
+    if (a.status === "recusado" || a.status === "expirado") return false;
+
+    const itens = Array.isArray(a.itens_reservados)
+      ? a.itens_reservados
+      : (typeof a.itens_reservados === "string"
+          ? [a.itens_reservados]
+          : []);
+
+    return itens.includes(itemId);
+  })
           .map(a => {
             let ini = parseHora(a.horario);
             let fim = parseHora(a.hora_fim);
