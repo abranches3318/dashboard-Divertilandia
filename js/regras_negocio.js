@@ -185,6 +185,7 @@ if (conflitosGlobais >= qtd) {
         let existeAlerta = false;
         let existeInviavel = false;
         let existeLinhaSemConflito = false;
+        let piorClassificacao = "FOLGA"; 
 
         for (const linha of linhas) {
           let conflita = false;
@@ -208,41 +209,52 @@ if (conflitosGlobais >= qtd) {
           if (!conflita) {
             existeLinhaSemConflito = true;
 
-            if (menorDiff === null || menorDiff >= 90) {
-              existeFolga = true;
-            } else if (menorDiff >= 60) {
-              existeAlerta = true;
-            } else {
-              existeInviavel = true;
-            }
+            let classificacaoLinha;
+
+if (menorDiff === null || menorDiff >= 90) {
+  classificacaoLinha = "FOLGA";
+} else if (menorDiff >= 60) {
+  classificacaoLinha = "ALERTA";
+} else {
+  classificacaoLinha = "INVIAVEL";
+}
+
+// 🔴 guarda sempre a PIOR classificação encontrada
+if (classificacaoLinha === "INVIAVEL") {
+  piorClassificacao = "INVIAVEL";
+} else if (
+  classificacaoLinha === "ALERTA" &&
+  piorClassificacao === "FOLGA"
+) {
+  piorClassificacao = "ALERTA";
+}
           }
         }
 
         // -----------------------------------------
         // Consolida resultado DESTE ITEM
         // -----------------------------------------
-        if (existeFolga) {
-          itensComFolga++;
-          continue;
-        }
+       if (!existeLinhaSemConflito) {
+  itensSemEstoque++;
+  itemReferencia = item.nome;
+  continue;
+}
 
-        if (existeAlerta) {
-          itensComAlerta++;
-          itemReferencia = item.nome;
-          continue;
-        }
+if (piorClassificacao === "INVIAVEL") {
+  itensComInviavel++;
+  itemReferencia = item.nome;
+  continue;
+}
 
-        if (existeLinhaSemConflito && existeInviavel) {
-          itensComInviavel++;
-          itemReferencia = item.nome;
-          continue;
-        }
+if (piorClassificacao === "ALERTA") {
+  itensComAlerta++;
+  itemReferencia = item.nome;
+  continue;
+}
 
-        // nenhuma unidade atende
-        itensSemEstoque++;
-        itemReferencia = item.nome;
-      }
-
+// só chega aqui se TODAS as opções forem folga real
+itensComFolga++;
+        
       // ==========================================
       // DECISÃO FINAL GLOBAL
       // ==========================================
