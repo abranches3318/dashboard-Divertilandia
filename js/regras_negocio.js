@@ -189,29 +189,31 @@ if (fimNovoNorm <= iniNovoNorm) {
           }
         }
 
-       // -----------------------------------------
-// Consolida resultado deste ITEM (CORRIGIDO)
+  // -----------------------------------------
+// Consolidação FINAL por ITEM (CORRETA)
 // -----------------------------------------
 
-// ❌ BLOQUEIO ABSOLUTO — este item não pode ser atendido
-if (
-  !existeLinhaSemConflito || 
-  (existeLinhaSemConflito && existeInviavel)
-) {
+// ❌ NENHUMA unidade atende este item
+if (!existeLinhaSemConflito) {
   bloqueio = {
     item: item.nome,
-    reason: existeLinhaSemConflito
-      ? "INTERVALO_MENOR_1H"
-      : "ESTOQUE_INDISPONIVEL"
+    reason: "ESTOQUE_INDISPONIVEL"
   };
-  break; // NENHUM outro item pode salvar este
+  break;
 }
 
-// ⚠️ ALERTA — só marca se ainda não houver alerta
-if (existeAlerta && !alerta) {
-  alerta = {
-    item: item.nome
+// ❌ Existe unidade, mas logística inviável
+if (existeInviavel && !existeFolga && !existeAlerta) {
+  bloqueio = {
+    item: item.nome,
+    reason: "INTERVALO_MENOR_1H"
   };
+  break;
+}
+
+// ⚠️ Existe unidade com alerta
+if (existeAlerta && !alerta) {
+  alerta = { item: item.nome };
 }
 
       // ==========================================
