@@ -234,27 +234,31 @@ if (classificacaoLinha === "INVIAVEL") {
         // -----------------------------------------
         // Consolida resultado DESTE ITEM
         // -----------------------------------------
-       if (!existeLinhaSemConflito) {
+       
+if (!existeLinhaSemConflito) {
   itensSemEstoque++;
   itemReferencia = item.nome;
   continue;
 }
 
+// ⚠️ SE QUALQUER linha disponível for inviável → BLOQUEIA
 if (piorClassificacao === "INVIAVEL") {
   itensComInviavel++;
   itemReferencia = item.nome;
   continue;
 }
 
+// ⚠️ Se não há inviável, mas existe alerta
 if (piorClassificacao === "ALERTA") {
   itensComAlerta++;
   itemReferencia = item.nome;
   continue;
 }
 
-// só chega aqui se TODAS as opções forem folga real
+// ✅ Só chega aqui se TODAS as linhas forem folga real
 itensComFolga++;
          } 
+      
       // ==========================================
       // DECISÃO FINAL GLOBAL
       // ==========================================
