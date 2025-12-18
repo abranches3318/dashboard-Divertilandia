@@ -72,11 +72,8 @@ if (fimNovoNorm <= iniNovoNorm) {
       // ==========================================
       // ACUMULADORES GLOBAIS (CORREÇÃO CRÍTICA)
       // ==========================================
-      let temFolga = false;
-      let temAlerta = false;
-      let temInviavel = false;
-      let temEstoqueIndisponivel = false;
-      let itemReferencia = null;
+      let bloqueio = null;
+      let alerta = null;
 
       // ==========================================
       // LOOP POR ITEM (SEM RETURNS FATAIS)
@@ -192,75 +189,58 @@ if (fimNovoNorm <= iniNovoNorm) {
           }
         }
 
-        // -----------------------------------------
-        // Consolida resultado deste ITEM
-        // -----------------------------------------
-        if (existeFolga) {
-          temFolga = true;
-          continue;
-        }
+       // -----------------------------------------
+// Consolida resultado deste ITEM (CORRIGIDO)
+// -----------------------------------------
 
-        if (existeAlerta) {
-          temAlerta = true;
-          itemReferencia = item.nome;
-          continue;
-        }
-
-        if (existeLinhaSemConflito && existeInviavel) {
-          temInviavel = true;
-          itemReferencia = item.nome;
-          continue;
-        }
-
-        // nenhuma unidade disponível
-        temEstoqueIndisponivel = true;
-        itemReferencia = item.nome;
-      }
-
-      // ==========================================
-      // DECISÃO FINAL GLOBAL (DEFINITIVA)
-      // ==========================================
-
-      if (temFolga) {
-        return { ok: true };
-      }
-
-      if (temAlerta) {
-        return {
-          ok: true,
-          warning: true,
-          warningItem: itemReferencia
-        };
-      }
-
-      if (temInviavel) {
-        return {
-          ok: false,
-          problems: [{
-            item: itemReferencia,
-            reason: "INTERVALO_MENOR_1H"
-          }]
-        };
-      }
-
-      if (temEstoqueIndisponivel) {
-        return {
-          ok: false,
-          problems: [{
-            item: itemReferencia,
-            reason: "ESTOQUE_INDISPONIVEL"
-          }]
-        };
-      }
-
-      return { ok: true };
-
-    } catch (err) {
-      console.error("checkConflitoPorEstoqueAsync:", err);
-      return { ok: false, error: true };
-    }
+// ❌ BLOQUEIO ABSOLUTO — este item não pode ser atendido
+if (
+  !existeLinhaSemConflito || 
+  (existeLinhaSemConflito && existeInviavel)
+) {
+  bloqueio = {
+    item: item.nome,
+    reason: existeLinhaSemConflito
+      ? "INTERVALO_MENOR_1H"
+      : "ESTOQUE_INDISPONIVEL"
   };
+  break; // NENHUM outro item pode salvar este
+}
 
+// ⚠️ ALERTA — só marca se ainda não houver alerta
+if (existeAlerta && !alerta) {
+  alerta = {
+    item: item.nome
+  };
+}
+
+      // ==========================================
+// DECISÃO FINAL GLOBAL (DEFINITIVA — CORRIGIDA)
+// ==========================================
+
+// ❌ BLOQUEIO ABSOLUTO (qualquer item)
+if (bloqueio) {
+  return {
+    ok: false,
+    problems: [{
+      item: bloqueio.item,
+      reason: bloqueio.reason
+    }]
+  };
+}
+
+// ⚠️ ALERTA GLOBAL (nenhum item bloqueou)
+if (alerta) {
+  return {
+    ok: true,
+    warning: true,
+    warningItem: alerta.item
+  };
+}
+
+// ✔ TODOS os itens OK
+return { ok: true };
+        
   // -----------------------------------------------------
   // Checagem de duplicidade (inalterada)
   // -----------------------------------------------------
