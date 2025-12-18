@@ -133,6 +133,11 @@ function setCurrencyInput(el, n) {
   el.value = formatNumberToCurrencyString(Number(n));
 }
 
+function isDataPassadaYMD(dataStr) {
+  const hojeYMD = toYMD(new Date());
+  return dataStr < hojeYMD;
+}
+
 // ---------- TABELA ----------
 function renderTabela(lista, origem = "auto") {
   if (!listaEl || !painelTabela) return;
@@ -1073,14 +1078,24 @@ try {
 
     Swal.close();
   }
+  
+// =====================================================
+// 🔹 PREPARA UPDATE
+// =====================================================
+const updateData = {
+  observacao,
+  atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
+};
 
-  // =====================================================
-  // 🔹 UPDATE FINAL (metadata)
-  // =====================================================
-  await db.collection("agendamentos").doc(docId).update({
-    observacao,
-    atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
-  });
+// 🔹 Data passada → marcar como concluído
+if (isDataPassadaYMD(formData.data)) {
+  updateData.status = "concluido";
+}
+
+// =====================================================
+// 🔹 UPDATE FINAL
+// =====================================================
+await db.collection("agendamentos").doc(docId).update(updateData);
 
   Swal.fire({
     title: "OK",
