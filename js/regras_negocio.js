@@ -72,8 +72,11 @@ if (fimNovoNorm <= iniNovoNorm) {
       // ==========================================
       // ACUMULADORES GLOBAIS (CORREÇÃO CRÍTICA)
       // ==========================================
-      let bloqueio = null;
-      let alerta = null;
+      let temFolga = false;
+      let temAlerta = false;
+      let temInviavel = false;
+      let temEstoqueIndisponivel = false;
+      let itemReferencia = null;
 
       // ==========================================
       // LOOP POR ITEM (SEM RETURNS FATAIS)
@@ -189,60 +192,75 @@ if (fimNovoNorm <= iniNovoNorm) {
           }
         }
 
-  // -----------------------------------------
-// Consolidação FINAL por ITEM (CORRETA)
-// -----------------------------------------
+        // -----------------------------------------
+        // Consolida resultado deste ITEM
+        // -----------------------------------------
+        if (existeFolga) {
+          temFolga = true;
+          continue;
+        }
 
-// ❌ NENHUMA unidade atende este item
-if (!existeLinhaSemConflito) {
-  bloqueio = {
-    item: item.nome,
-    reason: "ESTOQUE_INDISPONIVEL"
-  };
-  break;
-}
+        if (existeAlerta) {
+          temAlerta = true;
+          itemReferencia = item.nome;
+          continue;
+        }
 
-// ❌ Existe unidade, mas logística inviável
-if (existeInviavel && !existeFolga && !existeAlerta) {
-  bloqueio = {
-    item: item.nome,
-    reason: "INTERVALO_MENOR_1H"
-  };
-  break;
-}
+        if (existeLinhaSemConflito && existeInviavel) {
+          temInviavel = true;
+          itemReferencia = item.nome;
+          continue;
+        }
 
-// ⚠️ Existe unidade com alerta
-if (existeAlerta && !alerta) {
-  alerta = { item: item.nome };
-}
+        // nenhuma unidade disponível
+        temEstoqueIndisponivel = true;
+        itemReferencia = item.nome;
+      }
 
       // ==========================================
-// DECISÃO FINAL GLOBAL (DEFINITIVA — CORRIGIDA)
-// ==========================================
+      // DECISÃO FINAL GLOBAL (DEFINITIVA)
+      // ==========================================
 
-// ❌ BLOQUEIO ABSOLUTO (qualquer item)
-if (bloqueio) {
-  return {
-    ok: false,
-    problems: [{
-      item: bloqueio.item,
-      reason: bloqueio.reason
-    }]
+      if (temFolga) {
+        return { ok: true };
+      }
+
+      if (temAlerta) {
+        return {
+          ok: true,
+          warning: true,
+          warningItem: itemReferencia
+        };
+      }
+
+      if (temInviavel) {
+        return {
+          ok: false,
+          problems: [{
+            item: itemReferencia,
+            reason: "INTERVALO_MENOR_1H"
+          }]
+        };
+      }
+
+      if (temEstoqueIndisponivel) {
+        return {
+          ok: false,
+          problems: [{
+            item: itemReferencia,
+            reason: "ESTOQUE_INDISPONIVEL"
+          }]
+        };
+      }
+
+      return { ok: true };
+
+    } catch (err) {
+      console.error("checkConflitoPorEstoqueAsync:", err);
+      return { ok: false, error: true };
+    }
   };
-}
 
-// ⚠️ ALERTA GLOBAL (nenhum item bloqueou)
-if (alerta) {
-  return {
-    ok: true,
-    warning: true,
-    warningItem: alerta.item
-  };
-}
-
-// ✔ TODOS os itens OK
-return { ok: true };
-        
   // -----------------------------------------------------
   // Checagem de duplicidade (inalterada)
   // -----------------------------------------------------
