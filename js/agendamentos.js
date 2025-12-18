@@ -134,8 +134,13 @@ function setCurrencyInput(el, n) {
 }
 
 function isDataPassadaYMD(dataStr) {
-  const hojeYMD = toYMD(new Date());
-  return dataStr < hojeYMD;
+  if (!dataStr) return false;
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const dataAg = new Date(dataStr + "T00:00:00");
+  return dataAg < hoje;
 }
 
 // ---------- TABELA ----------
@@ -489,6 +494,7 @@ chk.style.transform = "scale(1.05)";
 // ---------- CARREGAR AGENDAMENTOS ----------
 async function carregarAgendamentos() {
   if (!db) return;
+
   try {
     if (painelTabela) painelTabela.style.display = "none";
 
@@ -497,12 +503,43 @@ async function carregarAgendamentos() {
       .orderBy("horario", "asc")
       .get();
 
+    // =====================================================
+    // 🔁 ATUALIZAÇÃO AUTOMÁTICA → CONCLUIDO (DATA PASSADA)
+    // =====================================================
+    const hojeYMD = toYMD(new Date());
+
+    for (const doc of snap.docs) {
+      const ag = doc.data();
+
+      if (!ag.data || !ag.status) continue;
+
+      // Apenas pendente ou confirmado
+      if (ag.status !== "pendente" && ag.status !== "confirmado") continue;
+
+      // Data já passou
+      if (ag.data < hojeYMD) {
+        await db.collection("agendamentos").doc(doc.id).update({
+          status: "concluido",
+          atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    }
+
+    // =====================================================
+    // 🔹 CARREGA ESTADO APÓS AJUSTE AUTOMÁTICO
+    // =====================================================
     STATE.todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // default: keep table hidden until user filters or until init decides to render
-    renderTabela([]); // keep hidden on initial load
+
+    renderTabela([]); // mantém oculto no load inicial
+
   } catch (err) {
     console.error("carregarAgendamentos:", err);
-    Swal.fire({ title: "Erro", text: "Não foi possível carregar agendamentos.", icon: "error", customClass: { popup: 'swal-high-z' } });
+    Swal.fire({
+      title: "Erro",
+      text: "Não foi possível carregar agendamentos.",
+      icon: "error",
+      customClass: { popup: "swal-high-z" }
+    });
   }
 }
 
