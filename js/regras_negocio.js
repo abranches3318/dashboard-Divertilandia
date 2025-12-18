@@ -254,7 +254,7 @@ if (piorClassificacao === "ALERTA") {
 
 // só chega aqui se TODAS as opções forem folga real
 itensComFolga++;
-        
+         } 
       // ==========================================
       // DECISÃO FINAL GLOBAL
       // ==========================================
