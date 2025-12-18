@@ -110,13 +110,13 @@
         // -----------------------------------------
         const linhas = Array.from({ length: qtd }, () => []);
 
-        cconst STATUS_ATIVOS = ["confirmado", "pendente"];
+        const STATUS_ATIVOS = ["confirmado", "pendente"];
 
 const reservas = existingBookings
   .filter(a => {
     if (currentId && a.id === currentId) return false;
 
-    // 🚫 só status ativos entram no cálculo de estoque
+    // 🔒 SOMENTE status ativos bloqueiam estoque
     if (!STATUS_ATIVOS.includes(a.status)) return false;
 
     const itens = Array.isArray(a.itens_reservados)
