@@ -40,7 +40,7 @@
   };
 
   // -----------------------------------------------------
-  // Checagem de conflito por estoque + logística (FINAL)
+  // Checagem de conflito por estoque + logística
   // -----------------------------------------------------
 
   regrasNegocio.checkConflitoPorEstoqueAsync = async function (
@@ -58,32 +58,32 @@
       const fimNovo = parseHora(novoHorarioFim);
 
       if (iniNovo === null || fimNovo === null) {
-  return { ok: false, error: "HORARIO_INVALIDO" };
-}
+        return { ok: false, error: "HORARIO_INVALIDO" };
+      }
 
-// NORMALIZA AGENDAMENTO QUE CRUZA MEIA-NOITE
-let iniNovoNorm = iniNovo;
-let fimNovoNorm = fimNovo;
-
-if (fimNovoNorm <= iniNovoNorm) {
-  fimNovoNorm += 1440; // +24h
-}
-
-      // ==========================================
-      // ACUMULADORES GLOBAIS (CORREÇÃO CRÍTICA)
-      // ==========================================
-    let itensComFolga = 0;
-let itensComAlerta = 0;
-let itensComInviavel = 0;
-let itensSemEstoque = 0;
-
-let itemReferencia = null;
-const totalItens = itensSolicitados.length;
+      // NORMALIZA AGENDAMENTO QUE CRUZA MEIA-NOITE
+      let iniNovoNorm = iniNovo;
+      let fimNovoNorm = fimNovo;
+      if (fimNovoNorm <= iniNovoNorm) {
+        fimNovoNorm += 1440;
+      }
 
       // ==========================================
-      // LOOP POR ITEM (SEM RETURNS FATAIS)
+      // ACUMULADORES GLOBAIS
+      // ==========================================
+      let itensComFolga = 0;
+      let itensComAlerta = 0;
+      let itensComInviavel = 0;
+      let itensSemEstoque = 0;
+
+      let itemReferencia = null;
+      const totalItens = itensSolicitados.length;
+
+      // ==========================================
+      // LOOP POR ITEM (CADA ITEM É INDEPENDENTE)
       // ==========================================
       for (const itemId of itensSolicitados) {
+
         const snap = await firebase
           .firestore()
           .collection("item")
@@ -91,7 +91,7 @@ const totalItens = itensSolicitados.length;
           .get();
 
         if (!snap.exists) {
-          temEstoqueIndisponivel = true;
+          itensSemEstoque++;
           itemReferencia = itemId;
           continue;
         }
@@ -100,7 +100,7 @@ const totalItens = itensSolicitados.length;
         const qtd = Number(item.quantidade || 0);
 
         if (qtd <= 0) {
-          temEstoqueIndisponivel = true;
+          itensSemEstoque++;
           itemReferencia = item.nome || itemId;
           continue;
         }
@@ -111,33 +111,32 @@ const totalItens = itensSolicitados.length;
         const linhas = Array.from({ length: qtd }, () => []);
 
         const reservas = existingBookings
-       .filter(a => {
-  if (currentId && a.id === currentId) return false;
+          .filter(a => {
+            if (currentId && a.id === currentId) return false;
 
-  const itens = Array.isArray(a.itens_reservados)
-    ? a.itens_reservados
-    : (typeof a.itens_reservados === "string"
-        ? [a.itens_reservados]
-        : []);
+            const itens = Array.isArray(a.itens_reservados)
+              ? a.itens_reservados
+              : (typeof a.itens_reservados === "string"
+                ? [a.itens_reservados]
+                : []);
 
-  return itens.includes(itemId);
-})
+            return itens.includes(itemId);
+          })
           .map(a => {
-  let ini = parseHora(a.horario);
-  let fim = parseHora(a.hora_fim);
+            let ini = parseHora(a.horario);
+            let fim = parseHora(a.hora_fim);
 
-  // NORMALIZA AGENDAMENTO QUE CRUZA MEIA-NOITE
-  if (ini !== null && fim !== null && fim <= ini) {
-    fim += 1440; // +24h
-  }
+            if (ini !== null && fim !== null && fim <= ini) {
+              fim += 1440;
+            }
 
             if (fim < iniNovoNorm - 1440) {
-    ini += 1440;
-    fim += 1440;
-  }
+              ini += 1440;
+              fim += 1440;
+            }
 
-  return { ini, fim };
-})
+            return { ini, fim };
+          })
           .filter(r => r.ini !== null && r.fim !== null);
 
         reservas.sort((a, b) => a.ini - b.ini);
@@ -167,19 +166,19 @@ const totalItens = itensSolicitados.length;
           let menorDiff = null;
 
           for (const r of linha) {
-  if (intervalosConflitam(iniNovoNorm, fimNovoNorm, r.ini, r.fim)) {
-    conflita = true;
-    break;
-  }
+            if (intervalosConflitam(iniNovoNorm, fimNovoNorm, r.ini, r.fim)) {
+              conflita = true;
+              break;
+            }
 
-  let diff = null;
-  if (fimNovoNorm <= r.ini) diff = r.ini - fimNovoNorm;
-  if (iniNovoNorm >= r.fim) diff = iniNovoNorm - r.fim;
+            let diff = null;
+            if (fimNovoNorm <= r.ini) diff = r.ini - fimNovoNorm;
+            if (iniNovoNorm >= r.fim) diff = iniNovoNorm - r.fim;
 
-  if (diff !== null) {
-    menorDiff = menorDiff === null ? diff : Math.min(menorDiff, diff);
-  }
-}
+            if (diff !== null) {
+              menorDiff = menorDiff === null ? diff : Math.min(menorDiff, diff);
+            }
+          }
 
           if (!conflita) {
             existeLinhaSemConflito = true;
@@ -195,77 +194,76 @@ const totalItens = itensSolicitados.length;
         }
 
         // -----------------------------------------
-        // Consolida resultado deste ITEM
+        // Consolida resultado DESTE ITEM
         // -----------------------------------------
-    if (existeFolga) {
-  itensComFolga++;
-  continue;
-}
+        if (existeFolga) {
+          itensComFolga++;
+          continue;
+        }
 
-if (existeAlerta) {
-  itensComAlerta++;
-  itemReferencia = item.nome;
-  continue;
-}
+        if (existeAlerta) {
+          itensComAlerta++;
+          itemReferencia = item.nome;
+          continue;
+        }
 
-if (existeLinhaSemConflito && existeInviavel) {
-  itensComInviavel++;
-  itemReferencia = item.nome;
-  continue;
-}
+        if (existeLinhaSemConflito && existeInviavel) {
+          itensComInviavel++;
+          itemReferencia = item.nome;
+          continue;
+        }
 
-// nenhuma unidade disponível
-itensSemEstoque++;
-itemReferencia = item.nome;
+        // nenhuma unidade atende
+        itensSemEstoque++;
+        itemReferencia = item.nome;
+      }
 
       // ==========================================
-      // DECISÃO FINAL GLOBAL (DEFINITIVA)
+      // DECISÃO FINAL GLOBAL
       // ==========================================
-if (itensSemEstoque > 0) {
-  return {
-    ok: false,
-    problems: [{
-      item: itemReferencia,
-      reason: "ESTOQUE_INDISPONIVEL"
-    }]
-  };
-}
 
-// ❌ Logística inviável em qualquer item bloqueia
-if (itensComInviavel > 0) {
-  return {
-    ok: false,
-    problems: [{
-      item: itemReferencia,
-      reason: "INTERVALO_MENOR_1H"
-    }]
-  };
-}
+      if (itensSemEstoque > 0) {
+        return {
+          ok: false,
+          problems: [{
+            item: itemReferencia,
+            reason: "ESTOQUE_INDISPONIVEL"
+          }]
+        };
+      }
 
-// ⚠️ ALERTA só se TODOS os itens puderem
-if (itensComFolga + itensComAlerta === totalItens && itensComAlerta > 0) {
-  return {
-    ok: true,
-    warning: true,
-    warningItem: itemReferencia
-  };
-}
+      if (itensComInviavel > 0) {
+        return {
+          ok: false,
+          problems: [{
+            item: itemReferencia,
+            reason: "INTERVALO_MENOR_1H"
+          }]
+        };
+      }
 
-// ✔ TODOS com folga
-if (itensComFolga === totalItens) {
-  return { ok: true };
-}
+      if (
+        itensComFolga + itensComAlerta === totalItens &&
+        itensComAlerta > 0
+      ) {
+        return {
+          ok: true,
+          warning: true,
+          warningItem: itemReferencia
+        };
+      }
 
-// fallback seguro
-return {
-  ok: false,
-  problems: [{
-    item: itemReferencia,
-    reason: "ESTOQUE_INDISPONIVEL"
-  }]
-};
+      if (itensComFolga === totalItens) {
+        return { ok: true };
+      }
 
-      return { ok: true };
+      return {
+        ok: false,
+        problems: [{
+          item: itemReferencia,
+          reason: "ESTOQUE_INDISPONIVEL"
+        }]
+      };
 
     } catch (err) {
       console.error("checkConflitoPorEstoqueAsync:", err);
