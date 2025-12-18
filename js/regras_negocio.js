@@ -144,6 +144,26 @@ const reservas = existingBookings
           })
           .filter(r => r.ini !== null && r.fim !== null);
 
+        // ==========================================
+// 🔒 ULTIMO BLOCO: BLOQUEIO GLOBAL POR ITEM (SATURAÇÃO)
+// ==========================================
+
+// conta quantas reservas CONFLITANTES existem
+let conflitosGlobais = 0;
+
+for (const r of reservas) {
+  if (intervalosConflitam(iniNovoNorm, fimNovoNorm, r.ini, r.fim)) {
+    conflitosGlobais++;
+  }
+}
+
+// se já atingiu o estoque total do item, bloqueia
+if (conflitosGlobais >= qtd) {
+  itensSemEstoque++;
+  itemReferencia = item.nome;
+  continue; // ⛔ NÃO avalia por unidade
+}
+
         reservas.sort((a, b) => a.ini - b.ini);
 
         for (const r of reservas) {
