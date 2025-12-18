@@ -1078,7 +1078,30 @@ try {
 
     Swal.close();
   }
-  
+
+  // ============================================
+// 🔹 DEFINE STATUS FINAL (COM ALERTA)
+// ============================================
+  let statusFinal = formData.status || "pendente";
+
+// 🔴 DATA PASSADA → CONFIRMAÇÃO
+if (isDataPassadaYMD(formData.data)) {
+  const res = await Swal.fire({
+    title: "Data já passou",
+    text: "Este agendamento será salvo como CONCLUÍDO. Deseja continuar?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Sim, salvar como concluído",
+    cancelButtonText: "Cancelar",
+    customClass: { popup: "swal-high-z" }
+  });
+
+  if (!res.isConfirmed) {
+    return; // ⛔ cancela o salvamento
+  }
+
+  statusFinal = "concluido";
+}
 // =====================================================
 // 🔹 PREPARA UPDATE
 // =====================================================
@@ -1086,11 +1109,6 @@ const updateData = {
   observacao,
   atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
 };
-
-// 🔹 Data passada → marcar como concluído
-if (isDataPassadaYMD(formData.data)) {
-  updateData.status = "concluido";
-}
 
 // =====================================================
 // 🔹 UPDATE FINAL
