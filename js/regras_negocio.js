@@ -216,6 +216,34 @@ for (const linha of linhas) {
   }
 }
 
+        // -----------------------------------------
+// 🔒 NOVA REGRA — CONSUMO DE UNIDADE CRÍTICA
+// -----------------------------------------
+
+if (temFolga || temAlerta) {
+
+  let reservasFuturasCriticas = 0;
+
+  for (const r of reservas) {
+    // reserva começa depois do novo agendamento
+    if (r.ini >= fimNovoNorm) {
+      const diff = r.ini - fimNovoNorm;
+
+      // janela logística crítica
+      if (diff < 90) {
+        reservasFuturasCriticas++;
+      }
+    }
+  }
+
+  // se o futuro já consome todas as unidades
+  if (reservasFuturasCriticas >= qtd) {
+    temFolga = false;
+    temAlerta = false;
+    temInviavel = true;
+  }
+}
+
 // -----------------------------------------
 // Consolidação FINAL do item
 // -----------------------------------------
