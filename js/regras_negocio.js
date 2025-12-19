@@ -2,7 +2,7 @@
 // regras_negocio.js
 // Regras de negócio de estoque + logística
 // Baseado EXCLUSIVAMENTE em itemId
-// COMPATÍVEL com agendamentos.js atual
+// VERSÃO FINAL ESTÁVEL
 // =====================================================
 
 (function () {
@@ -31,7 +31,7 @@
   }
 
   // -----------------------------------------------------
-  // Pacote → itens (itemId)
+  // Pacote → itens
   // -----------------------------------------------------
 
   regrasNegocio.pacoteToItens = function (pacoteDoc) {
@@ -40,7 +40,7 @@
   };
 
   // -----------------------------------------------------
-  // Checagem de conflito por estoque + logística
+  // Checagem principal
   // -----------------------------------------------------
 
   regrasNegocio.checkConflitoPorEstoqueAsync = async function (
@@ -61,16 +61,12 @@
         return { ok: false, error: "HORARIO_INVALIDO" };
       }
 
-      // NORMALIZA AGENDAMENTO QUE CRUZA MEIA-NOITE
       let iniNovoNorm = iniNovo;
       let fimNovoNorm = fimNovo;
       if (fimNovoNorm <= iniNovoNorm) {
         fimNovoNorm += 1440;
       }
 
-      // ==========================================
-      // ACUMULADORES GLOBAIS
-      // ==========================================
       let itensComFolga = 0;
       let itensComAlerta = 0;
       let itensComInviavel = 0;
@@ -80,7 +76,7 @@
       const totalItens = itensSolicitados.length;
 
       // ==========================================
-      // LOOP POR ITEM (CADA ITEM É INDEPENDENTE)
+      // LOOP POR ITEM
       // ==========================================
       for (const itemId of itensSolicitados) {
 
@@ -105,28 +101,21 @@
           continue;
         }
 
-        // -----------------------------------------
-        // Monta linhas de tempo (1 por unidade)
-        // -----------------------------------------
         const linhas = Array.from({ length: qtd }, () => []);
 
         const STATUS_ATIVOS = ["confirmado", "pendente"];
 
-const reservas = existingBookings
-  .filter(a => {
-    if (currentId && a.id === currentId) return false;
+        const reservas = existingBookings
+          .filter(a => {
+            if (currentId && a.id === currentId) return false;
+            if (!STATUS_ATIVOS.includes(a.status)) return false;
 
-    // 🔒 SOMENTE status ativos bloqueiam estoque
-    if (!STATUS_ATIVOS.includes(a.status)) return false;
+            const itens = Array.isArray(a.itens_reservados)
+              ? a.itens_reservados
+              : [a.itens_reservados];
 
-    const itens = Array.isArray(a.itens_reservados)
-      ? a.itens_reservados
-      : (typeof a.itens_reservados === "string"
-          ? [a.itens_reservados]
-          : []);
-
-    return itens.includes(itemId);
-  })
+            return itens.includes(itemId);
+          })
           .map(a => {
             let ini = parseHora(a.horario);
             let fim = parseHora(a.hora_fim);
@@ -144,26 +133,25 @@ const reservas = existingBookings
           })
           .filter(r => r.ini !== null && r.fim !== null);
 
-        // ==========================================
-// 🔒 ULTIMO BLOCO: BLOQUEIO GLOBAL POR ITEM (SATURAÇÃO)
-// ==========================================
+        // -----------------------------------------
+        // BLOQUEIO GLOBAL DE SOBREPOSIÇÃO
+        // -----------------------------------------
+        let conflitos = 0;
+        for (const r of reservas) {
+          if (intervalosConflitam(iniNovoNorm, fimNovoNorm, r.ini, r.fim)) {
+            conflitos++;
+          }
+        }
 
-// conta quantas reservas CONFLITANTES existem
-let conflitosGlobais = 0;
+        if (conflitos >= qtd) {
+          itensSemEstoque++;
+          itemReferencia = item.nome;
+          continue;
+        }
 
-for (const r of reservas) {
-  if (intervalosConflitam(iniNovoNorm, fimNovoNorm, r.ini, r.fim)) {
-    conflitosGlobais++;
-  }
-}
-
-// se já atingiu o estoque total do item, bloqueia
-if (conflitosGlobais >= qtd) {
-  itensSemEstoque++;
-  itemReferencia = item.nome;
-  continue; // ⛔ NÃO avalia por unidade
-}
-
+        // -----------------------------------------
+        // Distribui reservas nas linhas
+        // -----------------------------------------
         reservas.sort((a, b) => a.ini - b.ini);
 
         for (const r of reservas) {
@@ -178,97 +166,82 @@ if (conflitosGlobais >= qtd) {
           }
         }
 
-// -----------------------------------------
-// Avaliação por unidade (LÓGICA FINAL)
-// -----------------------------------------
-let existeFolga = false;
-let existeAlerta = false;
+        // -----------------------------------------
+        // Avaliação por unidade
+        // -----------------------------------------
+        let existeFolga = false;
+        let existeAlerta = false;
 
-for (const linha of linhas) {
-  let conflita = false;
-  let menorDiff = null;
+        for (const linha of linhas) {
+          let conflita = false;
+          let menorDiff = null;
 
-  for (const r of linha) {
-    // Sobreposição direta → unidade inviável
-    if (intervalosConflitam(iniNovoNorm, fimNovoNorm, r.ini, r.fim)) {
-      conflita = true;
-      break;
-    }
+          for (const r of linha) {
+            if (intervalosConflitam(iniNovoNorm, fimNovoNorm, r.ini, r.fim)) {
+              conflita = true;
+              break;
+            }
 
-    // Calcula intervalo mínimo
-    let diff = null;
-    if (fimNovoNorm <= r.ini) diff = r.ini - fimNovoNorm;
-    if (iniNovoNorm >= r.fim) diff = iniNovoNorm - r.fim;
+            let diff = null;
+            if (fimNovoNorm <= r.ini) diff = r.ini - fimNovoNorm;
+            if (iniNovoNorm >= r.fim) diff = iniNovoNorm - r.fim;
 
-    if (diff !== null) {
-      menorDiff = menorDiff === null ? diff : Math.min(menorDiff, diff);
-    }
-  }
+            if (diff !== null) {
+              menorDiff = menorDiff === null ? diff : Math.min(menorDiff, diff);
+            }
+          }
 
-  // Unidade inutilizável
-  if (conflita) continue;
+          if (conflita) continue;
 
-  // Classificação da unidade
-  if (menorDiff === null || menorDiff >= 90) {
-    existeFolga = true;
-  } else if (menorDiff >= 60) {
-    existeAlerta = true;
-  }
-}
+          if (menorDiff === null || menorDiff >= 90) {
+            existeFolga = true;
+          } else if (menorDiff >= 60) {
+            existeAlerta = true;
+          }
+        }
 
         // -----------------------------------------
-// 🔒 NOVA REGRA — CONSUMO DE UNIDADE CRÍTICA
-// -----------------------------------------
+        // REGRA LOGÍSTICA FINAL (SEGURA)
+        // Só aplica se NÃO houver folga
+        // -----------------------------------------
+        if (!existeFolga && existeAlerta) {
+          let reservasCriticas = 0;
 
-if (temFolga || temAlerta) {
+          for (const r of reservas) {
+            if (r.ini >= fimNovoNorm) {
+              const diff = r.ini - fimNovoNorm;
+              if (diff < 90) {
+                reservasCriticas++;
+              }
+            }
+          }
 
-  let reservasFuturasCriticas = 0;
+          if (reservasCriticas >= qtd) {
+            existeAlerta = false;
+          }
+        }
 
-  for (const r of reservas) {
-    // reserva começa depois do novo agendamento
-    if (r.ini >= fimNovoNorm) {
-      const diff = r.ini - fimNovoNorm;
+        // -----------------------------------------
+        // Consolidação do item
+        // -----------------------------------------
+        if (existeFolga) {
+          itensComFolga++;
+          continue;
+        }
 
-      // janela logística crítica
-      if (diff < 90) {
-        reservasFuturasCriticas++;
+        if (existeAlerta) {
+          itensComAlerta++;
+          itemReferencia = item.nome;
+          continue;
+        }
+
+        itensComInviavel++;
+        itemReferencia = item.nome;
       }
-    }
-  }
 
-  // se o futuro já consome todas as unidades
-  if (reservasFuturasCriticas >= qtd) {
-    temFolga = false;
-    temAlerta = false;
-    temInviavel = true;
-  }
-}
-
-// -----------------------------------------
-// Consolidação FINAL do item
-// -----------------------------------------
-
-if (existeFolga) {
-  itensComFolga++;
-  continue;
-}
-
-if (existeAlerta) {
-  itensComAlerta++;
-  itemReferencia = item.nome;
-  continue;
-}
-
-// Nenhuma unidade atende
-itensComInviavel++;
-itemReferencia = item.nome;
-
-         } 
-      
       // ==========================================
       // DECISÃO FINAL GLOBAL
       // ==========================================
-
       if (itensSemEstoque > 0) {
         return {
           ok: false,
@@ -319,7 +292,7 @@ itemReferencia = item.nome;
   };
 
   // -----------------------------------------------------
-  // Checagem de duplicidade (inalterada)
+  // Checagem de duplicidade
   // -----------------------------------------------------
 
   regrasNegocio.checarDuplicidade = function (existingBookings, formData) {
@@ -351,10 +324,6 @@ itemReferencia = item.nome;
       return ini === iniAg;
     });
   };
-
-  // -----------------------------------------------------
-  // Export
-  // -----------------------------------------------------
 
   window.regrasNegocio = regrasNegocio;
 
