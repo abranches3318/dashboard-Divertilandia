@@ -219,6 +219,48 @@ for (const linha of linhas) {
 // Consolida resultado DESTE ITEM
 // -----------------------------------------
 
+// 🔒 PROTEÇÃO CONTRA CONSUMO DA ÚLTIMA UNIDADE FUTURA
+if (temFolga || temAlerta) {
+
+  const linhasFuturas = Array.from(
+    { length: linhas.length },
+    () => []
+  );
+
+  const reservasFuturas = reservas.filter(r =>
+    intervalosConflitam(
+      fimNovoNorm,
+      fimNovoNorm + 240, // janela logística futura (4h)
+      r.ini,
+      r.fim
+    )
+  );
+
+  reservasFuturas.sort((a, b) => a.ini - b.ini);
+
+  for (const r of reservasFuturas) {
+    for (const linha of linhasFuturas) {
+      if (
+        linha.length === 0 ||
+        linha[linha.length - 1].fim <= r.ini
+      ) {
+        linha.push(r);
+        break;
+      }
+    }
+  }
+
+  const unidadesOcupadasNoFuturo =
+    linhasFuturas.filter(l => l.length > 0).length;
+
+  if (unidadesOcupadasNoFuturo >= linhas.length) {
+    itensComInviavel++;
+    itemReferencia = item.nome;
+    continue;
+  }
+}
+
+// ✅ agora consolida normalmente
 if (temFolga) {
   itensComFolga++;
   continue;
@@ -230,9 +272,11 @@ if (temAlerta) {
   continue;
 }
 
-// se chegou aqui, nenhuma unidade atende com folga ou alerta
+// ❌ nenhuma unidade atende
 itensComInviavel++;
 itemReferencia = item.nome;
+continue;
+
          } 
       
       // ==========================================
