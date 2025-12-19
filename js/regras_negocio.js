@@ -181,82 +181,58 @@ if (conflitosGlobais >= qtd) {
         // -----------------------------------------
         // Avaliação por unidade
         // -----------------------------------------
-        let existeFolga = false;
-        let existeAlerta = false;
-        let existeInviavel = false;
-        let existeLinhaSemConflito = false;
-        let piorClassificacao = "FOLGA"; 
+       let temFolga = false;
+let temAlerta = false;
+let temInviavel = false;
 
-        for (const linha of linhas) {
-          let conflita = false;
-          let menorDiff = null;
+for (const linha of linhas) {
+  let conflita = false;
+  let menorDiff = null;
 
-          for (const r of linha) {
-            if (intervalosConflitam(iniNovoNorm, fimNovoNorm, r.ini, r.fim)) {
-              conflita = true;
-              break;
-            }
+  for (const r of linha) {
+    if (intervalosConflitam(iniNovoNorm, fimNovoNorm, r.ini, r.fim)) {
+      conflita = true;
+      break;
+    }
 
-            let diff = null;
-            if (fimNovoNorm <= r.ini) diff = r.ini - fimNovoNorm;
-            if (iniNovoNorm >= r.fim) diff = iniNovoNorm - r.fim;
+    let diff = null;
+    if (fimNovoNorm <= r.ini) diff = r.ini - fimNovoNorm;
+    if (iniNovoNorm >= r.fim) diff = iniNovoNorm - r.fim;
 
-            if (diff !== null) {
-              menorDiff = menorDiff === null ? diff : Math.min(menorDiff, diff);
-            }
-          }
+    if (diff !== null) {
+      menorDiff = menorDiff === null ? diff : Math.min(menorDiff, diff);
+    }
+  }
 
-          if (!conflita) {
-            existeLinhaSemConflito = true;
+  if (conflita) continue;
 
-            let classificacaoLinha;
-
-if (menorDiff === null || menorDiff >= 90) {
-  classificacaoLinha = "FOLGA";
-} else if (menorDiff >= 60) {
-  classificacaoLinha = "ALERTA";
-} else {
-  classificacaoLinha = "INVIAVEL";
+  if (menorDiff === null || menorDiff >= 90) {
+    temFolga = true;
+  } else if (menorDiff >= 60) {
+    temAlerta = true;
+  } else {
+    temInviavel = true;
+  }
 }
+        
+// -----------------------------------------
+// Consolida resultado DESTE ITEM
+// -----------------------------------------
 
-// 🔴 guarda sempre a PIOR classificação encontrada
-if (classificacaoLinha === "INVIAVEL") {
-  piorClassificacao = "INVIAVEL";
-} else if (
-  classificacaoLinha === "ALERTA" &&
-  piorClassificacao === "FOLGA"
-) {
-  piorClassificacao = "ALERTA";
-}
-          }
-        }
-
-        // -----------------------------------------
-        // Consolida resultado DESTE ITEM
-        // -----------------------------------------
-       
-if (!existeLinhaSemConflito) {
-  itensSemEstoque++;
-  itemReferencia = item.nome;
+if (temFolga) {
+  itensComFolga++;
   continue;
 }
 
-// ⚠️ SE QUALQUER linha disponível for inviável → BLOQUEIA
-if (piorClassificacao === "INVIAVEL") {
-  itensComInviavel++;
-  itemReferencia = item.nome;
-  continue;
-}
-
-// ⚠️ Se não há inviável, mas existe alerta
-if (piorClassificacao === "ALERTA") {
+if (temAlerta) {
   itensComAlerta++;
   itemReferencia = item.nome;
   continue;
 }
 
-// ✅ Só chega aqui se TODAS as linhas forem folga real
-itensComFolga++;
+// se chegou aqui, nenhuma unidade atende com folga ou alerta
+itensComInviavel++;
+itemReferencia = item.nome;
          } 
       
       // ==========================================
