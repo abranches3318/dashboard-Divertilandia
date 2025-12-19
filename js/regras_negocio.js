@@ -178,22 +178,24 @@ if (conflitosGlobais >= qtd) {
           }
         }
 
-        // -----------------------------------------
-        // Avaliação por unidade
-        // -----------------------------------------
-     let existeLinhaComFolga = false;
-let existeLinhaComAlerta = false;
+// -----------------------------------------
+// Avaliação por unidade (LÓGICA FINAL)
+// -----------------------------------------
+let existeFolga = false;
+let existeAlerta = false;
 
 for (const linha of linhas) {
   let conflita = false;
   let menorDiff = null;
 
   for (const r of linha) {
+    // Sobreposição direta → unidade inviável
     if (intervalosConflitam(iniNovoNorm, fimNovoNorm, r.ini, r.fim)) {
       conflita = true;
       break;
     }
 
+    // Calcula intervalo mínimo
     let diff = null;
     if (fimNovoNorm <= r.ini) diff = r.ini - fimNovoNorm;
     if (iniNovoNorm >= r.fim) diff = iniNovoNorm - r.fim;
@@ -203,52 +205,35 @@ for (const linha of linhas) {
     }
   }
 
+  // Unidade inutilizável
   if (conflita) continue;
 
-  // 🔒 verifica se ESTA LINHA ficará necessária no futuro
-  let seraNecessariaNoFuturo = false;
-
-  for (const r of reservas) {
-    if (
-      intervalosConflitam(
-        fimNovoNorm,
-        fimNovoNorm + 240,
-        r.ini,
-        r.fim
-      )
-    ) {
-      seraNecessariaNoFuturo = true;
-      break;
-    }
-  }
-
-  if (seraNecessariaNoFuturo) continue;
-
-  // agora classifica esta linha
+  // Classificação da unidade
   if (menorDiff === null || menorDiff >= 90) {
-    existeLinhaComFolga = true;
+    existeFolga = true;
   } else if (menorDiff >= 60) {
-    existeLinhaComAlerta = true;
+    existeAlerta = true;
   }
 }
 
 // -----------------------------------------
-// CONSOLIDA RESULTADO DO ITEM
+// Consolidação FINAL do item
 // -----------------------------------------
-if (existeLinhaComFolga) {
+
+if (existeFolga) {
   itensComFolga++;
   continue;
 }
 
-if (existeLinhaComAlerta) {
+if (existeAlerta) {
   itensComAlerta++;
   itemReferencia = item.nome;
   continue;
 }
 
+// Nenhuma unidade atende
 itensComInviavel++;
 itemReferencia = item.nome;
-continue;
 
          } 
       
