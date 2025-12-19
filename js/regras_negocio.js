@@ -181,9 +181,8 @@ if (conflitosGlobais >= qtd) {
         // -----------------------------------------
         // Avaliação por unidade
         // -----------------------------------------
-       let temFolga = false;
-let temAlerta = false;
-let temInviavel = false;
+     let existeLinhaComFolga = false;
+let existeLinhaComAlerta = false;
 
 for (const linha of linhas) {
   let conflita = false;
@@ -206,73 +205,47 @@ for (const linha of linhas) {
 
   if (conflita) continue;
 
-  if (menorDiff === null || menorDiff >= 90) {
-    temFolga = true;
-  } else if (menorDiff >= 60) {
-    temAlerta = true;
-  } else {
-    temInviavel = true;
-  }
-}
-        
-// -----------------------------------------
-// Consolida resultado DESTE ITEM
-// -----------------------------------------
+  // 🔒 verifica se ESTA LINHA ficará necessária no futuro
+  let seraNecessariaNoFuturo = false;
 
-// 🔒 PROTEÇÃO CONTRA CONSUMO DA ÚLTIMA UNIDADE FUTURA
-if (temFolga || temAlerta) {
-
-  const linhasFuturas = Array.from(
-    { length: linhas.length },
-    () => []
-  );
-
-  const reservasFuturas = reservas.filter(r =>
-    intervalosConflitam(
-      fimNovoNorm,
-      fimNovoNorm + 240, // janela logística futura (4h)
-      r.ini,
-      r.fim
-    )
-  );
-
-  reservasFuturas.sort((a, b) => a.ini - b.ini);
-
-  for (const r of reservasFuturas) {
-    for (const linha of linhasFuturas) {
-      if (
-        linha.length === 0 ||
-        linha[linha.length - 1].fim <= r.ini
-      ) {
-        linha.push(r);
-        break;
-      }
+  for (const r of reservas) {
+    if (
+      intervalosConflitam(
+        fimNovoNorm,
+        fimNovoNorm + 240,
+        r.ini,
+        r.fim
+      )
+    ) {
+      seraNecessariaNoFuturo = true;
+      break;
     }
   }
 
-  const unidadesOcupadasNoFuturo =
-    linhasFuturas.filter(l => l.length > 0).length;
+  if (seraNecessariaNoFuturo) continue;
 
-  if (unidadesOcupadasNoFuturo >= linhas.length) {
-    itensComInviavel++;
-    itemReferencia = item.nome;
-    continue;
+  // agora classifica esta linha
+  if (menorDiff === null || menorDiff >= 90) {
+    existeLinhaComFolga = true;
+  } else if (menorDiff >= 60) {
+    existeLinhaComAlerta = true;
   }
 }
 
-// ✅ agora consolida normalmente
-if (temFolga) {
+// -----------------------------------------
+// CONSOLIDA RESULTADO DO ITEM
+// -----------------------------------------
+if (existeLinhaComFolga) {
   itensComFolga++;
   continue;
 }
 
-if (temAlerta) {
+if (existeLinhaComAlerta) {
   itensComAlerta++;
   itemReferencia = item.nome;
   continue;
 }
 
-// ❌ nenhuma unidade atende
 itensComInviavel++;
 itemReferencia = item.nome;
 continue;
