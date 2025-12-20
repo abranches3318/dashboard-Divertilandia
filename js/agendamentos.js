@@ -143,6 +143,11 @@ function isDataPassadaYMD(dataStr) {
   return dataAg < hoje;
 }
 
+function getQueryParam(name) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
+
 // ---------- TABELA ----------
 function renderTabela(lista, origem = "auto") {
   if (!listaEl || !painelTabela) return;
@@ -1486,12 +1491,33 @@ async function init() {
     await carregarMonitores();
     await carregarAgendamentos();
 
-    const params = new URLSearchParams(location.search);
-    const dateParam = params.get("date");
-    if (dateParam && filtroData) {
-      filtroData.value = dateParam;
-      aplicarFiltros();
-    }
+   const params = new URLSearchParams(location.search);
+const openId = params.get("open");
+const dateParam = params.get("date");
+
+/* PRIORIDADE 1 — abrir detalhes direto */
+if (openId) {
+  // garante que a tabela tenha o item visível
+  const ag = STATE.todos.find(a => a.id === openId);
+
+  if (ag && filtroData) {
+    filtroData.value = ag.data;
+    aplicarFiltros();
+  }
+
+  // pequeno delay para garantir DOM renderizado
+  setTimeout(() => {
+    abrirModalDetalhes(openId);
+  }, 100);
+
+  return; // ⛔ não executa o resto
+}
+
+/* PRIORIDADE 2 — filtro por data (fluxo antigo) */
+if (dateParam && filtroData) {
+  filtroData.value = dateParam;
+  aplicarFiltros();
+}
   } catch (err) {
     console.error("init agendamentos:", err);
   }
