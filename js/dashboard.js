@@ -69,4 +69,18 @@ async function carregarResumo() {
   document.getElementById("conversas-ativas").textContent = snapC.size;
 }
 
+window.irParaAgendamentos = function (opts = {}) {
+  const btn = document.querySelector('[data-page="agendamentos"]');
+  if (!btn) return;
+
+  btn.click();
+
+  if (opts.abrirNovo && window.agendamentosModule?.openModalNew) {
+    setTimeout(() => {
+      window.agendamentosModule.openModalNew(
+        opts.data ? new Date(opts.data + "T00:00:00") : null
+      );
+    }, 300);
+  }
+};
 window.addEventListener("DOMContentLoaded", carregarResumo);
