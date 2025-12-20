@@ -1,6 +1,7 @@
-// js/calendar.js — versão estabilizada e compatível
+// js/calendar.js — versão final estável
 
 let calendar;
+let contagemPorDia = {};
 
 // ===========================
 // HELPERS
@@ -10,32 +11,22 @@ function statusColor(status) {
     case "confirmado": return "#4cafef";
     case "pendente": return "#e6b800";
     case "cancelado": return "#d32f2f";
-    case "concluido":
-    case "finalizado": return "#2e7d32";
     default: return "#777";
   }
 }
 
 // ===========================
-// CARREGAR CONTAGEM POR DIA
+// CARREGAR CONTAGEM
 // ===========================
-async function carregarEventosCalendario() {
+async function carregarContagem() {
   const snap = await db.collection("agendamentos").get();
-  const mapa = {};
+  contagemPorDia = {};
 
   snap.docs.forEach(doc => {
     const a = doc.data();
     if (!a.data) return;
-    mapa[a.data] = (mapa[a.data] || 0) + 1;
+    contagemPorDia[a.data] = (contagemPorDia[a.data] || 0) + 1;
   });
-
-  return Object.keys(mapa).map(data => ({
-    start: data,
-    allDay: true,
-    extendedProps: {
-      total: mapa[data]
-    }
-  }));
 }
 
 // ===========================
@@ -47,7 +38,6 @@ async function abrirDia(dataStr) {
     .orderBy("horario", "asc")
     .get();
 
-  // DIA VAZIO
   if (snap.empty) {
     const res = await Swal.fire({
       icon: "info",
@@ -60,7 +50,8 @@ async function abrirDia(dataStr) {
     });
 
     if (res.isConfirmed) {
-      window.location.href = `pages/agendamentos.html?newDate=${dataStr}`;
+      window.location.href =
+        `pages/agendamentos.html?new=1&date=${dataStr}`;
     }
     return;
   }
@@ -88,7 +79,8 @@ async function abrirDia(dataStr) {
           </div>
         </div>
         <button class="btn btn-dark"
-          onclick="window.location.href='pages/agendamentos.html?open=${doc.id}'">
+          onclick="window.location.href=
+          'pages/agendamentos.html?open=1&data=${a.data}&horario=${a.horario}&tel=${a.telefone}'">
           Visualizar
         </button>
       </div>
@@ -110,9 +102,9 @@ async function abrirDia(dataStr) {
 // CALENDÁRIO
 // ===========================
 async function carregarCalendario() {
-  const el = document.getElementById("calendar");
-  const eventos = await carregarEventosCalendario();
+  await carregarContagem();
 
+  const el = document.getElementById("calendar");
   const anoAtual = new Date().getFullYear();
 
   calendar = new FullCalendar.Calendar(el, {
@@ -123,7 +115,7 @@ async function carregarCalendario() {
     headerToolbar: {
       left: "prev,next hojeBtn",
       center: "title",
-      right: "anoSelect dayGridMonth,dayGridWeek"
+      right: "yearSelect dayGridMonth,dayGridWeek"
     },
 
     customButtons: {
@@ -131,31 +123,37 @@ async function carregarCalendario() {
         text: "Hoje",
         click: () => calendar.today()
       },
-      anoSelect: {
+      yearSelect: {
         text: anoAtual,
         click: () => {}
       }
     },
 
-    events: eventos,
+    buttonText: {
+      month: "Mês",
+      week: "Semana"
+    },
 
     dateClick: info => abrirDia(info.dateStr),
 
     dayCellDidMount: info => {
-      const ev = eventos.find(e => e.start === info.dateStr);
-      if (!ev) return;
+      const total = contagemPorDia[info.dateStr];
+      if (!total) return;
 
-      const total = ev.extendedProps.total;
+      const badge = document.createElement("div");
+      badge.textContent = total;
+      badge.style.position = "absolute";
+      badge.style.top = "4px";
+      badge.style.right = "6px";
+      badge.style.background = "#4cafef";
+      badge.style.color = "#fff";
+      badge.style.padding = "4px 8px";
+      badge.style.borderRadius = "12px";
+      badge.style.fontSize = "14px";
+      badge.style.fontWeight = "700";
 
-      const num = document.createElement("div");
-      num.textContent = total;
-      num.style.fontSize = "24px";
-      num.style.fontWeight = "700";
-      num.style.textAlign = "center";
-      num.style.marginTop = "6px";
-      num.style.color = "#000";
-
-      info.el.appendChild(num);
+      info.el.style.position = "relative";
+      info.el.appendChild(badge);
     }
   });
 
@@ -165,6 +163,7 @@ async function carregarCalendario() {
   const toolbar = el.querySelector(".fc-toolbar-chunk:last-child");
   const select = document.createElement("select");
   select.style.marginRight = "10px";
+  select.style.padding = "4px 6px";
 
   for (let y = anoAtual - 5; y <= anoAtual + 5; y++) {
     const opt = document.createElement("option");
