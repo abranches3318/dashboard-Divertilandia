@@ -1,11 +1,11 @@
-// js/calendar.js — DEFINITIVO, INTEGRADO AO agendamentos.js
+// js/calendar.js — versão FINAL PERSISTENTE (sem regressão)
 
 let calendar;
 let contagemPorDia = {};
-let agendamentosPorDia = {};
+let agPorDia = {};
 
 // ===========================
-// HELPERS
+// HELPERS (NÃO REMOVER)
 // ===========================
 function statusColor(status) {
   switch ((status || "").toLowerCase()) {
@@ -19,16 +19,13 @@ function statusColor(status) {
 }
 
 // ===========================
-// CARREGAR DADOS FIRESTORE
+// CARREGAR DADOS DO FIRESTORE
 // ===========================
-async function carregarDadosCalendario() {
-  if (!window.db) {
-    console.error("calendar.js: db não disponível");
-    return;
-  }
+async function carregarDados() {
+  if (!window.db) return;
 
   contagemPorDia = {};
-  agendamentosPorDia = {};
+  agPorDia = {};
 
   const snap = await db.collection("agendamentos").get();
 
@@ -36,13 +33,10 @@ async function carregarDadosCalendario() {
     const a = doc.data();
     if (!a.data) return;
 
-    if (!contagemPorDia[a.data]) {
-      contagemPorDia[a.data] = 0;
-      agendamentosPorDia[a.data] = [];
-    }
+    contagemPorDia[a.data] = (contagemPorDia[a.data] || 0) + 1;
 
-    contagemPorDia[a.data]++;
-    agendamentosPorDia[a.data].push({
+    if (!agPorDia[a.data]) agPorDia[a.data] = [];
+    agPorDia[a.data].push({
       id: doc.id,
       ...a
     });
@@ -50,13 +44,13 @@ async function carregarDadosCalendario() {
 }
 
 // ===========================
-// MODAL DO DIA
+// ABRIR DIA (LISTA OU NOVO)
 // ===========================
 async function abrirDia(dataStr) {
-  const lista = agendamentosPorDia[dataStr] || [];
+  const lista = agPorDia[dataStr] || [];
 
   // DIA SEM AGENDAMENTO
-  if (lista.length === 0) {
+  if (!lista.length) {
     const res = await Swal.fire({
       icon: "info",
       title: "Nenhum agendamento",
@@ -73,7 +67,7 @@ async function abrirDia(dataStr) {
           new Date(dataStr + "T00:00:00")
         );
       } else {
-        window.location.href = `pages/agendamentos.html?date=${dataStr}`;
+        location.href = `pages/agendamentos.html?date=${dataStr}`;
       }
     }
     return;
@@ -85,9 +79,11 @@ async function abrirDia(dataStr) {
   lista
     .sort((a, b) => (a.horario || "").localeCompare(b.horario || ""))
     .forEach(a => {
+      const cor = statusColor(a.status);
+
       html += `
         <div style="
-          background:${statusColor(a.status)};
+          background:${cor};
           padding:14px;
           border-radius:10px;
           color:#fff;
@@ -97,12 +93,12 @@ async function abrirDia(dataStr) {
         ">
           <div>
             <div><b>${a.horario || "--:--"}</b> — ${a.cliente || ""}</div>
-            <div style="font-size:13px; opacity:.9">
+            <div style="font-size:13px; opacity:.85">
               ${a.pacoteNome || a.itemNome || ""}
             </div>
           </div>
           <button class="btn btn-dark"
-            onclick="window.location.href='pages/agendamentos.html?open=${a.id}'">
+            onclick="location.href='pages/agendamentos.html?open=${a.id}'">
             Visualizar
           </button>
         </div>
@@ -112,7 +108,7 @@ async function abrirDia(dataStr) {
   html += `</div>`;
 
   Swal.fire({
-    title: `Agendamentos — ${dataStr.split("-").reverse().join("/")}`,
+    title: dataStr.split("-").reverse().join("/"),
     html,
     width: 760,
     confirmButtonText: "Fechar",
@@ -124,29 +120,31 @@ async function abrirDia(dataStr) {
 // CALENDÁRIO
 // ===========================
 async function carregarCalendario() {
-  await carregarDadosCalendario();
+  await carregarDados();
 
   const el = document.getElementById("calendar");
   if (!el) return;
 
-  const hoje = new Date();
-  const anoAtual = hoje.getFullYear();
-
   calendar = new FullCalendar.Calendar(el, {
     initialView: "dayGridMonth",
     locale: "pt-br",
-    height: "auto",
     fixedWeekCount: false,
     showNonCurrentDates: true,
 
     headerToolbar: {
-      left: "prev,next today",
+      left: "prev,next hoje",
       center: "title",
       right: "dayGridMonth,dayGridWeek"
     },
 
+    customButtons: {
+      hoje: {
+        text: "Hoje",
+        click: () => calendar.gotoDate(new Date())
+      }
+    },
+
     buttonText: {
-      today: "Hoje",
       month: "Mês",
       week: "Semana"
     },
@@ -157,51 +155,24 @@ async function carregarCalendario() {
       const total = contagemPorDia[info.dateStr];
       if (!total) return;
 
-      const badge = document.createElement("div");
+      const top = info.el.querySelector(".fc-daygrid-day-top");
+      if (!top) return;
+
+      const badge = document.createElement("span");
       badge.textContent = total;
-      badge.style.position = "absolute";
-      badge.style.top = "6px";
-      badge.style.right = "6px";
+      badge.style.marginLeft = "auto";
       badge.style.background = "#4cafef";
       badge.style.color = "#fff";
-      badge.style.padding = "4px 10px";
-      badge.style.borderRadius = "12px";
-      badge.style.fontSize = "14px";
+      badge.style.padding = "2px 8px";
+      badge.style.borderRadius = "10px";
+      badge.style.fontSize = "13px";
       badge.style.fontWeight = "700";
-      badge.style.boxShadow = "0 0 0 2px #fff";
 
-      info.el.style.position = "relative";
-      info.el.appendChild(badge);
+      top.appendChild(badge);
     }
   });
 
   calendar.render();
-
-  // ===========================
-  // SELETOR DE ANO
-  // ===========================
-  const toolbar = el.querySelector(".fc-toolbar-chunk:last-child");
-  if (!toolbar) return;
-
-  const select = document.createElement("select");
-  select.style.marginRight = "10px";
-  select.style.padding = "6px 8px";
-  select.style.borderRadius = "6px";
-  select.style.border = "1px solid #ccc";
-
-  for (let y = anoAtual - 5; y <= anoAtual + 5; y++) {
-    const opt = document.createElement("option");
-    opt.value = y;
-    opt.textContent = y;
-    if (y === anoAtual) opt.selected = true;
-    select.appendChild(opt);
-  }
-
-  select.onchange = () => {
-    calendar.gotoDate(`${select.value}-01-01`);
-  };
-
-  toolbar.prepend(select);
 }
 
 // ===========================
