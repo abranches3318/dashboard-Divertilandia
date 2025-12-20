@@ -1,8 +1,8 @@
 let calendar;
 
-// ===========================
-// HELPERS
-// ===========================
+/* ============================
+   HELPERS
+============================ */
 function statusColor(status) {
   switch ((status || "").toLowerCase()) {
     case "confirmado": return "#4cafef";
@@ -14,59 +14,45 @@ function statusColor(status) {
   }
 }
 
-// ===========================
-// CARREGAR EVENTOS (CONTAGEM POR DIA)
-// ===========================
-async function carregarEventos() {
+function formatarDataBR(dataStr) {
+  return dataStr.split("-").reverse().join("/");
+}
+
+/* ============================
+   CARREGAR AGENDAMENTOS
+============================ */
+async function carregarAgendamentos() {
   const snap = await db.collection("agendamentos").get();
-  const mapa = {};
+  const porDia = {};
+  const lista = [];
 
   snap.docs.forEach(doc => {
     const a = doc.data();
     if (!a.data) return;
-    mapa[a.data] = (mapa[a.data] || 0) + 1;
+
+    const ag = { id: doc.id, ...a };
+    lista.push(ag);
+
+    porDia[a.data] = porDia[a.data] || [];
+    porDia[a.data].push(ag);
   });
 
-  // guardamos isso globalmente para uso no render
-  window.__mapaEventosCalendario = mapa;
+  // ordena por horário
+  Object.values(porDia).forEach(arr =>
+    arr.sort((a, b) => (a.horario || "").localeCompare(b.horario || ""))
+  );
 
-  return Object.keys(mapa).map(data => ({
-    start: data,
-    allDay: true,
-    display: "background"
-  }));
+  return { porDia, lista };
 }
 
-// ===========================
-// VISUALIZAR AGENDAMENTO
-// ===========================
-function visualizarAgendamento(id) {
-  // fecha swal do calendário
-  Swal.close();
-
-  // garante navegação correta
-  if (window.irParaAgendamentos) {
-    window.irParaAgendamentos();
-  }
-
-  // abre modal de detalhes após navegação
-  setTimeout(() => {
-    if (window.abrirModalDetalhes) {
-      window.abrirModalDetalhes(id);
-    }
-  }, 300);
-}
-
-// ===========================
-// MODAL LISTA DO DIA
-// ===========================
+/* ============================
+   MODAL DO DIA
+============================ */
 async function abrirDia(dataStr) {
-  const snap = await db.collection("agendamentos")
-    .where("data", "==", dataStr)
-    .orderBy("horario", "asc")
-    .get();
+  const { porDia } = window.__dadosCalendario;
+  const ags = porDia[dataStr] || [];
 
-  if (snap.empty) {
+  if (ags.length === 0) {
     Swal.fire({
       icon: "info",
       title: "Nenhum agendamento",
@@ -88,13 +74,10 @@ async function abrirDia(dataStr) {
 
   let html = `<div style="display:grid; gap:12px;">`;
 
-  snap.docs.forEach(doc => {
-    const a = doc.data();
-    const cor = statusColor(a.status);
-
+  ags.forEach(a => {
     html += `
       <div style="
-        background:${cor};
+        background:${statusColor(a.status)};
         padding:14px;
         border-radius:10px;
         color:#fff;
@@ -111,7 +94,7 @@ async function abrirDia(dataStr) {
           </div>
         </div>
         <button class="btn btn-dark"
-          onclick="visualizarAgendamento('${doc.id}')">
+          onclick="visualizarAgendamento('${a.id}')">
           Visualizar
         </button>
       </div>
@@ -121,7 +104,7 @@ async function abrirDia(dataStr) {
   html += `</div>`;
 
   Swal.fire({
-    title: `Agendamentos — ${dataStr.split("-").reverse().join("/")}`,
+    title: `Agendamentos — ${formatarDataBR(dataStr)}`,
     html,
     width: 700,
     confirmButtonText: "Fechar",
@@ -129,13 +112,38 @@ async function abrirDia(dataStr) {
   });
 }
 
-// ===========================
-// RENDER CALENDÁRIO
-// ===========================
+/* ============================
+   VISUALIZAR AGENDAMENTO
+============================ */
+function visualizarAgendamento(id) {
+  Swal.close();
+
+  if (window.irParaAgendamentos) {
+    window.irParaAgendamentos();
+  }
+
+  setTimeout(() => {
+    if (window.abrirModalDetalhes) {
+      window.abrirModalDetalhes(id);
+    }
+  }, 300);
+}
+
+/* ============================
+   RENDER CALENDÁRIO
+============================ */
 async function carregarCalendario() {
-  const eventos = await carregarEventos();
+  const dados = await carregarAgendamentos();
+  window.__dadosCalendario = dados;
+
+  const eventos = Object.keys(dados.porDia).map(data => ({
+    start: data,
+    allDay: true,
+    title: String(dados.porDia[data].length)
+  }));
 
   const el = document.getElementById("calendar");
+
   calendar = new FullCalendar.Calendar(el, {
     initialView: "dayGridMonth",
     locale: "pt-br",
@@ -144,32 +152,52 @@ async function carregarCalendario() {
     headerToolbar: {
       left: "prev,next today",
       center: "title",
-      right: "dayGridMonth,dayGridWeek"
+      right: "yearSelect"
+    },
+
+    customButtons: {
+      yearSelect: {
+        text: new Date().getFullYear(),
+        click() {
+          const anoAtual = calendar.getDate().getFullYear();
+          Swal.fire({
+            title: "Selecionar ano",
+            input: "number",
+            inputValue: anoAtual,
+            showCancelButton: true,
+            confirmButtonText: "Ir",
+            cancelButtonText: "Cancelar",
+            customClass: { popup: "swal-high-z" }
+          }).then(res => {
+            if (res.isConfirmed) {
+              calendar.gotoDate(`${res.value}-01-01`);
+            }
+          });
+        }
+      }
     },
 
     buttonText: {
-      today: "Hoje",
-      month: "Mês",
-      week: "Semana"
+      today: "Hoje"
     },
 
     events: eventos,
 
     dateClick: info => abrirDia(info.dateStr),
 
-    dayCellDidMount: info => {
-      const total = window.__mapaEventosCalendario?.[info.dateStr];
-      if (!total) return;
-
-      const badge = document.createElement("div");
-      badge.textContent = total;
-      badge.style.fontSize = "26px";
-      badge.style.fontWeight = "bold";
-      badge.style.textAlign = "center";
-      badge.style.marginTop = "6px";
-      badge.style.color = "#000";
-
-      info.el.appendChild(badge);
+    eventContent(arg) {
+      return {
+        html: `
+          <div style="
+            font-size:26px;
+            font-weight:bold;
+            text-align:center;
+            color:#000;
+          ">
+            ${arg.event.title}
+          </div>
+        `
+      };
     }
   });
 
