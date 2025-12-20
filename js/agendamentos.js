@@ -1528,3 +1528,5 @@ document.addEventListener("DOMContentLoaded", init);
 window.agendamentosModule = window.agendamentosModule || {};
 window.agendamentosModule.reload = carregarAgendamentos;
 window.agendamentosModule.openModalNew = abrirModalNovo;
+window.abrirModalDetalhes = abrirModalDetalhes;
+
