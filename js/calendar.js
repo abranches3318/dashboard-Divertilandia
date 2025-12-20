@@ -15,7 +15,7 @@ function statusColor(status) {
 }
 
 // ===========================
-// CARREGAR EVENTOS (APENAS CONTAGEM)
+// CARREGAR EVENTOS (CONTAGEM POR DIA)
 // ===========================
 async function carregarEventos() {
   const snap = await db.collection("agendamentos").get();
@@ -27,14 +27,34 @@ async function carregarEventos() {
     mapa[a.data] = (mapa[a.data] || 0) + 1;
   });
 
+  // guardamos isso globalmente para uso no render
+  window.__mapaEventosCalendario = mapa;
+
   return Object.keys(mapa).map(data => ({
     start: data,
     allDay: true,
-    display: "background",
-    extendedProps: {
-      total: mapa[data]
-    }
+    display: "background"
   }));
+}
+
+// ===========================
+// VISUALIZAR AGENDAMENTO
+// ===========================
+function visualizarAgendamento(id) {
+  // fecha swal do calendário
+  Swal.close();
+
+  // garante navegação correta
+  if (window.irParaAgendamentos) {
+    window.irParaAgendamentos();
+  }
+
+  // abre modal de detalhes após navegação
+  setTimeout(() => {
+    if (window.abrirModalDetalhes) {
+      window.abrirModalDetalhes(id);
+    }
+  }, 300);
 }
 
 // ===========================
@@ -56,9 +76,11 @@ async function abrirDia(dataStr) {
       cancelButtonText: "Fechar",
       customClass: { popup: "swal-high-z" }
     }).then(res => {
-      if (res.isConfirmed) {
-        document.querySelector('[data-page="agendamentos"]').click();
-        window.agendamentosModule.openModalNew(new Date(dataStr + "T00:00:00"));
+      if (res.isConfirmed && window.irParaAgendamentos) {
+        window.irParaAgendamentos({
+          abrirNovo: true,
+          data: dataStr
+        });
       }
     });
     return;
@@ -73,20 +95,23 @@ async function abrirDia(dataStr) {
     html += `
       <div style="
         background:${cor};
-        padding:12px;
-        border-radius:8px;
+        padding:14px;
+        border-radius:10px;
         color:#fff;
         display:flex;
         justify-content:space-between;
         align-items:center;
       ">
         <div>
-          <div><b>${a.horario || "--:--"}</b> — ${a.cliente || ""}</div>
+          <div style="font-weight:bold">
+            ${a.horario || "--:--"} — ${a.cliente || ""}
+          </div>
           <div style="font-size:13px; opacity:.9">
             ${a.pacoteNome || a.itemNome || ""}
           </div>
         </div>
-        <button class="btn btn-dark" onclick="abrirModalDetalhes('${doc.id}')">
+        <button class="btn btn-dark"
+          onclick="visualizarAgendamento('${doc.id}')">
           Visualizar
         </button>
       </div>
@@ -133,18 +158,18 @@ async function carregarCalendario() {
     dateClick: info => abrirDia(info.dateStr),
 
     dayCellDidMount: info => {
-      const total = eventos.find(e => e.start === info.dateStr)?.extendedProps?.total;
+      const total = window.__mapaEventosCalendario?.[info.dateStr];
       if (!total) return;
 
-      const span = document.createElement("div");
-      span.textContent = total;
-      span.style.fontSize = "22px";
-      span.style.fontWeight = "bold";
-      span.style.textAlign = "center";
-      span.style.marginTop = "6px";
-      span.style.color = "#000";
+      const badge = document.createElement("div");
+      badge.textContent = total;
+      badge.style.fontSize = "26px";
+      badge.style.fontWeight = "bold";
+      badge.style.textAlign = "center";
+      badge.style.marginTop = "6px";
+      badge.style.color = "#000";
 
-      info.el.appendChild(span);
+      info.el.appendChild(badge);
     }
   });
 
