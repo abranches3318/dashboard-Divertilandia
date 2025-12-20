@@ -1,24 +1,31 @@
-// ===========================
-// CALENDAR.JS — VERSÃO FINAL
-// Dashboard apenas VISUAL
-// ===========================
+// js/calendar.js — versão estabilizada e compatível
 
 let calendar;
 
-
+// ===========================
+// HELPERS
+// ===========================
+function statusColor(status) {
+  switch ((status || "").toLowerCase()) {
+    case "confirmado": return "#4cafef";
+    case "pendente": return "#e6b800";
+    case "cancelado": return "#d32f2f";
+    case "concluido":
+    case "finalizado": return "#2e7d32";
+    default: return "#777";
+  }
+}
 
 // ===========================
 // CARREGAR CONTAGEM POR DIA
 // ===========================
 async function carregarEventosCalendario() {
   const snap = await db.collection("agendamentos").get();
-
   const mapa = {};
 
   snap.docs.forEach(doc => {
     const a = doc.data();
     if (!a.data) return;
-
     mapa[a.data] = (mapa[a.data] || 0) + 1;
   });
 
@@ -32,17 +39,17 @@ async function carregarEventosCalendario() {
 }
 
 // ===========================
-// CLIQUE NO DIA
+// MODAL DO DIA
 // ===========================
-async function onClickDia(dataStr) {
-  const snap = await db
-    .collection("agendamentos")
+async function abrirDia(dataStr) {
+  const snap = await db.collection("agendamentos")
     .where("data", "==", dataStr)
+    .orderBy("horario", "asc")
     .get();
 
-  // 🔹 SEM AGENDAMENTOS
+  // DIA VAZIO
   if (snap.empty) {
-    Swal.fire({
+    const res = await Swal.fire({
       icon: "info",
       title: "Nenhum agendamento",
       text: "Deseja criar um novo agendamento?",
@@ -50,112 +57,131 @@ async function onClickDia(dataStr) {
       confirmButtonText: "Criar novo",
       cancelButtonText: "Fechar",
       customClass: { popup: "swal-high-z" }
-    }).then(res => {
-      if (res.isConfirmed) {
-        window.location.href =
-          "/dashboard-Divertilandia/pages/agendamentos.html?date=" + dataStr;
-      }
     });
+
+    if (res.isConfirmed) {
+      window.location.href = `pages/agendamentos.html?newDate=${dataStr}`;
+    }
     return;
   }
 
-  // 🔹 COM AGENDAMENTOS → LISTA
   let html = `<div style="display:grid; gap:12px;">`;
 
-  snap.docs
-    .map(d => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => (a.horario || "").localeCompare(b.horario || ""))
-    .forEach(a => {
-      const cor =
-        (a.status || "").toLowerCase() === "confirmado" ? "#4cafef" :
-        (a.status || "").toLowerCase() === "pendente"   ? "#e6b800" :
-        (a.status || "").toLowerCase() === "cancelado"  ? "#d32f2f" :
-        "#555";
+  snap.docs.forEach(doc => {
+    const a = doc.data();
+    const cor = statusColor(a.status);
 
-      html += `
-        <div style="
-          border:2px solid ${cor};
-          border-radius:8px;
-          padding:10px;
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-        ">
-          <div>
-            <div><b>${a.horario || "--:--"}</b> — ${a.cliente || ""}</div>
-            <div style="font-size:13px; opacity:.8">
-              ${a.pacoteNome || a.itemNome || ""}
-            </div>
+    html += `
+      <div style="
+        background:${cor};
+        padding:14px;
+        border-radius:10px;
+        color:#fff;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+      ">
+        <div>
+          <div><b>${a.horario}</b> — ${a.cliente}</div>
+          <div style="font-size:13px; opacity:.9">
+            ${a.pacoteNome || a.itemNome || ""}
           </div>
-          <button class="btn btn-dark"
-            onclick="window.location.href='/dashboard-Divertilandia/pages/agendamentos.html?open=${a.id}'">
-            Visualizar
-          </button>
         </div>
-      `;
-    });
+        <button class="btn btn-dark"
+          onclick="window.location.href='pages/agendamentos.html?open=${doc.id}'">
+          Visualizar
+        </button>
+      </div>
+    `;
+  });
 
   html += `</div>`;
 
   Swal.fire({
-    title: "Agendamentos",
+    title: `Agendamentos — ${dataStr.split("-").reverse().join("/")}`,
     html,
-    width: 700,
+    width: 720,
     confirmButtonText: "Fechar",
     customClass: { popup: "swal-high-z" }
   });
 }
 
 // ===========================
-// RENDER CALENDÁRIO
+// CALENDÁRIO
 // ===========================
 async function carregarCalendario() {
+  const el = document.getElementById("calendar");
   const eventos = await carregarEventosCalendario();
 
-  const el = document.getElementById("calendar");
-  if (!el) return;
+  const anoAtual = new Date().getFullYear();
 
   calendar = new FullCalendar.Calendar(el, {
-    locale: "pt-br",
     initialView: "dayGridMonth",
-    height: "auto",
+    locale: "pt-br",
+    fixedWeekCount: false,
 
     headerToolbar: {
-      left: "prev,next today",
+      left: "prev,next hojeBtn",
       center: "title",
-      right: "dayGridMonth,dayGridWeek"
+      right: "anoSelect dayGridMonth,dayGridWeek"
     },
 
-    buttonText: {
-      today: "Hoje",
-      month: "Mês",
-      week: "Semana"
+    customButtons: {
+      hojeBtn: {
+        text: "Hoje",
+        click: () => calendar.today()
+      },
+      anoSelect: {
+        text: anoAtual,
+        click: () => {}
+      }
     },
 
     events: eventos,
 
-    dateClick: info => onClickDia(info.dateStr),
+    dateClick: info => abrirDia(info.dateStr),
 
     dayCellDidMount: info => {
       const ev = eventos.find(e => e.start === info.dateStr);
       if (!ev) return;
 
-      const badge = document.createElement("div");
-      badge.textContent = ev.extendedProps.total;
-      badge.style.fontSize = "20px";
-      badge.style.fontWeight = "700";
-      badge.style.textAlign = "center";
-      badge.style.marginTop = "6px";
-      badge.style.color = "#000";
+      const total = ev.extendedProps.total;
 
-      info.el.appendChild(badge);
+      const num = document.createElement("div");
+      num.textContent = total;
+      num.style.fontSize = "24px";
+      num.style.fontWeight = "700";
+      num.style.textAlign = "center";
+      num.style.marginTop = "6px";
+      num.style.color = "#000";
+
+      info.el.appendChild(num);
     }
   });
 
   calendar.render();
+
+  // seletor de ano real
+  const toolbar = el.querySelector(".fc-toolbar-chunk:last-child");
+  const select = document.createElement("select");
+  select.style.marginRight = "10px";
+
+  for (let y = anoAtual - 5; y <= anoAtual + 5; y++) {
+    const opt = document.createElement("option");
+    opt.value = y;
+    opt.textContent = y;
+    if (y === anoAtual) opt.selected = true;
+    select.appendChild(opt);
+  }
+
+  select.onchange = () => {
+    calendar.gotoDate(`${select.value}-01-01`);
+  };
+
+  toolbar.prepend(select);
 }
 
 // ===========================
 // INIT
 // ===========================
-document.addEventListener("DOMContentLoaded", carregarCalendario);
+window.addEventListener("DOMContentLoaded", carregarCalendario);
