@@ -1,8 +1,8 @@
-let calendar;
+let calendar = null;
 
-/* ============================
+/* =====================================================
    HELPERS
-============================ */
+===================================================== */
 function statusColor(status) {
   switch ((status || "").toLowerCase()) {
     case "confirmado": return "#4cafef";
@@ -10,83 +10,104 @@ function statusColor(status) {
     case "cancelado": return "#d32f2f";
     case "concluido":
     case "finalizado": return "#2e7d32";
-    default: return "#777";
+    default: return "#999";
   }
 }
 
-function formatarDataBR(dataStr) {
-  return dataStr.split("-").reverse().join("/");
+function formatDateBR(ymd) {
+  if (!ymd) return "";
+  const [y, m, d] = ymd.split("-");
+  return `${d}/${m}/${y}`;
 }
 
-/* ============================
-   CARREGAR AGENDAMENTOS
-============================ */
-async function carregarAgendamentos() {
+/* =====================================================
+   CARREGAR AGENDAMENTOS AGRUPADOS POR DIA
+===================================================== */
+async function carregarResumoPorDia() {
+  if (!window.db) return [];
+
   const snap = await db.collection("agendamentos").get();
-  const porDia = {};
-  const lista = [];
+
+  const mapa = {};
 
   snap.docs.forEach(doc => {
     const a = doc.data();
     if (!a.data) return;
 
-    const ag = { id: doc.id, ...a };
-    lista.push(ag);
+    if (!mapa[a.data]) {
+      mapa[a.data] = {
+        total: 0,
+        statusCount: {}
+      };
+    }
 
-    porDia[a.data] = porDia[a.data] || [];
-    porDia[a.data].push(ag);
+    mapa[a.data].total++;
+
+    const st = (a.status || "pendente").toLowerCase();
+    mapa[a.data].statusCount[st] =
+      (mapa[a.data].statusCount[st] || 0) + 1;
   });
 
-  // ordena por horário
-  Object.values(porDia).forEach(arr =>
-    arr.sort((a, b) => (a.horario || "").localeCompare(b.horario || ""))
-  );
-
-  return { porDia, lista };
+  return Object.keys(mapa).map(data => ({
+    start: data,
+    allDay: true,
+    display: "background",
+    backgroundColor: "#f2f2f2",
+    extendedProps: mapa[data]
+  }));
 }
 
-/* ============================
-   MODAL DO DIA
-============================ */
+/* =====================================================
+   MODAL LISTA DO DIA
+===================================================== */
 async function abrirDia(dataStr) {
-  const { porDia } = window.__dadosCalendario;
-  const ags = porDia[dataStr] || [];
+  if (!window.db) return;
 
-  if (ags.length === 0) {
-    Swal.fire({
+  const snap = await db.collection("agendamentos")
+    .where("data", "==", dataStr)
+    .orderBy("horario", "asc")
+    .get();
+
+  // ---------------- SEM AGENDAMENTOS
+  if (snap.empty) {
+    const res = await Swal.fire({
       icon: "info",
-      title: "Nenhum agendamento",
+      title: `Nenhum agendamento em ${formatDateBR(dataStr)}`,
       text: "Deseja criar um novo agendamento?",
       showCancelButton: true,
       confirmButtonText: "Criar novo",
       cancelButtonText: "Fechar",
       customClass: { popup: "swal-high-z" }
-    }).then(res => {
-      if (res.isConfirmed && window.irParaAgendamentos) {
-        window.irParaAgendamentos({
-          abrirNovo: true,
-          data: dataStr
-        });
-      }
     });
+
+    if (res.isConfirmed && window.agendamentosModule?.openModalNew) {
+      window.agendamentosModule.openModalNew(
+        new Date(dataStr + "T00:00:00")
+      );
+    }
     return;
   }
 
+  // ---------------- COM AGENDAMENTOS
   let html = `<div style="display:grid; gap:12px;">`;
 
-  ags.forEach(a => {
+  snap.docs.forEach(doc => {
+    const a = doc.data();
+    const cor = statusColor(a.status);
+
     html += `
       <div style="
-        background:${statusColor(a.status)};
-        padding:14px;
-        border-radius:10px;
+        background:${cor};
+        padding:12px;
+        border-radius:8px;
         color:#fff;
         display:flex;
         justify-content:space-between;
         align-items:center;
+        gap:10px;
       ">
         <div>
-          <div style="font-weight:bold">
+          <div style="font-weight:700">
             ${a.horario || "--:--"} — ${a.cliente || ""}
           </div>
           <div style="font-size:13px; opacity:.9">
@@ -94,7 +115,7 @@ async function abrirDia(dataStr) {
           </div>
         </div>
         <button class="btn btn-dark"
-          onclick="visualizarAgendamento('${a.id}')">
+          onclick="window.abrirModalDetalhes('${doc.id}')">
           Visualizar
         </button>
       </div>
@@ -104,45 +125,22 @@ async function abrirDia(dataStr) {
   html += `</div>`;
 
   Swal.fire({
-    title: `Agendamentos — ${formatarDataBR(dataStr)}`,
+    title: `Agendamentos — ${formatDateBR(dataStr)}`,
     html,
-    width: 700,
+    width: 720,
     confirmButtonText: "Fechar",
     customClass: { popup: "swal-high-z" }
   });
 }
 
-/* ============================
-   VISUALIZAR AGENDAMENTO
-============================ */
-function visualizarAgendamento(id) {
-  Swal.close();
-
-  if (window.irParaAgendamentos) {
-    window.irParaAgendamentos();
-  }
-
-  setTimeout(() => {
-    if (window.abrirModalDetalhes) {
-      window.abrirModalDetalhes(id);
-    }
-  }, 300);
-}
-
-/* ============================
+/* =====================================================
    RENDER CALENDÁRIO
-============================ */
+===================================================== */
 async function carregarCalendario() {
-  const dados = await carregarAgendamentos();
-  window.__dadosCalendario = dados;
-
-  const eventos = Object.keys(dados.porDia).map(data => ({
-    start: data,
-    allDay: true,
-    title: String(dados.porDia[data].length)
-  }));
+  const eventosResumo = await carregarResumoPorDia();
 
   const el = document.getElementById("calendar");
+  if (!el) return;
 
   calendar = new FullCalendar.Calendar(el, {
     initialView: "dayGridMonth",
@@ -152,56 +150,43 @@ async function carregarCalendario() {
     headerToolbar: {
       left: "prev,next today",
       center: "title",
-      right: "yearSelect"
-    },
-
-    customButtons: {
-      yearSelect: {
-        text: new Date().getFullYear(),
-        click() {
-          const anoAtual = calendar.getDate().getFullYear();
-          Swal.fire({
-            title: "Selecionar ano",
-            input: "number",
-            inputValue: anoAtual,
-            showCancelButton: true,
-            confirmButtonText: "Ir",
-            cancelButtonText: "Cancelar",
-            customClass: { popup: "swal-high-z" }
-          }).then(res => {
-            if (res.isConfirmed) {
-              calendar.gotoDate(`${res.value}-01-01`);
-            }
-          });
-        }
-      }
+      right: "dayGridMonth,dayGridWeek,dayGridDay"
     },
 
     buttonText: {
-      today: "Hoje"
+      today: "Hoje",
+      month: "Mês",
+      week: "Semana",
+      day: "Dia"
     },
 
-    events: eventos,
+    navLinks: true,
+    selectable: true,
+
+    events: eventosResumo,
 
     dateClick: info => abrirDia(info.dateStr),
 
-    eventContent(arg) {
-      return {
-        html: `
-          <div style="
-            font-size:26px;
-            font-weight:bold;
-            text-align:center;
-            color:#000;
-          ">
-            ${arg.event.title}
-          </div>
-        `
-      };
+    dayCellDidMount: info => {
+      const ev = eventosResumo.find(e => e.start === info.dateStr);
+      if (!ev || !ev.extendedProps?.total) return;
+
+      const badge = document.createElement("div");
+      badge.textContent = ev.extendedProps.total;
+      badge.style.marginTop = "6px";
+      badge.style.fontSize = "18px";
+      badge.style.fontWeight = "800";
+      badge.style.textAlign = "center";
+      badge.style.color = "#000";
+
+      info.el.appendChild(badge);
     }
   });
 
   calendar.render();
 }
 
-window.addEventListener("DOMContentLoaded", carregarCalendario);
+/* =====================================================
+   INIT
+===================================================== */
+document.addEventListener("DOMContentLoaded", carregarCalendario);
