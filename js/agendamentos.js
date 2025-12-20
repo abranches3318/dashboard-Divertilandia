@@ -1497,7 +1497,6 @@ const dateParam = params.get("date");
 
 /* PRIORIDADE 1 — abrir detalhes direto */
 if (openId) {
-  // garante que a tabela tenha o item visível
   const ag = STATE.todos.find(a => a.id === openId);
 
   if (ag && filtroData) {
@@ -1505,18 +1504,16 @@ if (openId) {
     aplicarFiltros();
   }
 
-  // pequeno delay para garantir DOM renderizado
   setTimeout(() => {
     abrirModalDetalhes(openId);
   }, 100);
 
-  return; // ⛔ não executa o resto
+  return;
 }
 
-/* PRIORIDADE 2 — filtro por data (fluxo antigo) */
-if (dateParam && filtroData) {
-  filtroData.value = dateParam;
-  aplicarFiltros();
+/* PRIORIDADE 2 — criar novo com data */
+if (dateParam) {
+  abrirModalNovo(new Date(dateParam + "T00:00:00"));
 }
   } catch (err) {
     console.error("init agendamentos:", err);
