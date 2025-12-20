@@ -1,8 +1,10 @@
-let calendar = null;
+// js/calendar.js — versão definitiva compatível com agendamentos.js
 
-/* =====================================================
-   HELPERS
-===================================================== */
+let calendar;
+
+// ===========================
+// HELPERS
+// ===========================
 function statusColor(status) {
   switch ((status || "").toLowerCase()) {
     case "confirmado": return "#4cafef";
@@ -10,24 +12,21 @@ function statusColor(status) {
     case "cancelado": return "#d32f2f";
     case "concluido":
     case "finalizado": return "#2e7d32";
-    default: return "#999";
+    default: return "#777";
   }
 }
 
-function formatDateBR(ymd) {
-  if (!ymd) return "";
-  const [y, m, d] = ymd.split("-");
-  return `${d}/${m}/${y}`;
+function ymd(date) {
+  return date.toISOString().slice(0, 10);
 }
 
-/* =====================================================
-   CARREGAR AGENDAMENTOS AGRUPADOS POR DIA
-===================================================== */
-async function carregarResumoPorDia() {
+// ===========================
+// BUSCAR AGENDAMENTOS E AGRUPAR
+// ===========================
+async function carregarEventosCalendario() {
   if (!window.db) return [];
 
   const snap = await db.collection("agendamentos").get();
-
   const mapa = {};
 
   snap.docs.forEach(doc => {
@@ -37,42 +36,44 @@ async function carregarResumoPorDia() {
     if (!mapa[a.data]) {
       mapa[a.data] = {
         total: 0,
-        statusCount: {}
+        status: {}
       };
     }
 
     mapa[a.data].total++;
-
     const st = (a.status || "pendente").toLowerCase();
-    mapa[a.data].statusCount[st] =
-      (mapa[a.data].statusCount[st] || 0) + 1;
+    mapa[a.data].status[st] = (mapa[a.data].status[st] || 0) + 1;
   });
 
+  // um evento por dia (renderiza número)
   return Object.keys(mapa).map(data => ({
+    id: data,
     start: data,
     allDay: true,
-    display: "background",
-    backgroundColor: "#f2f2f2",
-    extendedProps: mapa[data]
+    title: String(mapa[data].total),
+    extendedProps: {
+      date: data,
+      resumo: mapa[data]
+    }
   }));
 }
 
-/* =====================================================
-   MODAL LISTA DO DIA
-===================================================== */
+// ===========================
+// MODAL LISTA DO DIA
+// ===========================
 async function abrirDia(dataStr) {
-  if (!window.db) return;
+  if (!db) return;
 
   const snap = await db.collection("agendamentos")
     .where("data", "==", dataStr)
     .orderBy("horario", "asc")
     .get();
 
-  // ---------------- SEM AGENDAMENTOS
+  // dia sem agendamento
   if (snap.empty) {
     const res = await Swal.fire({
       icon: "info",
-      title: `Nenhum agendamento em ${formatDateBR(dataStr)}`,
+      title: "Nenhum agendamento",
       text: "Deseja criar um novo agendamento?",
       showCancelButton: true,
       confirmButtonText: "Criar novo",
@@ -80,15 +81,21 @@ async function abrirDia(dataStr) {
       customClass: { popup: "swal-high-z" }
     });
 
-    if (res.isConfirmed && window.agendamentosModule?.openModalNew) {
-      window.agendamentosModule.openModalNew(
-        new Date(dataStr + "T00:00:00")
-      );
+    if (res.isConfirmed) {
+      if (window.agendamentosModule && window.agendamentosModule.openModalNew) {
+        window.agendamentosModule.openModalNew(new Date(dataStr + "T00:00:00"));
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Módulo de agendamentos não carregado.",
+          customClass: { popup: "swal-high-z" }
+        });
+      }
     }
     return;
   }
 
-  // ---------------- COM AGENDAMENTOS
   let html = `<div style="display:grid; gap:12px;">`;
 
   snap.docs.forEach(doc => {
@@ -104,18 +111,14 @@ async function abrirDia(dataStr) {
         display:flex;
         justify-content:space-between;
         align-items:center;
-        gap:10px;
       ">
         <div>
-          <div style="font-weight:700">
-            ${a.horario || "--:--"} — ${a.cliente || ""}
-          </div>
+          <div><b>${a.horario || "--:--"}</b> — ${a.cliente || ""}</div>
           <div style="font-size:13px; opacity:.9">
             ${a.pacoteNome || a.itemNome || ""}
           </div>
         </div>
-        <button class="btn btn-dark"
-          onclick="window.abrirModalDetalhes('${doc.id}')">
+        <button class="btn btn-dark" onclick="window.abrirModalDetalhes('${doc.id}')">
           Visualizar
         </button>
       </div>
@@ -125,7 +128,7 @@ async function abrirDia(dataStr) {
   html += `</div>`;
 
   Swal.fire({
-    title: `Agendamentos — ${formatDateBR(dataStr)}`,
+    title: `Agendamentos — ${dataStr.split("-").reverse().join("/")}`,
     html,
     width: 720,
     confirmButtonText: "Fechar",
@@ -133,60 +136,76 @@ async function abrirDia(dataStr) {
   });
 }
 
-/* =====================================================
-   RENDER CALENDÁRIO
-===================================================== */
+// ===========================
+// RENDER CALENDÁRIO
+// ===========================
 async function carregarCalendario() {
-  const eventosResumo = await carregarResumoPorDia();
-
   const el = document.getElementById("calendar");
   if (!el) return;
+
+  const eventos = await carregarEventosCalendario();
 
   calendar = new FullCalendar.Calendar(el, {
     initialView: "dayGridMonth",
     locale: "pt-br",
     height: "auto",
+    fixedWeekCount: false,
+    showNonCurrentDates: true,
 
     headerToolbar: {
       left: "prev,next today",
       center: "title",
-      right: "dayGridMonth,dayGridWeek,dayGridDay"
+      right: "dayGridMonth,dayGridWeek"
     },
 
     buttonText: {
       today: "Hoje",
       month: "Mês",
-      week: "Semana",
-      day: "Dia"
+      week: "Semana"
     },
 
-    navLinks: true,
-    selectable: true,
-
-    events: eventosResumo,
+    events: eventos,
 
     dateClick: info => abrirDia(info.dateStr),
 
-    dayCellDidMount: info => {
-      const ev = eventosResumo.find(e => e.start === info.dateStr);
-      if (!ev || !ev.extendedProps?.total) return;
+    eventContent: arg => {
+      // renderiza número grande no centro do dia
+      return {
+        html: `
+          <div style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            height:100%;
+            font-size:22px;
+            font-weight:700;
+            color:#000;
+          ">
+            ${arg.event.title}
+          </div>
+        `
+      };
+    },
 
-      const badge = document.createElement("div");
-      badge.textContent = ev.extendedProps.total;
-      badge.style.marginTop = "6px";
-      badge.style.fontSize = "18px";
-      badge.style.fontWeight = "800";
-      badge.style.textAlign = "center";
-      badge.style.color = "#000";
-
-      info.el.appendChild(badge);
+    eventDidMount: info => {
+      // evita conflito com CSS global
+      info.el.style.background = "transparent";
+      info.el.style.border = "none";
+      info.el.style.pointerEvents = "none";
     }
   });
 
   calendar.render();
 }
 
-/* =====================================================
-   INIT
-===================================================== */
-document.addEventListener("DOMContentLoaded", carregarCalendario);
+// ===========================
+// INIT
+// ===========================
+window.addEventListener("DOMContentLoaded", () => {
+  // garante que agendamentos.js já expôs API
+  if (!window.abrirModalDetalhes) {
+    console.warn("calendar.js: abrirModalDetalhes ainda não disponível no load");
+  }
+
+  carregarCalendario();
+});
