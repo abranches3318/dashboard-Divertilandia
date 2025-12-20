@@ -1,77 +1,54 @@
-// js/calendar.js — versão definitiva compatível com agendamentos.js
+// ===========================
+// CALENDAR.JS — VERSÃO FINAL
+// Dashboard apenas VISUAL
+// ===========================
 
 let calendar;
 
 // ===========================
-// HELPERS
+// FIRESTORE
 // ===========================
-function statusColor(status) {
-  switch ((status || "").toLowerCase()) {
-    case "confirmado": return "#4cafef";
-    case "pendente": return "#e6b800";
-    case "cancelado": return "#d32f2f";
-    case "concluido":
-    case "finalizado": return "#2e7d32";
-    default: return "#777";
-  }
-}
-
-function ymd(date) {
-  return date.toISOString().slice(0, 10);
+const db = window.db || (firebase && firebase.firestore ? firebase.firestore() : null);
+if (!db) {
+  console.error("calendar.js: Firestore não encontrado");
 }
 
 // ===========================
-// BUSCAR AGENDAMENTOS E AGRUPAR
+// CARREGAR CONTAGEM POR DIA
 // ===========================
 async function carregarEventosCalendario() {
-  if (!window.db) return [];
-
   const snap = await db.collection("agendamentos").get();
+
   const mapa = {};
 
   snap.docs.forEach(doc => {
     const a = doc.data();
     if (!a.data) return;
 
-    if (!mapa[a.data]) {
-      mapa[a.data] = {
-        total: 0,
-        status: {}
-      };
-    }
-
-    mapa[a.data].total++;
-    const st = (a.status || "pendente").toLowerCase();
-    mapa[a.data].status[st] = (mapa[a.data].status[st] || 0) + 1;
+    mapa[a.data] = (mapa[a.data] || 0) + 1;
   });
 
-  // um evento por dia (renderiza número)
   return Object.keys(mapa).map(data => ({
-    id: data,
     start: data,
     allDay: true,
-    title: String(mapa[data].total),
     extendedProps: {
-      date: data,
-      resumo: mapa[data]
+      total: mapa[data]
     }
   }));
 }
 
 // ===========================
-// MODAL LISTA DO DIA
+// CLIQUE NO DIA
 // ===========================
-async function abrirDia(dataStr) {
-  if (!db) return;
-
-  const snap = await db.collection("agendamentos")
+async function onClickDia(dataStr) {
+  const snap = await db
+    .collection("agendamentos")
     .where("data", "==", dataStr)
-    .orderBy("horario", "asc")
     .get();
 
-  // dia sem agendamento
+  // 🔹 SEM AGENDAMENTOS
   if (snap.empty) {
-    const res = await Swal.fire({
+    Swal.fire({
       icon: "info",
       title: "Nenhum agendamento",
       text: "Deseja criar um novo agendamento?",
@@ -79,58 +56,57 @@ async function abrirDia(dataStr) {
       confirmButtonText: "Criar novo",
       cancelButtonText: "Fechar",
       customClass: { popup: "swal-high-z" }
-    });
-
-    if (res.isConfirmed) {
-      if (window.agendamentosModule && window.agendamentosModule.openModalNew) {
-        window.agendamentosModule.openModalNew(new Date(dataStr + "T00:00:00"));
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Erro",
-          text: "Módulo de agendamentos não carregado.",
-          customClass: { popup: "swal-high-z" }
-        });
+    }).then(res => {
+      if (res.isConfirmed) {
+        window.location.href =
+          "/dashboard-Divertilandia/pages/agendamentos.html?date=" + dataStr;
       }
-    }
+    });
     return;
   }
 
+  // 🔹 COM AGENDAMENTOS → LISTA
   let html = `<div style="display:grid; gap:12px;">`;
 
-  snap.docs.forEach(doc => {
-    const a = doc.data();
-    const cor = statusColor(a.status);
+  snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.horario || "").localeCompare(b.horario || ""))
+    .forEach(a => {
+      const cor =
+        (a.status || "").toLowerCase() === "confirmado" ? "#4cafef" :
+        (a.status || "").toLowerCase() === "pendente"   ? "#e6b800" :
+        (a.status || "").toLowerCase() === "cancelado"  ? "#d32f2f" :
+        "#555";
 
-    html += `
-      <div style="
-        background:${cor};
-        padding:12px;
-        border-radius:8px;
-        color:#fff;
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-      ">
-        <div>
-          <div><b>${a.horario || "--:--"}</b> — ${a.cliente || ""}</div>
-          <div style="font-size:13px; opacity:.9">
-            ${a.pacoteNome || a.itemNome || ""}
+      html += `
+        <div style="
+          border:2px solid ${cor};
+          border-radius:8px;
+          padding:10px;
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+        ">
+          <div>
+            <div><b>${a.horario || "--:--"}</b> — ${a.cliente || ""}</div>
+            <div style="font-size:13px; opacity:.8">
+              ${a.pacoteNome || a.itemNome || ""}
+            </div>
           </div>
+          <button class="btn btn-dark"
+            onclick="window.location.href='/dashboard-Divertilandia/pages/agendamentos.html?open=${a.id}'">
+            Visualizar
+          </button>
         </div>
-        <button class="btn btn-dark" onclick="window.abrirModalDetalhes('${doc.id}')">
-          Visualizar
-        </button>
-      </div>
-    `;
-  });
+      `;
+    });
 
   html += `</div>`;
 
   Swal.fire({
-    title: `Agendamentos — ${dataStr.split("-").reverse().join("/")}`,
+    title: "Agendamentos",
     html,
-    width: 720,
+    width: 700,
     confirmButtonText: "Fechar",
     customClass: { popup: "swal-high-z" }
   });
@@ -140,17 +116,15 @@ async function abrirDia(dataStr) {
 // RENDER CALENDÁRIO
 // ===========================
 async function carregarCalendario() {
+  const eventos = await carregarEventosCalendario();
+
   const el = document.getElementById("calendar");
   if (!el) return;
 
-  const eventos = await carregarEventosCalendario();
-
   calendar = new FullCalendar.Calendar(el, {
-    initialView: "dayGridMonth",
     locale: "pt-br",
+    initialView: "dayGridMonth",
     height: "auto",
-    fixedWeekCount: false,
-    showNonCurrentDates: true,
 
     headerToolbar: {
       left: "prev,next today",
@@ -166,32 +140,21 @@ async function carregarCalendario() {
 
     events: eventos,
 
-    dateClick: info => abrirDia(info.dateStr),
+    dateClick: info => onClickDia(info.dateStr),
 
-    eventContent: arg => {
-      // renderiza número grande no centro do dia
-      return {
-        html: `
-          <div style="
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            height:100%;
-            font-size:22px;
-            font-weight:700;
-            color:#000;
-          ">
-            ${arg.event.title}
-          </div>
-        `
-      };
-    },
+    dayCellDidMount: info => {
+      const ev = eventos.find(e => e.start === info.dateStr);
+      if (!ev) return;
 
-    eventDidMount: info => {
-      // evita conflito com CSS global
-      info.el.style.background = "transparent";
-      info.el.style.border = "none";
-      info.el.style.pointerEvents = "none";
+      const badge = document.createElement("div");
+      badge.textContent = ev.extendedProps.total;
+      badge.style.fontSize = "20px";
+      badge.style.fontWeight = "700";
+      badge.style.textAlign = "center";
+      badge.style.marginTop = "6px";
+      badge.style.color = "#000";
+
+      info.el.appendChild(badge);
     }
   });
 
@@ -201,11 +164,4 @@ async function carregarCalendario() {
 // ===========================
 // INIT
 // ===========================
-window.addEventListener("DOMContentLoaded", () => {
-  // garante que agendamentos.js já expôs API
-  if (!window.abrirModalDetalhes) {
-    console.warn("calendar.js: abrirModalDetalhes ainda não disponível no load");
-  }
-
-  carregarCalendario();
-});
+document.addEventListener("DOMContentLoaded", carregarCalendario);
