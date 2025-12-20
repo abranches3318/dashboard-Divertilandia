@@ -1,16 +1,25 @@
- // ===========================
-// CALENDAR.JS – VISUAL E NAVEGAÇÃO
-// ===========================
+// ===============================
+// CALENDAR.JS – VISUAL PURO
+// ===============================
 
-document.addEventListener("DOMContentLoaded", async function () {
-  const calendarEl = document.getElementById("calendar");
+document.addEventListener("DOMContentLoaded", () => {
+  const el = document.getElementById("calendar");
+  if (!el) return;
 
-  if (!calendarEl) return;
+  const STATUS_COLORS = {
+    pendente:   { bg: "#e6b800", text: "#000" },
+    confirmado: { bg: "#4cafef", text: "#fff" },
+    cancelado:  { bg: "#d32f2f", text: "#fff" },
+    concluido:  { bg: "#2e7d32", text: "#fff" }
+  };
 
-  const calendar = new FullCalendar.Calendar(calendarEl, {
+  let cachePorDia = {};
+
+  const calendar = new FullCalendar.Calendar(el, {
     locale: "pt-br",
     initialView: "dayGridMonth",
     height: "auto",
+    fixedWeekCount: false,
 
     headerToolbar: {
       left: "prev,next today",
@@ -24,146 +33,122 @@ document.addEventListener("DOMContentLoaded", async function () {
       week: "Semana"
     },
 
-    selectable: true,
-    dayMaxEvents: true,
+    selectable: false,
+    events: [], // NÃO usamos eventos visuais
 
-    dateClick: function (info) {
-      abrirModalDia(info.dateStr);
-    },
-
-    events: async function (fetchInfo, successCallback) {
-      const inicio = fetchInfo.startStr;
-      const fim = fetchInfo.endStr;
-
+    datesSet: async (info) => {
+      cachePorDia = {};
       const snap = await db.collection("agendamentos")
-        .where("data", ">=", inicio)
-        .where("data", "<=", fim)
+        .where("data", ">=", info.startStr)
+        .where("data", "<=", info.endStr)
         .get();
-
-      const porDia = {};
 
       snap.forEach(doc => {
         const a = doc.data();
-        if (!porDia[a.data]) porDia[a.data] = 0;
-        porDia[a.data]++;
+        if (!cachePorDia[a.data]) cachePorDia[a.data] = [];
+        cachePorDia[a.data].push({ id: doc.id, ...a });
       });
 
-      const eventos = Object.keys(porDia).map(data => ({
-        start: data,
-        allDay: true,
-        title: porDia[data].toString()
-      }));
+      calendar.render();
+    },
 
-      successCallback(eventos);
+    dayCellDidMount(info) {
+      const data = info.date.toISOString().split("T")[0];
+      const qtd = cachePorDia[data]?.length || 0;
+
+      if (qtd > 0) {
+        const num = document.createElement("div");
+        num.textContent = qtd;
+        num.style.fontSize = "22px";
+        num.style.fontWeight = "bold";
+        num.style.textAlign = "center";
+        num.style.marginTop = "8px";
+        info.el.appendChild(num);
+      }
+
+      info.el.style.cursor = "pointer";
+      info.el.onclick = () => abrirModalDia(data);
     }
   });
 
   calendar.render();
-});
 
-// ===========================
-// MODAL DIA
-// ===========================
+  // ===============================
+  // MODAL DO DIA
+  // ===============================
+  async function abrirModalDia(data) {
+    const lista = cachePorDia[data] || [];
 
-async function abrirModalDia(data) {
-  const snap = await db.collection("agendamentos")
-    .where("data", "==", data)
-    .orderBy("horario")
-    .get();
+    if (lista.length === 0) {
+      Swal.fire({
+        icon: "info",
+        title: "Sem agendamentos",
+        text: "Não há agendamentos para esta data. Deseja criar um novo?",
+        showCancelButton: true,
+        confirmButtonText: "Criar novo",
+        cancelButtonText: "Fechar",
+        customClass: { popup: "swal-high-z" }
+      }).then(res => {
+        if (res.isConfirmed) {
+          abrirNovoAgendamento(data);
+        }
+      });
+      return;
+    }
 
-  if (snap.empty) {
-    Swal.fire({
-      icon: "info",
-      title: "Sem agendamentos",
-      text: "Não há agendamentos para esta data. Deseja criar um novo?",
-      showCancelButton: true,
-      confirmButtonText: "Criar novo",
-      cancelButtonText: "Fechar"
-    }).then(res => {
-      if (res.isConfirmed) {
-        abrirNovoAgendamento(data);
-      }
+    lista.sort((a, b) => a.horario.localeCompare(b.horario));
+
+    let html = "";
+    lista.forEach(a => {
+      const cor = STATUS_COLORS[a.status] || STATUS_COLORS.pendente;
+
+      html += `
+        <div style="
+          background:${cor.bg};
+          color:${cor.text};
+          padding:12px;
+          border-radius:8px;
+          margin-bottom:10px;
+        ">
+          <strong>${a.cliente}</strong><br>
+          ${a.horario} – ${a.pacoteNome || "-"}<br><br>
+          <button class="btn"
+            onclick="window.visualizarAgendamento('${a.id}')">
+            Visualizar
+          </button>
+        </div>
+      `;
     });
-    return;
+
+    Swal.fire({
+      title: "Agendamentos do dia",
+      html,
+      width: 600,
+      showConfirmButton: false,
+      showCancelButton: true,
+      cancelButtonText: "Fechar",
+      customClass: { popup: "swal-high-z" }
+    });
   }
 
-  let html = "";
-
-  snap.forEach(doc => {
-    const a = doc.data();
-    const cor = a.status === "confirmado"
-      ? "#2ecc71"
-      : a.status === "pendente"
-        ? "#f1c40f"
-        : "#bdc3c7";
-
-    html += `
-      <div style="
-        border: 1px solid ${cor};
-        border-left: 6px solid ${cor};
-        padding: 10px;
-        margin-bottom: 10px;
-        border-radius: 6px;
-      ">
-        <strong>${a.cliente}</strong><br>
-        ${a.horario} - ${a.item || a.pacote}<br><br>
-        <button class="swal2-confirm swal2-styled"
-          onclick="visualizarAgendamento('${doc.id}')">
-          Visualizar
-        </button>
-      </div>
-    `;
-  });
-
-  Swal.fire({
-    title: "Agendamentos do dia",
-    html,
-    width: 600,
-    showConfirmButton: false,
-    showCancelButton: true,
-    cancelButtonText: "Fechar"
-  });
-}
-
-// ===========================
-// VISUALIZAR AGENDAMENTO
-// ===========================
-
-async function visualizarAgendamento(id) {
-  const doc = await db.collection("agendamentos").doc(id).get();
-  if (!doc.exists) return;
-
-  const a = doc.data();
-
-  Swal.fire({
-    title: "Detalhes do Agendamento",
-    html: `
-      <strong>Cliente:</strong> ${a.cliente}<br>
-      <strong>Telefone:</strong> ${a.telefone || "-"}<br>
-      <strong>Horário:</strong> ${a.horario}<br>
-      <strong>Item:</strong> ${a.item || a.pacote}<br>
-      <strong>Status:</strong> ${a.status}
-    `,
-    showCancelButton: true,
-    confirmButtonText: "Ver opções",
-    cancelButtonText: "Fechar"
-  }).then(res => {
-    if (res.isConfirmed) {
-      irParaAgendamento(id);
+  // ===============================
+  // EXPOR FUNÇÕES GLOBAIS
+  // ===============================
+  window.visualizarAgendamento = function (id) {
+    Swal.close();
+    if (window.abrirModalDetalhes) {
+      window.abrirModalDetalhes(id);
+    } else {
+      window.location.href = `?open=${id}`;
     }
-  });
-}
+  };
 
-// ===========================
-// REDIRECIONAMENTOS
-// ===========================
-
-function irParaAgendamento(id) {
-  window.location.href =
-    `/dashboard-Divertilandia/pages/agendamentos.html?open=${id}`;
-}
-
-function abrirNovoAgendamento(data) {
-  window.location.href =
-    `/dashboard-Divertilandia/pages/agendamentos.html?novo=1&data=${data}`;
-}
+  window.abrirNovoAgendamento = function (data) {
+    Swal.close();
+    if (window.agendamentosModule?.openModalNew) {
+      window.agendamentosModule.openModalNew(data);
+    } else {
+      window.location.href = `?novo=1&data=${data}`;
+    }
+  };
+});
