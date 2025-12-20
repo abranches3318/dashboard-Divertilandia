@@ -5,13 +5,7 @@
 
 let calendar;
 
-// ===========================
-// FIRESTORE
-// ===========================
-const db = window.db || (firebase && firebase.firestore ? firebase.firestore() : null);
-if (!db) {
-  console.error("calendar.js: Firestore não encontrado");
-}
+
 
 // ===========================
 // CARREGAR CONTAGEM POR DIA
