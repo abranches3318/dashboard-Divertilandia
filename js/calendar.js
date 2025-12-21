@@ -167,20 +167,25 @@ async function carregarCalendario() {
   container.appendChild(dayNumber);
 
   if (total) {
-    const badge = document.createElement("div");
-    badge.textContent = total;
-    badge.style.position = "absolute";
-    badge.style.top = "4px";
-    badge.style.right = "4px";
-    badge.style.background = "#4cafef";
-    badge.style.color = "#fff";
-    badge.style.padding = "3px 7px";
-    badge.style.borderRadius = "12px";
-    badge.style.fontSize = "12px";
-    badge.style.fontWeight = "700";
+  const badge = document.createElement("div");
+  badge.textContent = total;
 
-    container.appendChild(badge);
-  }
+  badge.style.position = "absolute";
+  badge.style.bottom = "4px";
+  badge.style.left = "4px";
+
+  badge.style.background = "#4cafef";
+  badge.style.color = "#fff";
+
+  badge.style.padding = "6px 12px"; // ~2x maior
+  badge.style.borderRadius = "16px";
+
+  badge.style.fontSize = "16px";
+  badge.style.fontWeight = "800";
+  badge.style.lineHeight = "1";
+
+  container.appendChild(badge);
+}
 
   return { domNodes: [container] };
 }
