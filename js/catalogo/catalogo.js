@@ -1,42 +1,31 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <title>Catálogo</title>
+// ============================
+// CATÁLOGO — CONTROLE DE ABAS
+// ============================
 
-  <!-- CSS GLOBAL -->
-  <link rel="stylesheet" href="../css/global.css">
+document.addEventListener("DOMContentLoaded", () => {
+  const tabs = document.querySelectorAll(".tab-btn");
+  const content = document.getElementById("catalogo-content");
 
-  <!-- CSS DO CATÁLOGO -->
-  <link rel="stylesheet" href="../css/catalogo.css">
-</head>
-<body>
+  function ativarAba(tab) {
+    tabs.forEach(b => b.classList.remove("active"));
+    tab.classList.add("active");
 
-  <!-- NAV -->
-  <div id="nav-container"></div>
+    const tipo = tab.dataset.tab;
+    content.innerHTML = "";
 
-  <main class="page-container">
-    <header class="page-header">
-      <h1>Catálogo</h1>
-      <p>Gerencie itens, pacotes e promoções</p>
-    </header>
+    if (tipo === "itens") {
+      carregarItens();
+    } else if (tipo === "pacotes") {
+      carregarPacotes();
+    } else if (tipo === "promocoes") {
+      carregarPromocoes();
+    }
+  }
 
-    <!-- ABAS -->
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="itens">Itens</button>
-      <button class="tab-btn" data-tab="pacotes">Pacotes</button>
-      <button class="tab-btn" data-tab="promocoes">Promoções</button>
-    </div>
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => ativarAba(tab));
+  });
 
-    <!-- CONTEÚDO DINÂMICO -->
-    <section id="catalogo-content"></section>
-  </main>
-
-  <!-- SCRIPTS -->
-  <script src="../js/nav.js"></script>
-  <script src="../js/catalogo/catalogo.js"></script>
-  <script src="../js/catalogo/catalogo_itens.js"></script>
-  <script src="../js/catalogo/catalogo_pacotes.js"></script>
-  <script src="../js/catalogo/catalogo_promocoes.js"></script>
-</body>
-</html>
+  // inicial
+  carregarItens();
+});
