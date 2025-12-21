@@ -131,18 +131,12 @@ async function carregarCalendario() {
     fixedWeekCount: false,
     showNonCurrentDates: true,
 
-    headerToolbar: {
-      left: "prev,next hoje",
-      center: "title",
-      right: "dayGridMonth,dayGridWeek"
-    },
+   headerToolbar: {
+  left: "prev,next",
+  center: "title",
+  right: "dayGridMonth,dayGridWeek"
+},
 
-    customButtons: {
-      hoje: {
-        text: "Hoje",
-        click: () => calendar.gotoDate(new Date())
-      }
-    },
 
     buttonText: {
       month: "Mês",
