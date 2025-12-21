@@ -115,7 +115,9 @@ if (lista.length === 0) {
 
   html += `</div>`;
 
-  const result = await Swal.fire({
+const dataPassada = isDataPassada(dataStr);
+
+const result = await Swal.fire({
   title: `Agendamentos — ${dataStr.split("-").reverse().join("/")}`,
   html,
   width: 720,
@@ -123,17 +125,18 @@ if (lista.length === 0) {
   showConfirmButton: true,
   confirmButtonText: "Fechar",
 
-  showDenyButton: true,
+  showDenyButton: !dataPassada,
   denyButtonText: "Novo",
 
   focusConfirm: false,
   customClass: { popup: "swal-high-z" }
 });
 
-if (result.isDenied) {
+if (!dataPassada && result.isDenied) {
   window.location.href =
     `pages/agendamentos.html?new=1&date=${dataStr}`;
-   }
+}
+  
 }
 
 // ===========================
