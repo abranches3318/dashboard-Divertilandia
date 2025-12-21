@@ -151,44 +151,46 @@ async function carregarCalendario() {
 
     dateClick: info => abrirDia(info.dateStr),
 
-    dayCellContent: function(arg) {
-  const dateStr = arg.date.toISOString().slice(0, 10);
-  const total = contagemPorDia[dateStr];
+   dayCellContent: function (arg) {
+  const total = contagemPorDia[arg.dateStr];
 
-  const container = document.createElement("div");
-  container.style.position = "relative";
-  container.style.height = "100%";
+  const wrapper = document.createElement("div");
+  wrapper.style.position = "relative";
+  wrapper.style.width = "100%";
+  wrapper.style.height = "100%";
 
-  const dayNumber = document.createElement("div");
-  dayNumber.textContent = arg.dayNumberText;
-  dayNumber.style.fontSize = "14px";
-  dayNumber.style.fontWeight = "600";
+  const number = document.createElement("div");
+  number.innerHTML = arg.dayNumberText;
+  number.style.fontSize = "14px";
+  number.style.fontWeight = "600";
+  number.style.padding = "4px";
 
-  container.appendChild(dayNumber);
+  wrapper.appendChild(number);
 
   if (total) {
-  const badge = document.createElement("div");
-  badge.textContent = total;
+    const badge = document.createElement("div");
+    badge.textContent = total;
 
-  badge.style.position = "absolute";
-  badge.style.bottom = "4px";
-  badge.style.left = "4px";
+    badge.style.position = "absolute";
+    badge.style.bottom = "4px";
+    badge.style.left = "4px";
 
-  badge.style.background = "#4cafef";
-  badge.style.color = "#fff";
+    badge.style.background = "#4cafef";
+    badge.style.color = "#fff";
 
-  badge.style.padding = "6px 12px"; // ~2x maior
-  badge.style.borderRadius = "16px";
+    badge.style.padding = "6px 14px";
+    badge.style.borderRadius = "18px";
 
-  badge.style.fontSize = "16px";
-  badge.style.fontWeight = "800";
-  badge.style.lineHeight = "1";
+    badge.style.fontSize = "16px";
+    badge.style.fontWeight = "800";
+    badge.style.lineHeight = "1";
 
-  container.appendChild(badge);
-}
+    wrapper.appendChild(badge);
+  }
 
-  return { domNodes: [container] };
-}
+  return { domNodes: [wrapper] };
+},
+
   });
 
   calendar.render();
