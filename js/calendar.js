@@ -152,47 +152,47 @@ async function carregarCalendario() {
     dateClick: info => abrirDia(info.dateStr),
 
    dayCellContent: function (arg) {
-  const total = contagemPorDia[arg.dateStr];
+  const dateStr = arg.date.toISOString().slice(0, 10);
+  const total = contagemPorDia[dateStr];
 
-  const wrapper = document.createElement("div");
-  wrapper.style.position = "relative";
-  wrapper.style.width = "100%";
-  wrapper.style.height = "100%";
+  const container = document.createElement("div");
+  container.style.position = "relative";
+  container.style.height = "100%";
+  container.style.padding = "4px";
 
-  // Número do dia (manual, garantido)
+  // 🔹 Número do dia (FORÇADO, nunca some)
   const dayNumber = document.createElement("div");
-  dayNumber.textContent = arg.date.getDate();
+  dayNumber.textContent = arg.date.getDate(); // <- AQUI está a correção real
   dayNumber.style.fontSize = "14px";
   dayNumber.style.fontWeight = "600";
-  dayNumber.style.padding = "4px";
   dayNumber.style.color = "#000";
 
-  wrapper.appendChild(dayNumber);
+  container.appendChild(dayNumber);
 
-  // Badge de quantidade
+  // 🔹 Badge de quantidade
   if (total) {
     const badge = document.createElement("div");
     badge.textContent = total;
 
     badge.style.position = "absolute";
-    badge.style.bottom = "6px";
-    badge.style.left = "6px";
+    badge.style.bottom = "6px";   // canto inferior
+    badge.style.left = "6px";     // canto esquerdo
 
     badge.style.background = "#4cafef";
     badge.style.color = "#fff";
 
-    badge.style.padding = "6px 16px";
+    badge.style.padding = "8px 18px"; // 2x maior
     badge.style.borderRadius = "20px";
 
     badge.style.fontSize = "18px";
     badge.style.fontWeight = "800";
     badge.style.lineHeight = "1";
 
-    wrapper.appendChild(badge);
+    container.appendChild(badge);
   }
 
-  return { domNodes: [wrapper] };
-},
+  return { domNodes: [container] };
+}
 
   });
 
