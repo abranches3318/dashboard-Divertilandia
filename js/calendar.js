@@ -50,28 +50,23 @@ async function abrirDia(dataStr) {
   const lista = agPorDia[dataStr] || [];
 
   // DIA SEM AGENDAMENTO
-  if (!lista.length) {
-    const res = await Swal.fire({
-      icon: "info",
-      title: "Nenhum agendamento",
-      text: "Deseja criar um novo agendamento?",
-      showCancelButton: true,
-      confirmButtonText: "Criar novo",
-      cancelButtonText: "Fechar",
-      customClass: { popup: "swal-high-z" }
-    });
+  if (snap.empty) {
+  const res = await Swal.fire({
+    icon: "info",
+    title: "Nenhum agendamento",
+    text: "Deseja criar um novo agendamento?",
+    showCancelButton: true,
+    confirmButtonText: "Criar novo",
+    cancelButtonText: "Fechar",
+    customClass: { popup: "swal-high-z" }
+  });
 
-    if (res.isConfirmed) {
-      if (window.agendamentosModule?.openModalNew) {
-        window.agendamentosModule.openModalNew(
-          new Date(dataStr + "T00:00:00")
-        );
-      } else {
-        location.href = `pages/agendamentos.html?date=${dataStr}`;
-      }
-    }
-    return;
+  if (res.isConfirmed) {
+    window.location.href =
+      `pages/agendamentos.html?new=1&date=${dataStr}`;
   }
+  return;
+}
 
   // DIA COM AGENDAMENTOS
   let html = `<div style="display:grid; gap:12px;">`;
