@@ -18,6 +18,14 @@ function statusColor(status) {
   }
 }
 
+function isDataPassada(dataStr) {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const data = new Date(dataStr + "T00:00:00");
+  return data < hoje;
+}
+
 // ===========================
 // CARREGAR DADOS DO FIRESTORE
 // ===========================
@@ -50,24 +58,29 @@ async function abrirDia(dataStr) {
   const lista = agPorDia[dataStr] || [];
 
   // DIA SEM AGENDAMENTO
-  if (lista.length === 0) {
-    const res = await Swal.fire({
-      icon: "info",
-      title: "Nenhum agendamento",
-      text: "Deseja criar um novo agendamento?",
-      showCancelButton: true,
-      confirmButtonText: "Criar novo",
-      cancelButtonText: "Fechar",
-      customClass: { popup: "swal-high-z" }
-    });
+ // DIA SEM AGENDAMENTO
+if (lista.length === 0) {
+  const dataPassada = isDataPassada(dataStr);
 
-    if (res.isConfirmed) {
-      window.location.href =
-        `pages/agendamentos.html?new=1&date=${dataStr}`;
-    }
-    return;
+  const res = await Swal.fire({
+    icon: "info",
+    title: "Nenhum agendamento",
+    text: dataPassada
+      ? "Não há agendamentos para esta data."
+      : "Deseja criar um novo agendamento?",
+    showCancelButton: !dataPassada,
+    confirmButtonText: dataPassada ? "" : "Criar novo",
+    cancelButtonText: "Fechar",
+    customClass: { popup: "swal-high-z" }
+  });
+
+  if (!dataPassada && res.isConfirmed) {
+    window.location.href =
+      `pages/agendamentos.html?new=1&date=${dataStr}`;
   }
 
+  return;
+}
   // DIA COM AGENDAMENTOS
   let html = `<div style="display:grid; gap:12px;">`;
 
