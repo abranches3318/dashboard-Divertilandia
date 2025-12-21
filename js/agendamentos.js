@@ -1491,7 +1491,7 @@ async function init() {
     await carregarMonitores();
     await carregarAgendamentos();
 
-   const params = new URLSearchParams(location.search);
+  const params = new URLSearchParams(location.search);
 const openId = params.get("open");
 const dateParam = params.get("date");
 
