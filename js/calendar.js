@@ -151,25 +151,39 @@ async function carregarCalendario() {
 
     dateClick: info => abrirDia(info.dateStr),
 
-    dayCellDidMount: info => {
-      const total = contagemPorDia[info.dateStr];
-      if (!total) return;
+    dayCellContent: function(arg) {
+  const dateStr = arg.date.toISOString().slice(0, 10);
+  const total = contagemPorDia[dateStr];
 
-      const top = info.el.querySelector(".fc-daygrid-day-top");
-      if (!top) return;
+  const container = document.createElement("div");
+  container.style.position = "relative";
+  container.style.height = "100%";
 
-      const badge = document.createElement("span");
-      badge.textContent = total;
-      badge.style.marginLeft = "auto";
-      badge.style.background = "#4cafef";
-      badge.style.color = "#fff";
-      badge.style.padding = "2px 8px";
-      badge.style.borderRadius = "10px";
-      badge.style.fontSize = "13px";
-      badge.style.fontWeight = "700";
+  const dayNumber = document.createElement("div");
+  dayNumber.textContent = arg.dayNumberText;
+  dayNumber.style.fontSize = "14px";
+  dayNumber.style.fontWeight = "600";
 
-      top.appendChild(badge);
-    }
+  container.appendChild(dayNumber);
+
+  if (total) {
+    const badge = document.createElement("div");
+    badge.textContent = total;
+    badge.style.position = "absolute";
+    badge.style.top = "4px";
+    badge.style.right = "4px";
+    badge.style.background = "#4cafef";
+    badge.style.color = "#fff";
+    badge.style.padding = "3px 7px";
+    badge.style.borderRadius = "12px";
+    badge.style.fontSize = "12px";
+    badge.style.fontWeight = "700";
+
+    container.appendChild(badge);
+  }
+
+  return { domNodes: [container] };
+}
   });
 
   calendar.render();
