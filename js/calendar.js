@@ -102,13 +102,25 @@ async function abrirDia(dataStr) {
 
   html += `</div>`;
 
-  Swal.fire({
-    title: dataStr.split("-").reverse().join("/"),
-    html,
-    width: 760,
-    confirmButtonText: "Fechar",
-    customClass: { popup: "swal-high-z" }
-  });
+  const result = await Swal.fire({
+  title: `Agendamentos — ${dataStr.split("-").reverse().join("/")}`,
+  html,
+  width: 720,
+
+  showConfirmButton: true,
+  confirmButtonText: "Fechar",
+
+  showDenyButton: true,
+  denyButtonText: "Novo",
+
+  focusConfirm: false,
+  customClass: { popup: "swal-high-z" }
+});
+
+if (result.isDenied) {
+  window.location.href =
+    `pages/agendamentos.html?new=1&date=${dataStr}`;
+   }
 }
 
 // ===========================
