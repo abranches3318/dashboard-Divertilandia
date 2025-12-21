@@ -1491,8 +1491,9 @@ async function init() {
     await carregarMonitores();
     await carregarAgendamentos();
 
-  const params = new URLSearchParams(location.search);
+const params = new URLSearchParams(location.search);
 const openId = params.get("open");
+const isNew = params.get("new") === "1";
 const dateParam = params.get("date");
 
 /* PRIORIDADE 1 — abrir detalhes direto */
@@ -1508,11 +1509,9 @@ if (openId) {
     abrirModalDetalhes(openId);
   }, 100);
 
-  return;
 }
-
 /* PRIORIDADE 2 — criar novo com data */
-if (dateParam) {
+else if (isNew && dateParam) {
   abrirModalNovo(new Date(dateParam + "T00:00:00"));
 }
   } catch (err) {
