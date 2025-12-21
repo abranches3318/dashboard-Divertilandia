@@ -99,12 +99,27 @@ if (lista.length === 0) {
         gap:12px;
         align-items:flex-start;
         ">
-          <div style="flex:1; min-width:0;">
-            <div><b>${a.horario || "--:--"}</b> — ${a.cliente || ""}</div>
-            <div style="font-size:13px; opacity:.85">
-              ${a.pacoteNome || a.itemNome || ""}
-            </div>
-          </div>
+          <div style="
+  flex:1;
+  min-width:0;
+  display:grid;
+  grid-template-columns: 70px 1fr;
+  row-gap:2px;
+  column-gap:8px;
+  align-items:center;
+">
+  <div style="font-weight:700;">
+    ${a.horario || "--:--"}
+  </div>
+
+  <div>
+    ${a.cliente || ""}
+  </div>
+
+  <div style="grid-column: 2; font-size:13px; opacity:.85;">
+    ${a.pacoteNome || a.itemNome || ""}
+  </div>
+</div>
           <button class="btn btn-dark"
             onclick="location.href='pages/agendamentos.html?open=${a.id}'">
             Visualizar
