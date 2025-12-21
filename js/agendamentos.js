@@ -613,6 +613,26 @@ function aplicarFiltros() {
   renderTabela(lista, "filtro");
 }
 
+
+// ---------- FILTRO DIRETO POR AGENDAMENTO (CALENDÁRIO) ----------
+function filtrarSomenteAgendamento(id) {
+  if (!id || !Array.isArray(STATE.todos)) return;
+
+  const ag = STATE.todos.find(a => a.id === id);
+  if (!ag) return;
+
+  // mostra somente este agendamento na tabela
+  renderTabela([ag], "auto");
+
+  // preserva estado mínimo (data) para reload coerente
+  LAST_FILTERS = {
+    data: ag.data || "",
+    cliente: "",
+    telefone: "",
+    status: ""
+  };
+}
+
 // ---------- MODAL: abrir / editar / fechar ----------
 function abrirModalNovo(dateInitial = null) {
 
@@ -1506,9 +1526,9 @@ if (openId) {
   }
 
   setTimeout(() => {
+    filtrarSomenteAgendamento(openId);
     abrirModalDetalhes(openId);
   }, 100);
-
 }
 /* PRIORIDADE 2 — criar novo com data */
 else if (isNew && dateParam) {
