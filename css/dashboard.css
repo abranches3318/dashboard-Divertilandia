@@ -507,3 +507,17 @@ label {
   font-family: inherit !important;
 }
 
+/* CALENDÁRIO — HOVER */
+.fc .fc-daygrid-day {
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.fc .fc-daygrid-day:hover {
+  background-color: #f2f2f2;
+  cursor: pointer;
+}
+
+.fc .fc-daygrid-day:hover .fc-daygrid-day-frame {
+  transform: scale(1.02);
+}
+
