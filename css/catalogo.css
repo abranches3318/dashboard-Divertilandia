@@ -1,1 +1,32 @@
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
 
+.tab-btn {
+  padding: 8px 14px;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.tab-btn.active {
+  background: #4cafef;
+  color: #fff;
+}
+
+.catalogo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.catalogo-lista {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+}
