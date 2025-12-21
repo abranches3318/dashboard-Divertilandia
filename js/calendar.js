@@ -95,11 +95,11 @@ if (lista.length === 0) {
           padding:14px;
           border-radius:10px;
           color:#fff;
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
+         display:flex;
+        gap:12px;
+        align-items:flex-start;
         ">
-          <div>
+          <div style="flex:1; min-width:0;">
             <div><b>${a.horario || "--:--"}</b> — ${a.cliente || ""}</div>
             <div style="font-size:13px; opacity:.85">
               ${a.pacoteNome || a.itemNome || ""}
