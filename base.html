@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{TITLE}}</title>
+
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="icon" href="img/favicon.ico">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <!-- FullCalendar (caso alguma página use) -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+<button class="btn-hamburger">☰</button>
+
+<aside class="sidebar">
+  <div class="logo">
+    <img src="img/logo.png" class="logo-img">
+  </div>
+
+  <nav>
+    <ul>
+      <li onclick="nav('dashboard')">📊 Dashboard</li>
+      <li onclick="nav('agendamentos')">📅 Agendamentos</li>
+      <li onclick="nav('financeiro')">💰 Financeiro</li>
+      <li onclick="nav('catalogo')">🎈 Catálogo</li>
+      <li onclick="nav('monitores')">🧑‍🏫 Monitores</li>
+      <li onclick="nav('tarefas')">📝 Tarefas</li>
+      <li onclick="nav('conversas')">💬 Conversas</li>
+      <li onclick="logout()">🚪 Sair</li>
+    </ul>
+  </nav>
+</aside>
+
+<main class="content">
+  <header class="topbar">
+    <h1 id="titulo-pagina">{{TITLE}}</h1>
+
+    <div class="top-right">
+      <div class="notif" onclick="nav('notificacoes')">
+        🔔 <span id="notif-count">0</span>
+      </div>
+      <div class="user-info" id="user-info">Usuário</div>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO DA PÁGINA -->
+  <section class="pagina ativa">
+    {{CONTENT}}
+  </section>
+</main>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+<script src="firebase-config.js"></script>
+
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Navegação e Auth -->
+<script src="/dashboard-Divertilandia/js/nav.js"></script>
+<script src="js/dashboard.js"></script>
+
+</body>
+</html>
