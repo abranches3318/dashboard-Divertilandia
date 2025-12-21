@@ -159,29 +159,32 @@ async function carregarCalendario() {
   wrapper.style.width = "100%";
   wrapper.style.height = "100%";
 
-  const number = document.createElement("div");
-  number.innerHTML = arg.dayNumberText;
-  number.style.fontSize = "14px";
-  number.style.fontWeight = "600";
-  number.style.padding = "4px";
+  // Número do dia (manual, garantido)
+  const dayNumber = document.createElement("div");
+  dayNumber.textContent = arg.date.getDate();
+  dayNumber.style.fontSize = "14px";
+  dayNumber.style.fontWeight = "600";
+  dayNumber.style.padding = "4px";
+  dayNumber.style.color = "#000";
 
-  wrapper.appendChild(number);
+  wrapper.appendChild(dayNumber);
 
+  // Badge de quantidade
   if (total) {
     const badge = document.createElement("div");
     badge.textContent = total;
 
     badge.style.position = "absolute";
-    badge.style.bottom = "4px";
-    badge.style.left = "4px";
+    badge.style.bottom = "6px";
+    badge.style.left = "6px";
 
     badge.style.background = "#4cafef";
     badge.style.color = "#fff";
 
-    badge.style.padding = "6px 14px";
-    badge.style.borderRadius = "18px";
+    badge.style.padding = "6px 16px";
+    badge.style.borderRadius = "20px";
 
-    badge.style.fontSize = "16px";
+    badge.style.fontSize = "18px";
     badge.style.fontWeight = "800";
     badge.style.lineHeight = "1";
 
