@@ -171,25 +171,31 @@ async function carregarCalendario() {
 
   // 🔹 Badge de quantidade
   if (total) {
-    const badge = document.createElement("div");
-    badge.textContent = total;
+  const badge = document.createElement("div");
+  badge.textContent = total;
 
-    badge.style.position = "absolute";
-    badge.style.bottom = "6px";   // canto inferior
-    badge.style.left = "6px";     // canto esquerdo
+  badge.style.position = "absolute";
+  badge.style.bottom = "6px";
+  badge.style.left = "6px";
 
-    badge.style.background = "#4cafef";
-    badge.style.color = "#fff";
+  badge.style.background = "#4cafef";
+  badge.style.color = "#fff";
 
-    badge.style.padding = "8px 18px"; // 2x maior
-    badge.style.borderRadius = "20px";
+  badge.style.padding = "6px 10px"; // reduzido horizontal
+  badge.style.borderRadius = "14px";
 
-    badge.style.fontSize = "18px";
-    badge.style.fontWeight = "800";
-    badge.style.lineHeight = "1";
+  badge.style.fontSize = "18px";
+  badge.style.fontWeight = "800";
+  badge.style.lineHeight = "1";
 
-    container.appendChild(badge);
-  }
+  badge.style.maxWidth = "90%";            // 🔴 CRÍTICO
+  badge.style.boxSizing = "border-box";    // 🔴 CRÍTICO
+  badge.style.whiteSpace = "nowrap";
+  badge.style.overflow = "hidden";
+  badge.style.textOverflow = "ellipsis";
+
+  container.appendChild(badge);
+}
 
   return { domNodes: [container] };
 }
