@@ -57,8 +57,8 @@ async function carregarDados() {
 async function abrirDia(dataStr) {
   const lista = agPorDia[dataStr] || [];
 
-  // DIA SEM AGENDAMENTO
- // DIA SEM AGENDAMENTO
+ 
+// DIA SEM AGENDAMENTO
 if (lista.length === 0) {
   const dataPassada = isDataPassada(dataStr);
 
@@ -69,8 +69,8 @@ if (lista.length === 0) {
       ? "Não há agendamentos para esta data."
       : "Deseja criar um novo agendamento?",
     showCancelButton: !dataPassada,
-    confirmButtonText: dataPassada ? "" : "Criar novo",
-    cancelButtonText: "Fechar",
+    confirmButtonText: dataPassada ? "Fechar" : "Criar novo",
+    cancelButtonText: dataPassada ? "" : "Fechar",
     customClass: { popup: "swal-high-z" }
   });
 
