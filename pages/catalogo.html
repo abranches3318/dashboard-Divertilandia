@@ -95,7 +95,9 @@
 
     <header class="modal-header">
       <h2 id="modal-item-titulo">Novo Item</h2>
-      <button class="btn-fechar" onclick="fecharModalItem()">×</button>
+     <button id="btn-cancelar-item" class="btn btn-danger">
+  Cancelar
+</button>
     </header>
 
     <div class="modal-body">
@@ -170,10 +172,21 @@
 
       <div class="acoes-direita">
         <button class="btn btn-light" onclick="fecharModalItem()">Cancelar</button>
-        <button class="btn btn-primary" id="btn-salvar-item">
-          Salvar
-        </button>
+      <button id="btn-salvar-item" class="btn btn-primary">
+  Salvar
+</button>
       </div>
+
+      <div class="modal-footer">
+  <button id="btn-cancelar-item" class="btn btn-danger">
+    Cancelar
+  </button>
+
+  <button id="btn-salvar-item" class="btn btn-primary">
+    Salvar
+  </button>
+</div>
+      
     </footer>
 
   </div>
