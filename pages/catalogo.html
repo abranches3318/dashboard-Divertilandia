@@ -88,6 +88,97 @@
   </section>
 </main>
 
+  <!-- MODAL ITEM -->
+<div id="modal-item" class="modal hidden">
+
+  <div class="modal-content modal-lg">
+
+    <header class="modal-header">
+      <h2 id="modal-item-titulo">Novo Item</h2>
+      <button class="btn-fechar" onclick="fecharModalItem()">×</button>
+    </header>
+
+    <div class="modal-body">
+
+      <!-- FORM -->
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label>Nome do item *</label>
+          <input type="text" id="item-nome" placeholder="Ex: Pula-pula grande">
+        </div>
+
+        <div class="form-group">
+          <label>Preço (R$) *</label>
+          <input type="number" id="item-preco" step="0.01">
+        </div>
+
+        <div class="form-group">
+          <label>Quantidade *</label>
+          <input type="number" id="item-quantidade">
+        </div>
+
+        <div class="form-group">
+          <label>Status</label>
+          <select id="item-status">
+            <option value="ativo">Ativo</option>
+            <option value="inativo">Inativo</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label>Descrição</label>
+          <textarea id="item-descricao" rows="3"></textarea>
+        </div>
+
+      </div>
+
+      <!-- IMAGENS -->
+      <div class="imagens-bloco">
+
+        <div class="imagens-header">
+          <h3>Imagens do item</h3>
+          <label class="btn btn-secondary">
+            Adicionar imagens
+            <input
+              type="file"
+              id="input-imagens"
+              accept="image/*"
+              multiple
+              hidden
+            >
+          </label>
+        </div>
+
+        <!-- PREVIEW -->
+        <div id="preview-imagens" class="preview-imagens">
+          <!-- miniaturas entram aqui -->
+        </div>
+
+        <small class="hint">
+          A primeira imagem será usada como capa.
+        </small>
+
+      </div>
+
+    </div>
+
+    <footer class="modal-footer">
+      <button class="btn btn-danger" id="btn-excluir-item" style="display:none">
+        Excluir
+      </button>
+
+      <div class="acoes-direita">
+        <button class="btn btn-light" onclick="fecharModalItem()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-salvar-item">
+          Salvar
+        </button>
+      </div>
+    </footer>
+
+  </div>
+</div>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
