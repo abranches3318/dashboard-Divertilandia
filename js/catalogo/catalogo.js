@@ -12,6 +12,8 @@ const CATALOGO_STATE = {
   imagensTemp : []
 };
 
+let ITEM_EDITANDO_ID = null;
+
 function handleSelecionarFotos(event) {
   const files = Array.from(event.target.files);
   if (!files.length) return;
