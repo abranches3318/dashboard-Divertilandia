@@ -303,64 +303,44 @@ function bindEventos() {
   if (inputFotos) {
     inputFotos.addEventListener("change", handleSelecionarFotos);
   }
-}
 
+  const btnNovoPacote = document.getElementById("btn-novo-pacote");
   if (btnNovoPacote) {
     btnNovoPacote.addEventListener("click", () => {
       Swal.fire({
         icon: "info",
         title: "Novo Pacote",
-        text: "Fluxo de criação será implementado no próximo passo.",
+        text: "Fluxo será implementado depois.",
         customClass: { popup: "swal-high-z" }
       });
     });
   }
-
+}
 
 // ============================
-// MODAL — NOVO ITEM
+// MODAL ITEM — HTML
 // ============================
 
-async function abrirModalNovoItem() {
-  const { value: formData } = await Swal.fire({
-    title: "Novo Item",
-    html: `
-      <input id="item-nome" class="swal2-input" placeholder="Nome do item">
-      <input id="item-valor" type="number" class="swal2-input" placeholder="Valor (R$)">
-      <input id="item-quantidade" type="number" class="swal2-input" placeholder="Quantidade disponível">
-      <textarea id="item-descricao" class="swal2-textarea" placeholder="Descrição (opcional)"></textarea>
-    `,
-    focusConfirm: false,
-    showCancelButton: true,
-    confirmButtonText: "Salvar",
-    cancelButtonText: "Cancelar",
-    customClass: { popup: "swal-high-z" },
-    preConfirm: () => {
-      const nome = document.getElementById("item-nome").value.trim();
-      const valor = Number(document.getElementById("item-valor").value);
-      const quantidade = Number(document.getElementById("item-quantidade").value);
-      const descricao = document.getElementById("item-descricao").value.trim();
+function abrirModalNovoItem() {
+  // limpa estado
+  CATALOGO_STATE.imagensTemp = [];
 
-      if (!nome) {
-        Swal.showValidationMessage("Informe o nome do item");
-        return;
-      }
-      if (!valor || valor <= 0) {
-        Swal.showValidationMessage("Informe um valor válido");
-        return;
-      }
-      if (!quantidade || quantidade < 0) {
-        Swal.showValidationMessage("Informe a quantidade");
-        return;
-      }
+  document.getElementById("modal-item-titulo").textContent = "Novo Item";
+  document.getElementById("item-nome").value = "";
+  document.getElementById("item-preco").value = "";
+  document.getElementById("item-quantidade").value = "";
+  document.getElementById("item-descricao").value = "";
+  document.getElementById("item-status").value = "ativo";
 
-      return { nome, valor, quantidade, descricao };
-    }
-  });
+  document.getElementById("btn-excluir-item").style.display = "none";
 
-  if (!formData) return;
+  renderPreviewImagens();
 
-  salvarNovoItem(formData);
+  document.getElementById("modal-item").classList.add("active");
+}
+
+function fecharModalItem() {
+  document.getElementById("modal-item").classList.remove("active");
 }
 
 // ============================
