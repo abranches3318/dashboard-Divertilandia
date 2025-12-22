@@ -537,3 +537,13 @@ label {
   overflow: hidden;
 }
 
+.btn-secondary {
+  background: #e9ecef;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.btn-secondary:hover {
+  background: #dde2e6;
+}
+
