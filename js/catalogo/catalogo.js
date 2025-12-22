@@ -368,6 +368,17 @@ async function uploadImagensItem(itemId) {
   return fotos;
 }
 
+function limparModalItem() {
+  document.getElementById("item-nome").value = "";
+  document.getElementById("item-preco").value = "";
+  document.getElementById("item-quantidade").value = "";
+  document.getElementById("item-descricao").value = "";
+  document.getElementById("item-status").value = "ativo";
+
+  CATALOGO_STATE.imagensTemp = [];
+  renderPreviewImagens();
+}
+
 // ============================
 // SALVAR ITEM
 // ============================
