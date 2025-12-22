@@ -9,7 +9,7 @@ const CATALOGO_STATE = {
   itens: [],
   pacotes: [],
   promocoes: [],
-  imagensTemp : [];
+  imagensTemp : []
 };
 
 // ---------- REFERENCES ----------
