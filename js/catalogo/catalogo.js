@@ -194,7 +194,7 @@ function bindEventos() {
     btnNovoItem.addEventListener("click", abrirModalNovoItem);
   }
 
-  const inputFotos = document.getElementById("input-fotos-item");
+  const inputFotos = document.getElementById("input-imagens");
   if (inputFotos) {
     inputFotos.addEventListener("change", handleSelecionarFotos);
   }
