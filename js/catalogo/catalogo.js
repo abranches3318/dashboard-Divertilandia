@@ -304,6 +304,11 @@ function bindEventos() {
     inputFotos.addEventListener("change", handleSelecionarFotos);
   }
 
+  const btnSalvarItem = document.getElementById("btn-salvar-item");
+  if (btnSalvarItem) {
+    btnSalvarItem.addEventListener("click", salvarNovoItem);
+  }
+
   const btnNovoPacote = document.getElementById("btn-novo-pacote");
   if (btnNovoPacote) {
     btnNovoPacote.addEventListener("click", () => {
@@ -379,43 +384,75 @@ function limparModalItem() {
   renderPreviewImagens();
 }
 
+async function uploadImagensItem(itemId) {
+  const uploads = [];
+
+  for (let i = 0; i < CATALOGO_STATE.imagensTemp.length; i++) {
+    const img = CATALOGO_STATE.imagensTemp[i];
+
+    const ref = storage
+      .ref()
+      .child(`catalogo/itens/${itemId}/${Date.now()}_${img.file.name}`);
+
+    const snapshot = await ref.put(img.file);
+    const url = await snapshot.ref.getDownloadURL();
+
+    uploads.push({
+      url,
+      principal: img.principal === true
+    });
+  }
+
+  return uploads;
+}
+
 // ============================
 // SALVAR ITEM
 // ============================
 
 async function salvarNovoItem() {
+  const nome = document.getElementById("item-nome").value.trim();
+  const preco = Number(document.getElementById("item-preco").value);
+  const quantidade = Number(document.getElementById("item-quantidade").value);
+  const descricao = document.getElementById("item-descricao").value.trim();
+  const status = document.getElementById("item-status").value;
+
+  if (!nome || !preco || quantidade < 0) {
+    Swal.fire({
+      icon: "warning",
+      title: "Campos obrigatórios",
+      text: "Preencha corretamente nome, preço e quantidade.",
+      customClass: { popup: "swal-high-z" }
+    });
+    return;
+  }
+
   try {
-    const nome = document.getElementById("item-nome").value.trim();
-    const preco = Number(document.getElementById("item-preco").value);
-    const quantidade = Number(document.getElementById("item-quantidade").value);
-    const status = document.getElementById("item-status").value;
-    const descricao = document.getElementById("item-descricao").value.trim();
+    Swal.fire({
+      title: "Salvando item...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+      customClass: { popup: "swal-high-z" }
+    });
 
-    if (!nome || preco <= 0 || quantidade < 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "Campos obrigatórios",
-        text: "Preencha corretamente nome, preço e quantidade.",
-        customClass: { popup: "swal-high-z" }
-      });
-      return;
-    }
-
-    // 1. cria item vazio
-    const docRef = await db.collection("itens").add({
+    // 1️⃣ cria item
+    const docRef = await db.collection("item").add({
       nome,
       valor: preco,
       quantidade,
-      descricao: descricao || "",
+      descricao,
       ativo: status === "ativo",
       fotos: [],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    // 2. upload imagens
-    const fotos = await uploadImagensItem(docRef.id);
+    // 2️⃣ upload imagens
+    let fotos = [];
+    if (CATALOGO_STATE.imagensTemp.length) {
+      fotos = await uploadImagensItem(docRef.id);
+    }
 
-    // 3. atualiza item com imagens
+    // 3️⃣ atualiza item com fotos
     if (fotos.length) {
       await docRef.update({ fotos });
     }
@@ -437,7 +474,7 @@ async function salvarNovoItem() {
     Swal.fire({
       icon: "error",
       title: "Erro",
-      text: "Falha ao salvar item.",
+      text: "Não foi possível salvar o item.",
       customClass: { popup: "swal-high-z" }
     });
   }
