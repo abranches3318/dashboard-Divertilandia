@@ -210,7 +210,7 @@ function renderItens() {
           ${CATALOGO_STATE.itens.map(item => `
             <tr>
               <td>${item.nome || "-"}</td>
-              <td>R$ ${Number(item.valor || 0).toFixed(2)}</td>
+              <td>R$ ${Number(item.valor ?? item.preco ?? 0).toFixed(2)}</td>
               <td>${item.quantidade ?? "-"}</td>
               <td>${item.ativo === false ? "Inativo" : "Ativo"}</td>
             </tr>
