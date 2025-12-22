@@ -417,7 +417,7 @@ async function salvarNovoItem() {
   const descricao = document.getElementById("item-descricao").value.trim();
   const status = document.getElementById("item-status").value;
 
-  if (!nome || !preco || quantidade < 0) {
+ if (!nome || valor <= 0 || quantidade < 0) {
     Swal.fire({
       icon: "warning",
       title: "Campos obrigatórios",
@@ -437,14 +437,15 @@ async function salvarNovoItem() {
 
     // 1️⃣ cria item
     const docRef = await db.collection("item").add({
-      nome,
-      valor: preco,
-      quantidade,
-      descricao,
-      ativo: status === "ativo",
-      fotos: [],
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+  nome,
+  valor: valor,      // padrão novo
+  preco: valor,      // compatibilidade com agendamentos
+  quantidade,
+  descricao,
+  ativo: status === "ativo",
+  fotos: [],
+  createdAt: firebase.firestore.FieldValue.serverTimestamp()
+});
 
     // 2️⃣ upload imagens
     let fotos = [];
