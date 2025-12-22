@@ -196,27 +196,40 @@ function renderItens() {
   }
 
   listaItensEl.innerHTML = `
-    <div class="table-wrapper">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Valor</th>
-            <th>Quantidade</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${CATALOGO_STATE.itens.map(item => `
-            <tr>
-              <td>${item.nome || "-"}</td>
-              <td>R$ ${Number(item.valor ?? item.preco ?? 0).toFixed(2)}</td>
-              <td>${item.quantidade ?? "-"}</td>
-              <td>${item.ativo === false ? "Inativo" : "Ativo"}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
+    <div class="itens-lista">
+      ${CATALOGO_STATE.itens.map(item => {
+        const capa =
+          Array.isArray(item.fotos)
+            ? item.fotos.find(f => f.principal)?.url || item.fotos[0]?.url
+            : null;
+
+        return `
+          <div class="item-row">
+            
+            <div class="item-thumb">
+              <img src="${capa || '../img/placeholder-item.png'}" alt="Capa">
+            </div>
+
+            <div class="item-info">
+              <div class="item-nome">${item.nome || "-"}</div>
+              <div class="item-quantidade">Qtd: ${item.quantidade ?? 0}</div>
+            </div>
+
+            <div class="item-valor">
+              R$ ${Number(item.valor || 0).toFixed(2)}
+            </div>
+
+            <div class="item-status ${item.ativo === false ? 'inativo' : 'ativo'}">
+              ${item.ativo === false ? "Inativo" : "Ativo"}
+            </div>
+
+            <button class="item-acoes" title="Ações">
+              ⋮
+            </button>
+
+          </div>
+        `;
+      }).join("")}
     </div>
   `;
 }
