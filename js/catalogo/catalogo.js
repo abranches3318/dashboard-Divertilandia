@@ -493,3 +493,23 @@ async function salvarNovoItem() {
     });
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const tabs = document.querySelectorAll(".tab-btn");
+  const sections = document.querySelectorAll(".catalogo-section");
+
+  tabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const alvo = btn.dataset.tab;
+
+      // botão ativo
+      tabs.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      // seção ativa
+      sections.forEach(sec => {
+        sec.classList.toggle("active", sec.id === `sec-${alvo}`);
+      });
+    });
+  });
+});
