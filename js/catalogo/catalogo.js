@@ -216,7 +216,7 @@ function renderItens() {
             </div>
 
             <div class="item-valor">
-              R$ ${Number(item.valor || 0).toFixed(2)}
+              <td>R$ ${Number(item.valor ?? item.preco ?? 0).toFixed(2)}</td>
             </div>
 
             <div class="item-status ${item.ativo === false ? 'inativo' : 'ativo'}">
