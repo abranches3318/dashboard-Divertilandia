@@ -354,7 +354,7 @@ function abrirModalNovoItem() {
   document.getElementById("item-descricao").value = "";
   document.getElementById("item-status").value = "ativo";
 
-  document.getElementById("btn-excluir-item").style.display = "none";
+  
 
   renderPreviewImagens();
 
@@ -534,10 +534,6 @@ function criarMenuItem() {
   menu.style.zIndex = "9999";
   menu.style.display = "none";
 
-  menu.innerHTML = `
-    <button class="menu-item" onclick="editarItem()">✏️ Editar</button>
-    <button class="menu-item danger" onclick="excluirItem()">🗑️ Excluir</button>
-  `;
 
   document.body.appendChild(menu);
 
@@ -587,16 +583,7 @@ function editarItem() {
 
   renderPreviewImagens();
 
-const btnExcluir = document.getElementById("btn-excluir-item");
 
-if (btnExcluir) {
-  btnExcluir.style.display = "block";
-
-  // remove qualquer handler antigo antes de setar outro
-  btnExcluir.onclick = null;
-
-  btnExcluir.onclick = () => excluirItem(item.id);
-}
 
   document.getElementById("modal-item").classList.add("active");
 
