@@ -12,6 +12,23 @@ const CATALOGO_STATE = {
   imagensTemp : []
 };
 
+function handleSelecionarFotos(event) {
+  const files = Array.from(event.target.files);
+
+  if (!files.length) return;
+
+  console.log("Imagens selecionadas:", files);
+
+  // por enquanto só armazenamos
+  files.forEach(file => {
+    CATALOGO_STATE.imagensTemp.push({
+      file,
+      url: URL.createObjectURL(file),
+      principal: false
+    });
+  });
+}
+
 // ---------- REFERENCES ----------
 const listaItensEl = document.getElementById("lista-itens");
 const listaPacotesEl = document.getElementById("lista-pacotes");
