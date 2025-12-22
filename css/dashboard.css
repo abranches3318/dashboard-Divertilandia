@@ -573,3 +573,67 @@ label {
   justify-content: space-between;
   align-items: center;
 }
+
+.itens-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.item-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 140px 110px 40px;
+  align-items: center;
+  height: 100px;
+  padding: 0 16px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 8px;
+}
+
+.item-thumb img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.item-nome {
+  font-weight: 600;
+}
+
+.item-quantidade {
+  font-size: 13px;
+  opacity: .7;
+}
+
+.item-valor {
+  font-weight: 600;
+  text-align: right;
+}
+
+.item-status {
+  text-align: center;
+  font-weight: 500;
+}
+
+.item-status.ativo {
+  color: #4cafef;
+}
+
+.item-status.inativo {
+  color: #f44336;
+}
+
+.item-acoes {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+}
