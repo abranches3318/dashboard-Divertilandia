@@ -675,20 +675,26 @@ label {
   cursor: pointer;
 }
 
-.menu-item {
-  width: 100%;
-  padding: 10px 14px;
-  background: none;
-  border: none;
-  color: #fff;
-  text-align: left;
-  cursor: pointer;
+#menu-item-flutuante {
+  background: #1c1c1c;
+  border-radius: 10px;
+  min-width: 200px;          /* 🔼 mais largo */
+  box-shadow: 0 10px 30px rgba(0,0,0,.6);
+  padding: 6px 0;
 }
 
-.menu-item:hover {
+#menu-item-flutuante .menu-item {
+  padding: 12px 18px;        /* 🔼 mais alto */
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#menu-item-flutuante .menu-item:hover {
   background: rgba(255,255,255,.08);
 }
 
-.menu-item.danger {
+#menu-item-flutuante .menu-item.danger {
   color: #ff6b6b;
 }
