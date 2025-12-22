@@ -46,63 +46,72 @@
 
   <section class="pagina ativa">
 
-    <!-- ITENS -->
-    <div class="panel">
-      <h2>🎈 Itens Individuais</h2>
-
-      <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
-        <button class="btn" id="btn-novo-item">Novo Item</button>
-      </div>
-
-      <div id="lista-itens">
-        <!-- cards ou tabela de itens -->
-      </div>
+    <!-- TOP BAR CATÁLOGO -->
+    <div class="catalogo-topbar">
+      <button class="tab-btn active" data-tab="itens">Itens</button>
+      <button class="tab-btn" data-tab="pacotes">Pacotes</button>
+      <button class="tab-btn" data-tab="promocoes">Promoções</button>
     </div>
 
-    <!-- PACOTES -->
-    <div class="panel">
-      <h2>📦 Pacotes</h2>
+    <!-- ================= ITENS ================= -->
+    <section id="sec-itens" class="catalogo-section active">
+      <div class="panel">
+        <h2>🎈 Itens Individuais</h2>
 
-      <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
-        <button class="btn" id="btn-novo-pacote">Novo Pacote</button>
+        <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+          <button class="btn" id="btn-novo-item">Novo Item</button>
+        </div>
+
+        <div id="lista-itens">
+          <!-- cards ou tabela de itens -->
+        </div>
       </div>
+    </section>
 
-      <div id="lista-pacotes">
-        <!-- cards ou tabela de pacotes -->
+    <!-- ================= PACOTES ================= -->
+    <section id="sec-pacotes" class="catalogo-section">
+      <div class="panel">
+        <h2>📦 Pacotes</h2>
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+          <button class="btn" id="btn-novo-pacote">Novo Pacote</button>
+        </div>
+
+        <div id="lista-pacotes">
+          <!-- cards ou tabela de pacotes -->
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- PROMOÇÕES -->
-    <div class="panel">
-      <h2>🔥 Promoções Ativas</h2>
+    <!-- ================= PROMOÇÕES ================= -->
+    <section id="sec-promocoes" class="catalogo-section">
+      <div class="panel">
+        <h2>🔥 Promoções Ativas</h2>
 
-      <p style="font-size:14px; opacity:.8; margin-bottom:15px;">
-        Promoções são reduções temporárias de preço aplicadas a itens ou pacotes existentes.
-      </p>
+        <p style="font-size:14px; opacity:.8; margin-bottom:15px;">
+          Promoções são reduções temporárias de preço aplicadas a itens ou pacotes existentes.
+        </p>
 
-      <div id="lista-promocoes">
-        <!-- promoções aplicadas -->
+        <div id="lista-promocoes">
+          <!-- promoções aplicadas -->
+        </div>
       </div>
-    </div>
+    </section>
 
   </section>
 </main>
 
-  <!-- MODAL ITEM -->
+<!-- MODAL ITEM -->
 <div id="modal-item" class="modal">
-  
   <div class="modal-content modal-lg">
 
-   <header class="modal-header">
-  <h2 id="modal-item-titulo">Novo Item</h2>
- 
-</header>
+    <header class="modal-header">
+      <h2 id="modal-item-titulo">Novo Item</h2>
+    </header>
 
     <div class="modal-body">
 
-      <!-- FORM -->
       <div class="form-grid">
-
         <div class="form-group">
           <label>Nome do item *</label>
           <input type="text" id="item-nome" placeholder="Ex: Pula-pula grande">
@@ -130,55 +139,27 @@
           <label>Descrição</label>
           <textarea id="item-descricao" rows="3"></textarea>
         </div>
-
       </div>
 
-      <!-- IMAGENS -->
       <div class="imagens-bloco">
-
         <div class="imagens-header">
           <h3>Imagens do item</h3>
           <label class="btn btn-primary">
             Adicionar imagens
-            <input
-              type="file"
-              id="input-imagens"
-              accept="image/*"
-              multiple
-              hidden
-            >
+            <input type="file" id="input-imagens" accept="image/*" multiple hidden>
           </label>
         </div>
 
-        <!-- PREVIEW -->
-        <div id="preview-imagens" class="preview-imagens">
-          <!-- miniaturas entram aqui -->
-        </div>
-
-    
-
+        <div id="preview-imagens" class="preview-imagens"></div>
       </div>
 
     </div>
 
-  <footer class="modal-footer">
-  <button id="btn-cancelar-item" class="btn btn-danger" onclick="fecharModalItem()">
-    Cancelar
-  </button>
-
-  <button id="btn-salvar-item" class="btn btn-primary">
-    Salvar
-  </button>
-
-    <button
-  id="btn-excluir-item"
-  class="btn btn-danger"
-  style="display:none"
->
-  Excluir
-</button>
-    
-</footer>
+    <footer class="modal-footer">
+      <button id="btn-cancelar-item" class="btn btn-danger" onclick="fecharModalItem()">Cancelar</button>
+      <button id="btn-salvar-item" class="btn btn-primary">Salvar</button>
+      <button id="btn-excluir-item" class="btn btn-danger" style="display:none">Excluir</button>
+    </footer>
 
   </div>
 </div>
