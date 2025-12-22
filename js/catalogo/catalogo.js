@@ -412,7 +412,7 @@ async function uploadImagensItem(itemId) {
 
 async function salvarNovoItem() {
   const nome = document.getElementById("item-nome").value.trim();
-  const preco = Number(document.getElementById("item-preco").value);
+  const valor = Number(document.getElementById("item-preco").value);
   const quantidade = Number(document.getElementById("item-quantidade").value);
   const descricao = document.getElementById("item-descricao").value.trim();
   const status = document.getElementById("item-status").value;
