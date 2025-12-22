@@ -587,8 +587,16 @@ function editarItem() {
 
   renderPreviewImagens();
 
-  document.getElementById("btn-excluir-item").style.display = "block";
-  document.getElementById("btn-excluir-item").onclick = () => excluirItem(item.id);
+const btnExcluir = document.getElementById("btn-excluir-item");
+
+if (btnExcluir) {
+  btnExcluir.style.display = "block";
+
+  // remove qualquer handler antigo antes de setar outro
+  btnExcluir.onclick = null;
+
+  btnExcluir.onclick = () => excluirItem(item.id);
+}
 
   document.getElementById("modal-item").classList.add("active");
 
