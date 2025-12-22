@@ -587,7 +587,7 @@ function editarItem() {
 
   renderPreviewImagens();
 
-  document.getElementById("btn-excluir-item").style.display = "inline-block";
+  document.getElementById("btn-excluir-item").style.display = "block";
   document.getElementById("btn-excluir-item").onclick = () => excluirItem(item.id);
 
   document.getElementById("modal-item").classList.add("active");
