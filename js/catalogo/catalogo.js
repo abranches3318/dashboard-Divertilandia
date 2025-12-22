@@ -343,29 +343,81 @@ function fecharModalItem() {
   document.getElementById("modal-item").classList.remove("active");
 }
 
+
+async function uploadImagensItem(itemId) {
+  if (!CATALOGO_STATE.imagensTemp.length) return [];
+
+  const fotos = [];
+
+  for (const img of CATALOGO_STATE.imagensTemp) {
+    const nomeArquivo = `${crypto.randomUUID()}.${img.file.name.split(".").pop()}`;
+    const path = `itens/${itemId}/${nomeArquivo}`;
+
+    const ref = storage.ref(path);
+    await ref.put(img.file);
+
+    const url = await ref.getDownloadURL();
+
+    fotos.push({
+      url,
+      path,
+      principal: img.principal === true
+    });
+  }
+
+  return fotos;
+}
+
 // ============================
 // SALVAR ITEM
 // ============================
 
-async function salvarNovoItem(dados) {
+async function salvarNovoItem() {
   try {
-    await db.collection("itens").add({
-      nome: dados.nome,
-      valor: dados.valor,
-      quantidade: dados.quantidade,
-      descricao: dados.descricao || "",
-      ativo: true,
+    const nome = document.getElementById("item-nome").value.trim();
+    const preco = Number(document.getElementById("item-preco").value);
+    const quantidade = Number(document.getElementById("item-quantidade").value);
+    const status = document.getElementById("item-status").value;
+    const descricao = document.getElementById("item-descricao").value.trim();
+
+    if (!nome || preco <= 0 || quantidade < 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Campos obrigatórios",
+        text: "Preencha corretamente nome, preço e quantidade.",
+        customClass: { popup: "swal-high-z" }
+      });
+      return;
+    }
+
+    // 1. cria item vazio
+    const docRef = await db.collection("itens").add({
+      nome,
+      valor: preco,
+      quantidade,
+      descricao: descricao || "",
+      ativo: status === "ativo",
       fotos: [],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
+    // 2. upload imagens
+    const fotos = await uploadImagensItem(docRef.id);
+
+    // 3. atualiza item com imagens
+    if (fotos.length) {
+      await docRef.update({ fotos });
+    }
+
     Swal.fire({
       icon: "success",
-      title: "Item criado",
-      text: "O item foi cadastrado com sucesso.",
+      title: "Item salvo",
+      text: "Item cadastrado com sucesso.",
       customClass: { popup: "swal-high-z" }
     });
 
+    fecharModalItem();
+    limparModalItem();
     await carregarItens();
     renderItens();
 
@@ -374,7 +426,7 @@ async function salvarNovoItem(dados) {
     Swal.fire({
       icon: "error",
       title: "Erro",
-      text: "Não foi possível salvar o item.",
+      text: "Falha ao salvar item.",
       customClass: { popup: "swal-high-z" }
     });
   }
