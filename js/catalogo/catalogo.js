@@ -187,15 +187,9 @@ function renderPromocoes() {
 
 function bindEventos() {
   if (btnNovoItem) {
-    btnNovoItem.addEventListener("click", () => {
-      Swal.fire({
-        icon: "info",
-        title: "Novo Item",
-        text: "Fluxo de criação será implementado no próximo passo.",
-        customClass: { popup: "swal-high-z" }
-      });
-    });
+    btnNovoItem.addEventListener("click", abrirModalNovoItem);
   }
+}
 
   if (btnNovoPacote) {
     btnNovoPacote.addEventListener("click", () => {
@@ -205,6 +199,89 @@ function bindEventos() {
         text: "Fluxo de criação será implementado no próximo passo.",
         customClass: { popup: "swal-high-z" }
       });
+    });
+  }
+}
+
+// ============================
+// MODAL — NOVO ITEM
+// ============================
+
+async function abrirModalNovoItem() {
+  const { value: formData } = await Swal.fire({
+    title: "Novo Item",
+    html: `
+      <input id="item-nome" class="swal2-input" placeholder="Nome do item">
+      <input id="item-valor" type="number" class="swal2-input" placeholder="Valor (R$)">
+      <input id="item-quantidade" type="number" class="swal2-input" placeholder="Quantidade disponível">
+      <textarea id="item-descricao" class="swal2-textarea" placeholder="Descrição (opcional)"></textarea>
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: "Salvar",
+    cancelButtonText: "Cancelar",
+    customClass: { popup: "swal-high-z" },
+    preConfirm: () => {
+      const nome = document.getElementById("item-nome").value.trim();
+      const valor = Number(document.getElementById("item-valor").value);
+      const quantidade = Number(document.getElementById("item-quantidade").value);
+      const descricao = document.getElementById("item-descricao").value.trim();
+
+      if (!nome) {
+        Swal.showValidationMessage("Informe o nome do item");
+        return;
+      }
+      if (!valor || valor <= 0) {
+        Swal.showValidationMessage("Informe um valor válido");
+        return;
+      }
+      if (!quantidade || quantidade < 0) {
+        Swal.showValidationMessage("Informe a quantidade");
+        return;
+      }
+
+      return { nome, valor, quantidade, descricao };
+    }
+  });
+
+  if (!formData) return;
+
+  salvarNovoItem(formData);
+}
+
+// ============================
+// SALVAR ITEM
+// ============================
+
+async function salvarNovoItem(dados) {
+  try {
+    await db.collection("itens").add({
+      nome: dados.nome,
+      valor: dados.valor,
+      quantidade: dados.quantidade,
+      descricao: dados.descricao || "",
+      ativo: true,
+      fotos: [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "Item criado",
+      text: "O item foi cadastrado com sucesso.",
+      customClass: { popup: "swal-high-z" }
+    });
+
+    await carregarItens();
+    renderItens();
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire({
+      icon: "error",
+      title: "Erro",
+      text: "Não foi possível salvar o item.",
+      customClass: { popup: "swal-high-z" }
     });
   }
 }
