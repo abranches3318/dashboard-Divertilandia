@@ -93,12 +93,10 @@
   
   <div class="modal-content modal-lg">
 
-    <header class="modal-header">
-      <h2 id="modal-item-titulo">Novo Item</h2>
-     <button id="btn-cancelar-item" class="btn btn-danger">
-  Cancelar
-</button>
-    </header>
+   <header class="modal-header">
+  <h2 id="modal-item-titulo">Novo Item</h2>
+  <button class="btn-fechar" onclick="fecharModalItem()">×</button>
+</header>
 
     <div class="modal-body">
 
@@ -165,29 +163,15 @@
 
     </div>
 
-    <footer class="modal-footer">
-      <button class="btn btn-danger" id="btn-excluir-item" style="display:none">
-        Excluir
-      </button>
-
-      <div class="acoes-direita">
-        <button class="btn btn-light" onclick="fecharModalItem()">Cancelar</button>
-      <button id="btn-salvar-item" class="btn btn-primary">
-  Salvar
-</button>
-      </div>
-
-      <div class="modal-footer">
-  <button id="btn-cancelar-item" class="btn btn-danger">
+  <footer class="modal-footer">
+  <button id="btn-cancelar-item" class="btn btn-danger" onclick="fecharModalItem()">
     Cancelar
   </button>
 
   <button id="btn-salvar-item" class="btn btn-primary">
     Salvar
   </button>
-</div>
-      
-    </footer>
+</footer>
 
   </div>
 </div>
