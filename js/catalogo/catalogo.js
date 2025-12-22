@@ -8,7 +8,8 @@ console.log("catalogo.js carregado");
 const CATALOGO_STATE = {
   itens: [],
   pacotes: [],
-  promocoes: []
+  promocoes: [],
+  imagensTemp : [];
 };
 
 // ---------- REFERENCES ----------
@@ -188,8 +189,14 @@ function renderPromocoes() {
 // ============================
 
 function bindEventos() {
+  const btnNovoItem = document.getElementById("btn-novo-item");
   if (btnNovoItem) {
     btnNovoItem.addEventListener("click", abrirModalNovoItem);
+  }
+
+  const inputFotos = document.getElementById("input-fotos-item");
+  if (inputFotos) {
+    inputFotos.addEventListener("change", handleSelecionarFotos);
   }
 }
 
