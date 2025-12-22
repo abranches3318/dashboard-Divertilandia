@@ -201,7 +201,7 @@ function bindEventos() {
       });
     });
   }
-}
+
 
 // ============================
 // MODAL — NOVO ITEM
