@@ -14,20 +14,108 @@ const CATALOGO_STATE = {
 
 function handleSelecionarFotos(event) {
   const files = Array.from(event.target.files);
-
   if (!files.length) return;
 
-  console.log("Imagens selecionadas:", files);
-
-  // por enquanto só armazenamos
   files.forEach(file => {
     CATALOGO_STATE.imagensTemp.push({
       file,
       url: URL.createObjectURL(file),
-      principal: false
+      // primeira imagem vira capa automaticamente
+      principal: CATALOGO_STATE.imagensTemp.length === 0
     });
   });
+
+  // renderiza miniaturas
+  renderPreviewImagens();
+
+  // limpa input para permitir selecionar o mesmo arquivo novamente
+  event.target.value = "";
 }
+
+
+function renderPreviewImagens() {
+  const container = document.getElementById("preview-imagens");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  CATALOGO_STATE.imagensTemp.forEach((img, index) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "preview-item";
+    wrapper.style.position = "relative";
+
+    const image = document.createElement("img");
+    image.src = img.url;
+    image.style.width = "100%";
+    image.style.height = "100%";
+    image.style.objectFit = "cover";
+    image.style.borderRadius = "8px";
+
+    // ⭐ principal
+    const btnPrincipal = document.createElement("button");
+    btnPrincipal.textContent = "⭐";
+    btnPrincipal.title = "Definir como principal";
+    btnPrincipal.style.position = "absolute";
+    btnPrincipal.style.top = "6px";
+    btnPrincipal.style.left = "6px";
+    btnPrincipal.style.background = img.principal ? "#4cafef" : "rgba(0,0,0,.6)";
+    btnPrincipal.style.color = "#fff";
+    btnPrincipal.style.border = "none";
+    btnPrincipal.style.borderRadius = "50%";
+    btnPrincipal.style.width = "28px";
+    btnPrincipal.style.height = "28px";
+    btnPrincipal.style.cursor = "pointer";
+
+    btnPrincipal.onclick = () => definirImagemPrincipal(index);
+
+    // ❌ remover
+    const btnRemover = document.createElement("button");
+    btnRemover.textContent = "✕";
+    btnRemover.title = "Remover imagem";
+    btnRemover.style.position = "absolute";
+    btnRemover.style.top = "6px";
+    btnRemover.style.right = "6px";
+    btnRemover.style.background = "rgba(0,0,0,.6)";
+    btnRemover.style.color = "#fff";
+    btnRemover.style.border = "none";
+    btnRemover.style.borderRadius = "50%";
+    btnRemover.style.width = "28px";
+    btnRemover.style.height = "28px";
+    btnRemover.style.cursor = "pointer";
+
+    btnRemover.onclick = () => removerImagem(index);
+
+    wrapper.appendChild(image);
+    wrapper.appendChild(btnPrincipal);
+    wrapper.appendChild(btnRemover);
+
+    container.appendChild(wrapper);
+  });
+}
+
+function definirImagemPrincipal(index) {
+  CATALOGO_STATE.imagensTemp.forEach((img, i) => {
+    img.principal = i === index;
+  });
+
+  renderPreviewImagens();
+}
+
+function removerImagem(index) {
+  CATALOGO_STATE.imagensTemp.splice(index, 1);
+
+  // se removeu a principal, define a primeira como principal
+  if (
+    CATALOGO_STATE.imagensTemp.length &&
+    !CATALOGO_STATE.imagensTemp.some(i => i.principal)
+  ) {
+    CATALOGO_STATE.imagensTemp[0].principal = true;
+  }
+
+  renderPreviewImagens();
+}
+
+
 
 // ---------- REFERENCES ----------
 const listaItensEl = document.getElementById("lista-itens");
