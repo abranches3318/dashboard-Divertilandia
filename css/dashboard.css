@@ -666,3 +666,29 @@ label {
 .catalogo-section.active {
   display: block;
 }
+
+.item-acoes {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.menu-item {
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: rgba(255,255,255,.08);
+}
+
+.menu-item.danger {
+  color: #ff6b6b;
+}
