@@ -57,12 +57,14 @@ async function carregarCatalogo() {
   }
 }
 
-// ---------- ITENS ----------
+/ ---------- ITENS ----------
 async function carregarItens() {
-  const snap = await db.collection("itens").orderBy("nome").get();
-  CATALOGO_STATE.itens = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const snap = await db.collection("item").orderBy("nome").get();
+  CATALOGO_STATE.itens = snap.docs.map(d => ({
+    id: d.id,
+    ...d.data()
+  }));
 }
-
 // ---------- PACOTES ----------
 async function carregarPacotes() {
   const snap = await db.collection("pacotes").orderBy("nome").get();
