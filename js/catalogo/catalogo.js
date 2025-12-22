@@ -223,9 +223,13 @@ function renderItens() {
               ${item.ativo === false ? "Inativo" : "Ativo"}
             </div>
 
-            <button class="item-acoes" title="Ações">
-              ⋮
-            </button>
+          <button
+  class="item-acoes"
+  title="Ações"
+  onclick="abrirMenuItem(event, '${item.id}')"
+>
+  ⋮
+</button>
 
           </div>
         `;
@@ -513,3 +517,136 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+let MENU_ITEM_ATUAL = null;
+
+function criarMenuItem() {
+  if (document.getElementById("menu-item-flutuante")) return;
+
+  const menu = document.createElement("div");
+  menu.id = "menu-item-flutuante";
+  menu.style.position = "fixed";
+  menu.style.background = "#1e1e1e";
+  menu.style.border = "1px solid rgba(255,255,255,.1)";
+  menu.style.borderRadius = "8px";
+  menu.style.padding = "6px 0";
+  menu.style.minWidth = "160px";
+  menu.style.zIndex = "9999";
+  menu.style.display = "none";
+
+  menu.innerHTML = `
+    <button class="menu-item" onclick="editarItem()">✏️ Editar</button>
+    <button class="menu-item danger" onclick="excluirItem()">🗑️ Excluir</button>
+  `;
+
+  document.body.appendChild(menu);
+
+  document.addEventListener("click", (e) => {
+    if (!menu.contains(e.target)) {
+      menu.style.display = "none";
+      MENU_ITEM_ATUAL = null;
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", criarMenuItem);
+
+function abrirMenuItem(event, itemId) {
+  event.stopPropagation();
+
+  const menu = document.getElementById("menu-item-flutuante");
+  if (!menu) return;
+
+  MENU_ITEM_ATUAL = itemId;
+
+  const rect = event.target.getBoundingClientRect();
+
+  menu.style.top = `${rect.bottom + 6}px`;
+  menu.style.left = `${rect.left - 120}px`;
+  menu.style.display = "block";
+}
+
+function editarItem() {
+  const item = CATALOGO_STATE.itens.find(i => i.id === MENU_ITEM_ATUAL);
+  if (!item) return;
+
+  document.getElementById("modal-item-titulo").textContent = "Editar Item";
+
+  document.getElementById("item-nome").value = item.nome || "";
+  document.getElementById("item-preco").value = item.valor || 0;
+  document.getElementById("item-quantidade").value = item.quantidade || 0;
+  document.getElementById("item-descricao").value = item.descricao || "";
+  document.getElementById("item-status").value = item.ativo ? "ativo" : "inativo";
+
+  // fotos existentes
+  CATALOGO_STATE.imagensTemp = (item.fotos || []).map(f => ({
+    url: f.url,
+    principal: f.principal,
+    existente: true
+  }));
+
+  renderPreviewImagens();
+
+  document.getElementById("btn-excluir-item").style.display = "inline-block";
+  document.getElementById("btn-excluir-item").onclick = () => excluirItem(item.id);
+
+  document.getElementById("modal-item").classList.add("active");
+
+  document.getElementById("menu-item-flutuante").style.display = "none";
+}
+
+async function excluirItem(itemId = MENU_ITEM_ATUAL) {
+  if (!itemId) return;
+
+  const confirm = await Swal.fire({
+    icon: "warning",
+    title: "Excluir item?",
+    text: "Esta ação não pode ser desfeita.",
+    showCancelButton: true,
+    confirmButtonText: "Excluir",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#d33",
+    customClass: { popup: "swal-high-z" }
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  try {
+    const ref = db.collection("item").doc(itemId);
+    const snap = await ref.get();
+
+    if (snap.exists) {
+      const data = snap.data();
+
+      // remove imagens do storage
+      if (Array.isArray(data.fotos)) {
+        for (const foto of data.fotos) {
+          if (foto.path) {
+            await storage.ref(foto.path).delete().catch(() => {});
+          }
+        }
+      }
+    }
+
+    await ref.delete();
+
+    Swal.fire({
+      icon: "success",
+      title: "Item excluído",
+      customClass: { popup: "swal-high-z" }
+    });
+
+    fecharModalItem();
+    await carregarItens();
+    renderItens();
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire({
+      icon: "error",
+      title: "Erro",
+      text: "Não foi possível excluir o item.",
+      customClass: { popup: "swal-high-z" }
+    });
+  }
+}
