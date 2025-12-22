@@ -207,7 +207,7 @@ function renderItens() {
           <div class="item-row">
             
             <div class="item-thumb">
-              <img src="${capa || '../img/placeholder-item.png'}" alt="Capa">
+              <img src="${capa || '../img/imageplaceholder.jpg'}" alt="Capa">
             </div>
 
             <div class="item-info">
