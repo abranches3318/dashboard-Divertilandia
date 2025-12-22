@@ -57,7 +57,7 @@ async function carregarCatalogo() {
   }
 }
 
-/ ---------- ITENS ----------
+// ---------- ITENS ----------
 async function carregarItens() {
   const snap = await db.collection("item").orderBy("nome").get();
   CATALOGO_STATE.itens = snap.docs.map(d => ({
