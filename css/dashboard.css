@@ -546,4 +546,20 @@ label {
 .btn-secondary:hover {
   background: #dde2e6;
 }
+/* ===== Upload de imagens no catálogo ===== */
 
+.imagens-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.imagens-header label.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
