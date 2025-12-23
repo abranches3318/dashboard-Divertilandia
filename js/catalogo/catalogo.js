@@ -228,8 +228,11 @@ function renderPreviewImagens() {
 
   CATALOGO_STATE.imagensTemp.forEach((img, index) => {
     const wrapper = document.createElement("div");
-    wrapper.className = "preview-item";
-    wrapper.style.position = "relative";
+  wrapper.className = "preview-item";
+wrapper.style.position = "relative";
+wrapper.style.width = "100%";
+wrapper.style.height = "90px";
+wrapper.style.overflow = "hidden";
 
     const image = document.createElement("img");
     image.src = img.url;
