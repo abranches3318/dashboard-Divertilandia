@@ -600,8 +600,8 @@ label {
 }
 
 .item-thumb img {
-  width: 100%;
-  height: 100%;
+  width: 70px;
+  height: 70px;
   object-fit: cover;
   border-radius: 8px;
 }
@@ -710,14 +710,15 @@ label {
 }
 
 .item-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 80px 1fr 120px 90px 40px;
   align-items: center;
   gap: 16px;
-  overflow: visible; /* CRÍTICO */
 }
 
 .item-valor,
-.item-status {
+.item-status,
+.item-acoes {
+  justify-self: end;
   white-space: nowrap;
-  flex-shrink: 0;
 }
