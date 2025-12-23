@@ -712,13 +712,13 @@ label {
 .item-row {
   display: grid;
   grid-template-columns:
-    80px
-    minmax(280px, 1fr)
-    140px
-    120px
-    40px;
+    80px        /* imagem */
+    1fr         /* nome */
+    100px       /* valor (mais para o meio) */
+    90px        /* status (mais para o meio) */
+    40px;       /* ações */
   align-items: center;
-  column-gap: 24px;
+  column-gap: 20px;
   padding: 0 24px;
 }
 
