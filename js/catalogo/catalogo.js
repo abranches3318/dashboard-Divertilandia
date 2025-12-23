@@ -25,11 +25,50 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  carregarCatalogo();
-  bindEventos();
   criarMenuItem();
+  bindEventos();
   bindTabs();
+  carregarCatalogo();
 });
+
+// ============================
+// EVENTOS
+// ============================
+
+function bindEventos() {
+  const btnNovoItem = document.getElementById("btn-novo-item");
+  if (btnNovoItem) {
+    btnNovoItem.addEventListener("click", abrirModalNovoItem);
+  }
+
+  const btnSalvar = document.getElementById("btn-salvar-item");
+  if (btnSalvar) {
+    btnSalvar.addEventListener("click", salvarNovoItem);
+  }
+
+  const inputFotos = document.getElementById("input-imagens");
+  if (inputFotos) {
+    inputFotos.addEventListener("change", handleSelecionarFotos);
+  }
+}
+
+function bindTabs() {
+  const tabs = document.querySelectorAll(".tab-btn");
+  const sections = document.querySelectorAll(".catalogo-section");
+
+  tabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const alvo = btn.dataset.tab;
+
+      tabs.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      sections.forEach(sec => {
+        sec.classList.toggle("active", sec.id === `sec-${alvo}`);
+      });
+    });
+  });
+}
 
 // ============================
 // CARREGAR DADOS
@@ -78,7 +117,10 @@ function renderItens() {
   el.innerHTML = `
     <div class="itens-lista">
       ${CATALOGO_STATE.itens.map(item => {
-        const capa = item.fotos?.find(f => f.principal)?.url || item.fotos?.[0]?.url || "../img/imageplaceholder.jpg";
+        const capa =
+          item.fotos?.find(f => f.principal)?.url ||
+          item.fotos?.[0]?.url ||
+          "../img/imageplaceholder.jpg";
 
         return `
           <div class="item-row">
@@ -115,6 +157,8 @@ function criarMenuItem() {
   const menu = document.createElement("div");
   menu.id = "menu-item-flutuante";
   menu.className = "menu-acoes";
+  menu.style.display = "none";
+
   menu.innerHTML = `
     <button class="menu-item editar" onclick="editarItem()">✏️ Editar</button>
     <button class="menu-item excluir" onclick="excluirItem()">🗑️ Excluir</button>
@@ -132,8 +176,11 @@ function criarMenuItem() {
 
 function abrirMenuItem(event, itemId) {
   event.stopPropagation();
+
   const menu = document.getElementById("menu-item-flutuante");
-  const rect = event.target.getBoundingClientRect();
+  if (!menu) return;
+
+  const rect = event.currentTarget.getBoundingClientRect();
 
   MENU_ITEM_ATUAL = itemId;
   menu.style.top = `${rect.bottom + 6}px`;
@@ -165,13 +212,6 @@ function editarItem() {
   document.getElementById("item-descricao").value = item.descricao || "";
   document.getElementById("item-status").value = item.ativo ? "ativo" : "inativo";
 
-  CATALOGO_STATE.imagensTemp = (item.fotos || []).map(f => ({
-    url: f.url,
-    principal: f.principal,
-    existente: true
-  }));
-
-  renderPreviewImagens();
   document.getElementById("menu-item-flutuante").style.display = "none";
   document.getElementById("modal-item").classList.add("active");
 }
@@ -181,15 +221,15 @@ function fecharModalItem() {
 }
 
 // ============================
-// SALVAR ITEM (NOVO / EDITAR)
+// SALVAR ITEM
 // ============================
 
 async function salvarNovoItem() {
-  const nome = itemNome.value.trim();
-  const valor = Number(itemPreco.value);
-  const quantidade = Number(itemQuantidade.value);
-  const descricao = itemDescricao.value.trim();
-  const status = itemStatus.value;
+  const nome = document.getElementById("item-nome").value.trim();
+  const valor = Number(document.getElementById("item-preco").value);
+  const quantidade = Number(document.getElementById("item-quantidade").value);
+  const descricao = document.getElementById("item-descricao").value.trim();
+  const status = document.getElementById("item-status").value;
 
   if (!nome || valor <= 0 || quantidade < 0) {
     Swal.fire("Erro", "Preencha corretamente os campos.", "warning");
@@ -209,16 +249,11 @@ async function salvarNovoItem() {
   if (ITEM_EDITANDO_ID) {
     await db.collection("item").doc(ITEM_EDITANDO_ID).update(dados);
   } else {
-    const ref = await db.collection("item").add({
+    await db.collection("item").add({
       ...dados,
       fotos: [],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-
-    if (CATALOGO_STATE.imagensTemp.length) {
-      const fotos = await uploadImagensItem(ref.id);
-      await ref.update({ fotos });
-    }
   }
 
   fecharModalItem();
