@@ -731,12 +731,6 @@ label {
   margin-bottom: 12px;
 }
 
-.item-valor,
-.item-status,
-.item-acoes {
-  justify-self: end;
-  text-align: right;
-}
 
 .item-status {
   justify-self: center;
@@ -762,4 +756,10 @@ label {
   height: 100px;
   background: rgba(255,255,255,0.02);
   border-radius: 10px;
+}
+
+.item-valor {
+  font-weight: 600;
+  justify-self: center;
+  text-align: center;
 }
