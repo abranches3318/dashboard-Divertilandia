@@ -748,13 +748,13 @@ label {
   justify-self: end;
 }
 
-.itens-lista {
-  margin-left: -25px;
-  margin-right: -25px;
-}
-
 .item-row,
 .item-header {
   padding-left: 25px;
   padding-right: 25px;
+}
+
+.itens-wrapper {
+  margin-left: -25px;
+  margin-right: -25px;
 }
