@@ -585,7 +585,7 @@ label {
 .item-row {
   display: grid;
   align-items: center;
-  padding: 0 16px;
+ 
 }
 
 .item-thumb {
@@ -712,11 +712,11 @@ label {
 .item-row {
   display: grid;
   grid-template-columns:
-    80px        /* imagem */
-    1fr         /* nome */
-    140px       /* valor */
-    120px       /* status */
-    40px;       /* ações */
+    80px
+    minmax(280px, 1fr)
+    140px
+    120px
+    40px;
   align-items: center;
   column-gap: 24px;
   padding: 0 24px;
@@ -744,7 +744,7 @@ label {
 }
 
 .item-row,
-.item-header {
+.itens-header {
   padding-left: 25px;
   padding-right: 25px;
 }
