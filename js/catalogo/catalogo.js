@@ -81,6 +81,15 @@ function renderItens() {
 
   el.innerHTML = `
     <div class="itens-lista">
+
+      <div class="itens-header">
+        <div></div>
+        <div>Item</div>
+        <div style="text-align:center;">Valor</div>
+        <div style="text-align:center;">Status</div>
+        <div></div>
+      </div>
+
       ${CATALOGO_STATE.itens.map(item => {
         const capa =
           Array.isArray(item.fotos)
