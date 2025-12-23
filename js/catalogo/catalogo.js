@@ -89,7 +89,19 @@ function renderItens() {
 
         return `
           <div class="item-row">
-            <div class="item-thumb" style="position:relative; overflow:hidden;">
+            
+            <!-- THUMB -->
+            <div class="item-thumb"
+              style="
+                position:relative;
+                overflow:hidden;
+                width:70px;
+                height:70px;
+                min-width:70px;
+                border-radius:8px;
+                background:#111;
+              "
+            >
               <img
                 src="${capa?.url || "../img/imageplaceholder.jpg"}"
                 style="
@@ -105,31 +117,37 @@ function renderItens() {
                   height:120%;
                   width:auto;
                   user-select:none;
+                  pointer-events:none;
                 "
               >
             </div>
 
+            <!-- INFO -->
             <div class="item-info">
               <div class="item-nome">${item.nome}</div>
               <div class="item-quantidade">Qtd: ${item.quantidade}</div>
             </div>
 
+            <!-- VALOR -->
             <div class="item-valor">
               R$ ${(item.valor ?? item.preco ?? 0).toFixed(2)}
             </div>
 
+            <!-- STATUS -->
             <div class="item-status ${item.ativo === false ? "inativo" : "ativo"}">
               ${item.ativo === false ? "Inativo" : "Ativo"}
             </div>
 
-            <button class="item-acoes" onclick="abrirMenuItem(event,'${item.id}')">⋮</button>
+            <!-- AÇÕES -->
+            <button class="item-acoes"
+              onclick="abrirMenuItem(event,'${item.id}')">⋮</button>
+
           </div>
         `;
       }).join("")}
     </div>
   `;
 }
-
 // ============================
 // MENU ⋮
 // ============================
