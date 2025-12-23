@@ -715,3 +715,9 @@ label {
   gap: 16px;
   overflow: visible; /* CRÍTICO */
 }
+
+.item-valor,
+.item-status {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
