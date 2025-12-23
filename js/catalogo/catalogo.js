@@ -174,11 +174,14 @@ function editarItem() {
   document.getElementById("item-descricao").value = item.descricao || "";
   document.getElementById("item-status").value = item.ativo ? "ativo" : "inativo";
 
-  CATALOGO_STATE.imagensTemp = (item.fotos || []).map(f => ({
-    url: f.url,
-    principal: f.principal,
-    existente: true
-  }));
+CATALOGO_STATE.imagensTemp = (item.fotos || []).map(f => ({
+  url: f.url,
+  principal: f.principal,
+  existente: true,
+  offsetX: f.offsetX ?? 0,
+  offsetY: f.offsetY ?? 0,
+  scale: f.scale ?? 1
+}));
 
   renderPreviewImagens();
   document.getElementById("menu-item-flutuante").style.display = "none";
@@ -210,10 +213,13 @@ function handleSelecionarFotos(e) {
 
   files.forEach(file => {
     CATALOGO_STATE.imagensTemp.push({
-      file,
-      url: URL.createObjectURL(file),
-      principal: CATALOGO_STATE.imagensTemp.length === 0
-    });
+  file,
+  url: URL.createObjectURL(file),
+  principal: CATALOGO_STATE.imagensTemp.length === 0,
+  offsetX: 0,
+  offsetY: 0,
+  scale: 1
+});
   });
 
   renderPreviewImagens();
@@ -263,7 +269,13 @@ async function uploadImagensItem(itemId) {
     const snap = await ref.put(img.file);
     const url = await snap.ref.getDownloadURL();
 
-    fotos.push({ url, principal: img.principal });
+    fotos.push({
+  url,
+  principal: img.principal === true,
+  offsetX: img.offsetX ?? 0,
+  offsetY: img.offsetY ?? 0,
+  scale: img.scale ?? 1
+});
   }
 
   return fotos;
