@@ -714,8 +714,8 @@ label {
   grid-template-columns:
     80px        /* imagem */
     1fr         /* nome */
-    50px       /* valor (mais para o meio) */
-    70px        /* status (mais para o meio) */
+    120px       /* valor (mais para o meio) */
+    110px        /* status (mais para o meio) */
     40px;       /* ações */
   align-items: center;
   column-gap: 20px;
