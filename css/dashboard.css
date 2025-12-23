@@ -723,7 +723,7 @@ label {
     40px;
   align-items: center;
   column-gap: 24px;
-
+}
 
 .item-header {
   padding: 8px 16px 12px;
@@ -740,9 +740,4 @@ label {
   justify-self: end;
   text-align: right;
   white-space: nowrap;
-}
-
-.item-header {
-  padding-left: 16px;
-  padding-right: 16px;
 }
