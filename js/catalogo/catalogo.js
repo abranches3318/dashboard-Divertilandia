@@ -244,36 +244,43 @@ CATALOGO_STATE.imagensTemp.forEach((img, index) => {
   wrapper.style.height = "90px";
   wrapper.style.overflow = "hidden";
   wrapper.style.borderRadius = "8px";
+  wrapper.style.background = "#111";
 
-  /* ========= IMAGEM ========= */
+  /* ========= IMAGEM REAL (MAIOR QUE A MOLDURA) ========= */
   const image = document.createElement("img");
   image.src = img.url;
-  image.style.width = "100%";
-  image.style.height = "100%";
-  image.style.objectFit = "cover";
-  image.style.display = "block";
-  image.style.cursor = "grab";
+  image.style.position = "absolute";
+  image.style.top = "50%";
+  image.style.left = "50%";
+  image.style.transformOrigin = "center";
   image.style.userSelect = "none";
+  image.style.cursor = "grab";
 
-  /* ========= ENQUADRAMENTO ========= */
-  const x = img.offsetX ?? 0;
-  const y = img.offsetY ?? 0;
-  const scale = img.scale ?? 1;
+  /* tamanho base maior que a moldura */
+  image.style.width = "auto";
+  image.style.height = "120%";
 
-  image.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-  image.style.transition = "transform 0.1s ease";
+  /* estado persistente */
+  img.offsetX ??= 0;
+  img.offsetY ??= 0;
+  img.scale ??= 1;
+
+  aplicarTransform();
+
+  function aplicarTransform() {
+    image.style.transform =
+      `translate(calc(-50% + ${img.offsetX}px), calc(-50% + ${img.offsetY}px)) scale(${img.scale})`;
+  }
 
   /* =========================
      DRAG — INÍCIO
   ========================= */
   image.addEventListener("mousedown", (e) => {
     e.preventDefault();
-
     DRAG_ATIVO = true;
     DRAG_INDEX = index;
     DRAG_START_X = e.clientX;
     DRAG_START_Y = e.clientY;
-
     image.style.cursor = "grabbing";
   });
 
@@ -286,13 +293,13 @@ CATALOGO_STATE.imagensTemp.forEach((img, index) => {
     const dx = e.clientX - DRAG_START_X;
     const dy = e.clientY - DRAG_START_Y;
 
-    img.offsetX = (img.offsetX ?? 0) + dx;
-    img.offsetY = (img.offsetY ?? 0) + dy;
+    img.offsetX += dx;
+    img.offsetY += dy;
 
     DRAG_START_X = e.clientX;
     DRAG_START_Y = e.clientY;
 
-    image.style.transform = `translate(${img.offsetX}px, ${img.offsetY}px) scale(${img.scale ?? 1})`;
+    aplicarTransform();
   });
 
   /* =========================
@@ -300,7 +307,6 @@ CATALOGO_STATE.imagensTemp.forEach((img, index) => {
   ========================= */
   document.addEventListener("mouseup", () => {
     if (!DRAG_ATIVO) return;
-
     DRAG_ATIVO = false;
     DRAG_INDEX = null;
     image.style.cursor = "grab";
