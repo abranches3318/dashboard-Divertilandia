@@ -577,19 +577,15 @@ label {
 .itens-lista {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 1200px;
-
+  gap: 8px;
+  width: 100%;
 }
 
 
 .item-row {
   display: grid;
   align-items: center;
-  height: 100px;
   padding: 0 16px;
-  background: rgba(255,255,255,0.02);
-  border-radius: 8px;
 }
 
 .item-thumb {
@@ -712,21 +708,22 @@ label {
 }
 
 
-.item-header,
+.itens-header,
 .item-row {
   display: grid;
   grid-template-columns:
-    80px
-    minmax(360px, 1fr)
-    160px
-    120px
-    40px;
+    80px        /* imagem */
+    1fr         /* nome */
+    140px       /* valor */
+    120px       /* status */
+    40px;       /* ações */
   align-items: center;
   column-gap: 24px;
+  padding: 0 24px;
 }
 
-.item-header {
-  padding: 8px 16px 12px;
+.itens-header {
+  height: 44px;
   font-size: 12px;
   text-transform: uppercase;
   opacity: 0.6;
@@ -734,7 +731,9 @@ label {
   margin-bottom: 12px;
 }
 
-.item-valor {
+.item-valor,
+.item-status,
+.item-acoes {
   justify-self: end;
   text-align: right;
 }
@@ -742,10 +741,6 @@ label {
 .item-status {
   justify-self: center;
   text-align: center;
-}
-
-.item-acoes {
-  justify-self: end;
 }
 
 .item-row,
@@ -757,4 +752,14 @@ label {
 .itens-wrapper {
   margin-left: -25px;
   margin-right: -25px;
+}
+
+.itens-container {
+  width: 100%;
+}
+
+.item-row {
+  height: 100px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 10px;
 }
