@@ -287,6 +287,23 @@ CATALOGO_STATE.imagensTemp.forEach((img, index) => {
     image.style.cursor = "grabbing";
   });
 
+  /* =========================
+   ZOOM — SCROLL
+========================= */
+image.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const delta = e.deltaY > 0 ? -0.05 : 0.05;
+
+  img.scale = Math.min(
+    3,               // zoom máximo
+    Math.max(1, img.scale + delta) // zoom mínimo
+  );
+
+  aplicarTransform();
+});
+
   wrapper.appendChild(image);
   container.appendChild(wrapper);
 });
