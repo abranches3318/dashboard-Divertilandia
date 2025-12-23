@@ -579,7 +579,7 @@ label {
   flex-direction: column;
   gap: 6px;
   max-width: 1200px;
- margin-right: 0 auto;
+
 }
 
 
@@ -746,4 +746,9 @@ label {
 
 .item-acoes {
   justify-self: end;
+}
+
+.itens-lista {
+  margin-left: -25px;
+  margin-right: -25px;
 }
