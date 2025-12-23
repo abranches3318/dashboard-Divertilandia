@@ -760,6 +760,6 @@ label {
 
 .item-valor {
   font-weight: 600;
-  justify-self: center;
-  text-align: center;
+  justify-self: end;
+  text-align: right;
 }
