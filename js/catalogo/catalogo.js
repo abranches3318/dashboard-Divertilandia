@@ -14,6 +14,10 @@ const CATALOGO_STATE = {
 
 let ITEM_EDITANDO_ID = null;
 let MENU_ITEM_ATUAL = null;
+let DRAG_ATIVO = false;
+let DRAG_INDEX = null;
+let DRAG_START_X = 0;
+let DRAG_START_Y = 0;
 
 // ============================
 // INIT
@@ -247,6 +251,53 @@ wrapper.style.overflow = "hidden";
     image.style.objectFit = "cover";
 image.style.borderRadius = "8px";
 image.style.display = "block";
+
+    const image = document.createElement("img");
+image.src = img.url;
+
+    image.style.cursor = "grab";
+
+/* =========================
+   DRAG — INÍCIO
+========================= */
+image.addEventListener("mousedown", (e) => {
+  e.preventDefault();
+
+  DRAG_ATIVO = true;
+  DRAG_INDEX = index;
+  DRAG_START_X = e.clientX;
+  DRAG_START_Y = e.clientY;
+
+  image.style.cursor = "grabbing";
+});
+
+/* =========================
+   DRAG — MOVIMENTO
+========================= */
+document.addEventListener("mousemove", (e) => {
+  if (!DRAG_ATIVO || DRAG_INDEX !== index) return;
+
+  const dx = e.clientX - DRAG_START_X;
+  const dy = e.clientY - DRAG_START_Y;
+
+  img.offsetX = (img.offsetX ?? 0) + dx;
+  img.offsetY = (img.offsetY ?? 0) + dy;
+
+  DRAG_START_X = e.clientX;
+  DRAG_START_Y = e.clientY;
+
+  renderPreviewImagens();
+});
+
+/* =========================
+   DRAG — FIM
+========================= */
+document.addEventListener("mouseup", () => {
+  if (DRAG_ATIVO) {
+    DRAG_ATIVO = false;
+    DRAG_INDEX = null;
+  }
+});
 
 /* 🔹 APLICA ENQUADRAMENTO */
 const x = img.offsetX ?? 0;
