@@ -26,49 +26,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   criarMenuItem();
+  carregarCatalogo();
   bindEventos();
   bindTabs();
-  carregarCatalogo();
 });
-
-// ============================
-// EVENTOS
-// ============================
-
-function bindEventos() {
-  const btnNovoItem = document.getElementById("btn-novo-item");
-  if (btnNovoItem) {
-    btnNovoItem.addEventListener("click", abrirModalNovoItem);
-  }
-
-  const btnSalvar = document.getElementById("btn-salvar-item");
-  if (btnSalvar) {
-    btnSalvar.addEventListener("click", salvarNovoItem);
-  }
-
-  const inputFotos = document.getElementById("input-imagens");
-  if (inputFotos) {
-    inputFotos.addEventListener("change", handleSelecionarFotos);
-  }
-}
-
-function bindTabs() {
-  const tabs = document.querySelectorAll(".tab-btn");
-  const sections = document.querySelectorAll(".catalogo-section");
-
-  tabs.forEach(btn => {
-    btn.addEventListener("click", () => {
-      const alvo = btn.dataset.tab;
-
-      tabs.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      sections.forEach(sec => {
-        sec.classList.toggle("active", sec.id === `sec-${alvo}`);
-      });
-    });
-  });
-}
 
 // ============================
 // CARREGAR DADOS
@@ -133,7 +94,9 @@ function renderItens() {
               <div class="item-quantidade">Qtd: ${item.quantidade}</div>
             </div>
 
-            <div class="item-valor">R$ ${(item.valor ?? item.preco ?? 0).toFixed(2)}</div>
+            <div class="item-valor">
+              R$ ${(item.valor ?? item.preco ?? 0).toFixed(2)}
+            </div>
 
             <div class="item-status ${item.ativo === false ? "inativo" : "ativo"}">
               ${item.ativo === false ? "Inativo" : "Ativo"}
@@ -158,7 +121,6 @@ function criarMenuItem() {
   menu.id = "menu-item-flutuante";
   menu.className = "menu-acoes";
   menu.style.display = "none";
-
   menu.innerHTML = `
     <button class="menu-item editar" onclick="editarItem()">✏️ Editar</button>
     <button class="menu-item excluir" onclick="excluirItem()">🗑️ Excluir</button>
@@ -180,9 +142,9 @@ function abrirMenuItem(event, itemId) {
   const menu = document.getElementById("menu-item-flutuante");
   if (!menu) return;
 
-  const rect = event.currentTarget.getBoundingClientRect();
-
   MENU_ITEM_ATUAL = itemId;
+
+  const rect = event.target.getBoundingClientRect();
   menu.style.top = `${rect.bottom + 6}px`;
   menu.style.left = `${rect.left - 120}px`;
   menu.style.display = "block";
@@ -212,12 +174,90 @@ function editarItem() {
   document.getElementById("item-descricao").value = item.descricao || "";
   document.getElementById("item-status").value = item.ativo ? "ativo" : "inativo";
 
+  CATALOGO_STATE.imagensTemp = (item.fotos || []).map(f => ({
+    url: f.url,
+    principal: f.principal,
+    existente: true
+  }));
+
+  renderPreviewImagens();
   document.getElementById("menu-item-flutuante").style.display = "none";
   document.getElementById("modal-item").classList.add("active");
 }
 
 function fecharModalItem() {
   document.getElementById("modal-item").classList.remove("active");
+}
+
+function limparModalItem() {
+  document.getElementById("item-nome").value = "";
+  document.getElementById("item-preco").value = "";
+  document.getElementById("item-quantidade").value = "";
+  document.getElementById("item-descricao").value = "";
+  document.getElementById("item-status").value = "ativo";
+
+  CATALOGO_STATE.imagensTemp = [];
+  renderPreviewImagens();
+}
+
+// ============================
+// IMAGENS
+// ============================
+
+function handleSelecionarFotos(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  files.forEach(file => {
+    CATALOGO_STATE.imagensTemp.push({
+      file,
+      url: URL.createObjectURL(file),
+      principal: CATALOGO_STATE.imagensTemp.length === 0
+    });
+  });
+
+  renderPreviewImagens();
+  e.target.value = "";
+}
+
+function renderPreviewImagens() {
+  const container = document.getElementById("preview-imagens");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  CATALOGO_STATE.imagensTemp.forEach((img, i) => {
+    const div = document.createElement("div");
+    div.className = "preview-item";
+
+    const image = document.createElement("img");
+    image.src = img.url;
+
+    div.appendChild(image);
+    container.appendChild(div);
+  });
+}
+
+async function uploadImagensItem(itemId) {
+  const fotos = [];
+
+  for (const img of CATALOGO_STATE.imagensTemp) {
+    if (img.existente) {
+      fotos.push(img);
+      continue;
+    }
+
+    const ref = storage
+      .ref()
+      .child(`catalogo/itens/${itemId}/${Date.now()}_${img.file.name}`);
+
+    const snap = await ref.put(img.file);
+    const url = await snap.ref.getDownloadURL();
+
+    fotos.push({ url, principal: img.principal });
+  }
+
+  return fotos;
 }
 
 // ============================
@@ -236,24 +276,35 @@ async function salvarNovoItem() {
     return;
   }
 
-  const dados = {
-    nome,
-    valor,
-    preco: valor,
-    quantidade,
-    descricao,
-    ativo: status === "ativo",
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
+  let ref;
 
   if (ITEM_EDITANDO_ID) {
-    await db.collection("item").doc(ITEM_EDITANDO_ID).update(dados);
+    ref = db.collection("item").doc(ITEM_EDITANDO_ID);
+    await ref.update({
+      nome,
+      valor,
+      preco: valor,
+      quantidade,
+      descricao,
+      ativo: status === "ativo",
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
   } else {
-    await db.collection("item").add({
-      ...dados,
+    ref = await db.collection("item").add({
+      nome,
+      valor,
+      preco: valor,
+      quantidade,
+      descricao,
+      ativo: status === "ativo",
       fotos: [],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+  }
+
+  if (CATALOGO_STATE.imagensTemp.length) {
+    const fotos = await uploadImagensItem(ref.id);
+    await ref.update({ fotos });
   }
 
   fecharModalItem();
@@ -267,6 +318,8 @@ async function salvarNovoItem() {
 // ============================
 
 async function excluirItem(itemId = MENU_ITEM_ATUAL) {
+  if (!itemId) return;
+
   const confirm = await Swal.fire({
     icon: "warning",
     title: "Excluir item?",
@@ -279,4 +332,32 @@ async function excluirItem(itemId = MENU_ITEM_ATUAL) {
   await db.collection("item").doc(itemId).delete();
   await carregarItens();
   renderItens();
+}
+
+// ============================
+// EVENTOS / TABS
+// ============================
+
+function bindEventos() {
+  document.getElementById("btn-novo-item")?.addEventListener("click", abrirModalNovoItem);
+  document.getElementById("btn-salvar-item")?.addEventListener("click", salvarNovoItem);
+  document.getElementById("input-imagens")?.addEventListener("change", handleSelecionarFotos);
+}
+
+function bindTabs() {
+  const tabs = document.querySelectorAll(".tab-btn");
+  const sections = document.querySelectorAll(".catalogo-section");
+
+  tabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const alvo = btn.dataset.tab;
+
+      tabs.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      sections.forEach(sec => {
+        sec.classList.toggle("active", sec.id === `sec-${alvo}`);
+      });
+    });
+  });
 }
