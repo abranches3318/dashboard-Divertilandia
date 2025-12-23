@@ -717,8 +717,8 @@ label {
   display: grid;
   grid-template-columns:
     80px
-    minmax(300px, 1fr)
-    140px
+    minmax(360px, 1fr)
+    160px
     120px
     40px;
   align-items: center;
