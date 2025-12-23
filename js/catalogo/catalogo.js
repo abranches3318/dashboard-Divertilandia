@@ -89,23 +89,32 @@ function renderItens() {
 
         return `
           <div class="item-row">
-            <div class="item-thumb" style="position:relative; overflow:hidden;">
-              <img
-                src="${capa?.url || "../img/imageplaceholder.jpg"}"
-                style="
-                  position:absolute;
-                  top:50%;
-                  left:50%;
-                  transform:
-                    translate(
-                      calc(-50% + ${(capa?.offsetX ?? 0)}px),
-                      calc(-50% + ${(capa?.offsetY ?? 0)}px)
-                    )
-                    scale(${(capa?.scale ?? 1)});
-                  height:120%;
-                  width:auto;
-                "
-              >
+            <<div class="item-thumb"
+     style="
+       position:relative;
+       overflow:hidden;
+       width:70px;
+       height:70px;
+       border-radius:8px;
+       background:#111;
+     ">
+             <img
+  src="${capa?.url || "../img/imageplaceholder.jpg"}"
+  style="
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:
+      translate(
+        calc(-50% + ${(capa?.offsetX ?? 0)}px),
+        calc(-50% + ${(capa?.offsetY ?? 0)}px)
+      )
+      scale(${(capa?.scale ?? 1)});
+    height:120%;
+    width:auto;
+    user-select:none;
+  "
+>
             </div>
 
             <div class="item-info">
