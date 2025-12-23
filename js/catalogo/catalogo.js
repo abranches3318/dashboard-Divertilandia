@@ -226,15 +226,21 @@ function renderPreviewImagens() {
 
   container.innerHTML = "";
 
-  CATALOGO_STATE.imagensTemp.forEach((img, i) => {
-    const div = document.createElement("div");
-    div.className = "preview-item";
+  CATALOGO_STATE.imagensTemp.forEach((img, index) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "preview-item";
+    wrapper.style.position = "relative";
 
     const image = document.createElement("img");
     image.src = img.url;
+    image.style.width = "100%";
+    image.style.height = "100%";
+    image.style.objectFit = "cover";
+    image.style.borderRadius = "8px";
+    image.style.display = "block";
 
-    div.appendChild(image);
-    container.appendChild(div);
+    wrapper.appendChild(image);
+    container.appendChild(wrapper);
   });
 }
 
