@@ -578,8 +578,8 @@ label {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-width: 1100px;
- margin-right: auto;
+  max-width: 1200px;
+ margin-right: 0 auto;
 }
 
 
@@ -734,10 +734,16 @@ label {
   margin-bottom: 12px;
 }
 
-.item-valor,
-.item-status,
-.item-acoes {
+.item-valor {
   justify-self: end;
   text-align: right;
-  white-space: nowrap;
+}
+
+.item-status {
+  justify-self: center;
+  text-align: center;
+}
+
+.item-acoes {
+  justify-self: end;
 }
