@@ -245,9 +245,16 @@ wrapper.style.overflow = "hidden";
     image.style.width = "100%";
     image.style.height = "100%";
     image.style.objectFit = "cover";
-    image.style.borderRadius = "8px";
-    image.style.display = "block";
+image.style.borderRadius = "8px";
+image.style.display = "block";
 
+/* 🔹 APLICA ENQUADRAMENTO */
+const x = img.offsetX ?? 0;
+const y = img.offsetY ?? 0;
+const scale = img.scale ?? 1;
+
+image.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+image.style.transition = "transform 0.15s ease";
     wrapper.appendChild(image);
     container.appendChild(wrapper);
   });
