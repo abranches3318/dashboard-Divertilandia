@@ -236,79 +236,79 @@ function renderPreviewImagens() {
 
   container.innerHTML = "";
 
-  CATALOGO_STATE.imagensTemp.forEach((img, index) => {
-    const wrapper = document.createElement("div");
+CATALOGO_STATE.imagensTemp.forEach((img, index) => {
+  const wrapper = document.createElement("div");
   wrapper.className = "preview-item";
-wrapper.style.position = "relative";
-wrapper.style.width = "100%";
-wrapper.style.height = "90px";
-wrapper.style.overflow = "hidden";
+  wrapper.style.position = "relative";
+  wrapper.style.width = "100%";
+  wrapper.style.height = "90px";
+  wrapper.style.overflow = "hidden";
+  wrapper.style.borderRadius = "8px";
 
-    const image = document.createElement("img");
-    image.src = img.url;
-    image.style.width = "100%";
-    image.style.height = "100%";
-    image.style.objectFit = "cover";
-image.style.borderRadius = "8px";
-image.style.display = "block";
+  /* ========= IMAGEM ========= */
+  const image = document.createElement("img");
+  image.src = img.url;
+  image.style.width = "100%";
+  image.style.height = "100%";
+  image.style.objectFit = "cover";
+  image.style.display = "block";
+  image.style.cursor = "grab";
+  image.style.userSelect = "none";
 
-    const image = document.createElement("img");
-image.src = img.url;
+  /* ========= ENQUADRAMENTO ========= */
+  const x = img.offsetX ?? 0;
+  const y = img.offsetY ?? 0;
+  const scale = img.scale ?? 1;
 
-    image.style.cursor = "grab";
+  image.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  image.style.transition = "transform 0.1s ease";
 
-/* =========================
-   DRAG — INÍCIO
-========================= */
-image.addEventListener("mousedown", (e) => {
-  e.preventDefault();
+  /* =========================
+     DRAG — INÍCIO
+  ========================= */
+  image.addEventListener("mousedown", (e) => {
+    e.preventDefault();
 
-  DRAG_ATIVO = true;
-  DRAG_INDEX = index;
-  DRAG_START_X = e.clientX;
-  DRAG_START_Y = e.clientY;
+    DRAG_ATIVO = true;
+    DRAG_INDEX = index;
+    DRAG_START_X = e.clientX;
+    DRAG_START_Y = e.clientY;
 
-  image.style.cursor = "grabbing";
-});
+    image.style.cursor = "grabbing";
+  });
 
-/* =========================
-   DRAG — MOVIMENTO
-========================= */
-document.addEventListener("mousemove", (e) => {
-  if (!DRAG_ATIVO || DRAG_INDEX !== index) return;
+  /* =========================
+     DRAG — MOVIMENTO
+  ========================= */
+  document.addEventListener("mousemove", (e) => {
+    if (!DRAG_ATIVO || DRAG_INDEX !== index) return;
 
-  const dx = e.clientX - DRAG_START_X;
-  const dy = e.clientY - DRAG_START_Y;
+    const dx = e.clientX - DRAG_START_X;
+    const dy = e.clientY - DRAG_START_Y;
 
-  img.offsetX = (img.offsetX ?? 0) + dx;
-  img.offsetY = (img.offsetY ?? 0) + dy;
+    img.offsetX = (img.offsetX ?? 0) + dx;
+    img.offsetY = (img.offsetY ?? 0) + dy;
 
-  DRAG_START_X = e.clientX;
-  DRAG_START_Y = e.clientY;
+    DRAG_START_X = e.clientX;
+    DRAG_START_Y = e.clientY;
 
-  renderPreviewImagens();
-});
+    image.style.transform = `translate(${img.offsetX}px, ${img.offsetY}px) scale(${img.scale ?? 1})`;
+  });
 
-/* =========================
-   DRAG — FIM
-========================= */
-document.addEventListener("mouseup", () => {
-  if (DRAG_ATIVO) {
+  /* =========================
+     DRAG — FIM
+  ========================= */
+  document.addEventListener("mouseup", () => {
+    if (!DRAG_ATIVO) return;
+
     DRAG_ATIVO = false;
     DRAG_INDEX = null;
-  }
-});
-
-/* 🔹 APLICA ENQUADRAMENTO */
-const x = img.offsetX ?? 0;
-const y = img.offsetY ?? 0;
-const scale = img.scale ?? 1;
-
-image.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-image.style.transition = "transform 0.15s ease";
-    wrapper.appendChild(image);
-    container.appendChild(wrapper);
+    image.style.cursor = "grab";
   });
+
+  wrapper.appendChild(image);
+  container.appendChild(wrapper);
+});
 }
 
 async function uploadImagensItem(itemId) {
