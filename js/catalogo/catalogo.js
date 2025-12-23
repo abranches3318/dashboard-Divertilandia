@@ -83,14 +83,29 @@ function renderItens() {
     <div class="itens-lista">
       ${CATALOGO_STATE.itens.map(item => {
         const capa =
-          item.fotos?.find(f => f.principal)?.url ||
-          item.fotos?.[0]?.url ||
-          "../img/imageplaceholder.jpg";
+          Array.isArray(item.fotos)
+            ? item.fotos.find(f => f.principal) || item.fotos[0]
+            : null;
 
         return `
           <div class="item-row">
-            <div class="item-thumb">
-              <img src="${capa}">
+            <div class="item-thumb" style="position:relative; overflow:hidden;">
+              <img
+                src="${capa?.url || "../img/imageplaceholder.jpg"}"
+                style="
+                  position:absolute;
+                  top:50%;
+                  left:50%;
+                  transform:
+                    translate(
+                      calc(-50% + ${(capa?.offsetX ?? 0)}px),
+                      calc(-50% + ${(capa?.offsetY ?? 0)}px)
+                    )
+                    scale(${(capa?.scale ?? 1)});
+                  height:120%;
+                  width:auto;
+                "
+              >
             </div>
 
             <div class="item-info">
