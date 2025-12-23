@@ -590,9 +590,18 @@ label {
   border-radius: 8px;
 }
 
-.item-thumb img {
+.item-thumb {
   width: 72px;
   height: 72px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-thumb img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: 8px;
 }
