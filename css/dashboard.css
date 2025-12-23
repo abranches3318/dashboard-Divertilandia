@@ -578,11 +578,13 @@ label {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  max-width: 1100px;
+ margin-right: auto;
 }
+
 
 .item-row {
   display: grid;
-  grid-template-columns: 90px 1fr 140px 110px 40px;
   align-items: center;
   height: 100px;
   padding: 0 16px;
@@ -715,13 +717,13 @@ label {
 .item-row {
   display: grid;
   grid-template-columns:
-    80px   /* thumb */
-    1fr    /* nome */
-    120px  /* valor */
-    90px   /* status */
-    40px;  /* ações */
+    80px
+    minmax(300px, 1fr)
+    140px
+    120px
+    40px;
   align-items: center;
-  gap: 16px;
+  column-gap: 24px;
 }
 
 item-header {
