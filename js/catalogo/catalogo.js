@@ -256,11 +256,11 @@ CATALOGO_STATE.imagensTemp.forEach((img, index) => {
   image.style.userSelect = "none";
   image.style.cursor = "grab";
 
-  /* tamanho base maior que a moldura */
+  /* imagem maior que a moldura */
   image.style.width = "auto";
   image.style.height = "120%";
 
-  /* estado persistente */
+  /* ========= ESTADO PERSISTENTE ========= */
   img.offsetX ??= 0;
   img.offsetY ??= 0;
   img.scale ??= 1;
@@ -273,43 +273,18 @@ CATALOGO_STATE.imagensTemp.forEach((img, index) => {
   }
 
   /* =========================
-     DRAG — INÍCIO
+     DRAG — INÍCIO (SOMENTE AQUI)
   ========================= */
   image.addEventListener("mousedown", (e) => {
     e.preventDefault();
+    e.stopPropagation();
+
     DRAG_ATIVO = true;
     DRAG_INDEX = index;
     DRAG_START_X = e.clientX;
     DRAG_START_Y = e.clientY;
+
     image.style.cursor = "grabbing";
-  });
-
-  /* =========================
-     DRAG — MOVIMENTO
-  ========================= */
-  document.addEventListener("mousemove", (e) => {
-    if (!DRAG_ATIVO || DRAG_INDEX !== index) return;
-
-    const dx = e.clientX - DRAG_START_X;
-    const dy = e.clientY - DRAG_START_Y;
-
-    img.offsetX += dx;
-    img.offsetY += dy;
-
-    DRAG_START_X = e.clientX;
-    DRAG_START_Y = e.clientY;
-
-    aplicarTransform();
-  });
-
-  /* =========================
-     DRAG — FIM
-  ========================= */
-  document.addEventListener("mouseup", () => {
-    if (!DRAG_ATIVO) return;
-    DRAG_ATIVO = false;
-    DRAG_INDEX = null;
-    image.style.cursor = "grab";
   });
 
   wrapper.appendChild(image);
@@ -418,6 +393,30 @@ async function excluirItem(itemId = MENU_ITEM_ATUAL) {
   await carregarItens();
   renderItens();
 }
+
+document.addEventListener("mousemove", (e) => {
+  if (!DRAG_ATIVO || DRAG_INDEX === null) return;
+
+  const img = CATALOGO_STATE.imagensTemp[DRAG_INDEX];
+  if (!img) return;
+
+  const dx = e.clientX - DRAG_START_X;
+  const dy = e.clientY - DRAG_START_Y;
+
+  img.offsetX += dx;
+  img.offsetY += dy;
+
+  DRAG_START_X = e.clientX;
+  DRAG_START_Y = e.clientY;
+
+  renderPreviewImagens();
+});
+
+document.addEventListener("mouseup", () => {
+  if (!DRAG_ATIVO) return;
+  DRAG_ATIVO = false;
+  DRAG_INDEX = null;
+});
 
 // ============================
 // EVENTOS / TABS
