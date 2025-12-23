@@ -607,9 +607,10 @@ label {
 }
 
 .item-info {
-  display: flex;
+  flex: 1;  
   flex-direction: column;
   gap: 6px;
+    min-width: 0;
 }
 
 .item-nome {
@@ -706,4 +707,11 @@ label {
 
 #menu-item-flutuante .menu-item.danger {
   color: #ff6b6b;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  overflow: visible; /* CRÍTICO */
 }
