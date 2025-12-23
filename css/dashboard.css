@@ -710,26 +710,33 @@ label {
 }
 
 
+/* GRID BASE PARA ITENS */
 .item-header,
 .item-row {
   display: grid;
-  grid-template-columns: 80px 1fr 120px 90px 40px;
+  grid-template-columns:
+    80px   /* thumb */
+    1fr    /* nome */
+    120px  /* valor */
+    90px   /* status */
+    40px;  /* ações */
   align-items: center;
   gap: 16px;
 }
 
-.item-header {
-  padding: 8px 0;
+item-header {
+  padding: 8px 0 12px;
   font-size: 12px;
   text-transform: uppercase;
-  opacity: 0.7;
+  opacity: 0.6;
   border-bottom: 1px solid rgba(255,255,255,0.08);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .item-valor,
 .item-status,
 .item-acoes {
   justify-self: end;
+  text-align: right;
   white-space: nowrap;
 }
