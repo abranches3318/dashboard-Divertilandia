@@ -81,6 +81,16 @@ function renderItens() {
 
   el.innerHTML = `
     <div class="itens-lista">
+
+      <!-- CABEÇALHO -->
+      <div class="item-header">
+        <div></div>
+        <div>Item</div>
+        <div>Valor</div>
+        <div>Status</div>
+        <div></div>
+      </div>
+
       ${CATALOGO_STATE.itens.map(item => {
         const capa =
           Array.isArray(item.fotos)
@@ -89,62 +99,53 @@ function renderItens() {
 
         return `
           <div class="item-row">
-            
-            <!-- THUMB -->
-            <div class="item-thumb"
-              style="
+            <div class="item-thumb">
+              <div style="
                 position:relative;
-                overflow:hidden;
                 width:70px;
                 height:70px;
-                min-width:70px;
+                overflow:hidden;
                 border-radius:8px;
                 background:#111;
-              "
-            >
-              <img
-                src="${capa?.url || "../img/imageplaceholder.jpg"}"
-                style="
-                  position:absolute;
-                  top:50%;
-                  left:50%;
-                  transform:
-                    translate(
-                      calc(-50% + ${(capa?.offsetX ?? 0)}px),
-                      calc(-50% + ${(capa?.offsetY ?? 0)}px)
-                    )
-                    scale(${(capa?.scale ?? 1)});
-                  height:120%;
-                  width:auto;
-                  user-select:none;
-                  pointer-events:none;
-                "
-              >
+              ">
+                <img
+                  src="${capa?.url || "../img/imageplaceholder.jpg"}"
+                  style="
+                    position:absolute;
+                    top:50%;
+                    left:50%;
+                    transform:
+                      translate(
+                        calc(-50% + ${(capa?.offsetX ?? 0)}px),
+                        calc(-50% + ${(capa?.offsetY ?? 0)}px)
+                      )
+                      scale(${(capa?.scale ?? 1)});
+                    height:120%;
+                    width:auto;
+                    user-select:none;
+                  "
+                >
+              </div>
             </div>
 
-            <!-- INFO -->
             <div class="item-info">
               <div class="item-nome">${item.nome}</div>
               <div class="item-quantidade">Qtd: ${item.quantidade}</div>
             </div>
 
-            <!-- VALOR -->
             <div class="item-valor">
               R$ ${(item.valor ?? item.preco ?? 0).toFixed(2)}
             </div>
 
-            <!-- STATUS -->
             <div class="item-status ${item.ativo === false ? "inativo" : "ativo"}">
               ${item.ativo === false ? "Inativo" : "Ativo"}
             </div>
 
-            <!-- AÇÕES -->
-            <button class="item-acoes"
-              onclick="abrirMenuItem(event,'${item.id}')">⋮</button>
-
+            <button class="item-acoes" onclick="abrirMenuItem(event,'${item.id}')">⋮</button>
           </div>
         `;
       }).join("")}
+
     </div>
   `;
 }
