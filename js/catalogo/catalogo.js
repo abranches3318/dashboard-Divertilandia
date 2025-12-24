@@ -279,6 +279,79 @@ CATALOGO_STATE.imagensTemp.forEach((img, index) => {
   wrapper.style.borderRadius = "8px";
   wrapper.style.background = "#111";
 
+  const actions = document.createElement("div");
+actions.className = "img-actions";
+actions.style.position = "absolute";
+actions.style.top = "6px";
+actions.style.right = "6px";
+actions.style.display = "flex";
+actions.style.flexDirection = "column";
+actions.style.gap = "6px";
+actions.style.zIndex = "5";
+
+  const btnStar = document.createElement("button");
+btnStar.textContent = "⭐";
+btnStar.title = "Definir como principal";
+btnStar.style.cursor = "pointer";
+btnStar.style.opacity = img.principal ? "1" : "0.6";
+
+btnStar.onclick = (e) => {
+  e.stopPropagation();
+  CATALOGO_STATE.imagensTemp.forEach(i => i.principal = false);
+  img.principal = true;
+  renderPreviewImagens(); // função que já re-renderiza o modal
+};
+
+  const btnDelete = document.createElement("button");
+btnDelete.textContent = "❌";
+btnDelete.title = "Excluir imagem";
+btnDelete.style.cursor = "pointer";
+
+btnDelete.onclick = (e) => {
+  e.stopPropagation();
+  const eraPrincipal = img.principal;
+
+  CATALOGO_STATE.imagensTemp.splice(index, 1);
+
+  if (eraPrincipal && CATALOGO_STATE.imagensTemp.length) {
+    CATALOGO_STATE.imagensTemp[0].principal = true;
+  }
+
+  renderPreviewImagens();
+};
+
+  const btnView = document.createElement("button");
+btnView.textContent = "🔍";
+btnView.title = "Abrir no navegador";
+btnView.style.cursor = "pointer";
+
+btnView.onclick = (e) => {
+  e.stopPropagation();
+  window.open(img.url, "_blank");
+};
+
+  const btnDownload = document.createElement("button");
+btnDownload.textContent = "⬇️";
+btnDownload.title = "Download";
+btnDownload.style.cursor = "pointer";
+
+btnDownload.onclick = async (e) => {
+  e.stopPropagation();
+  const a = document.createElement("a");
+  a.href = img.url;
+  a.download = "imagem-catalogo";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
+
+  actions.appendChild(btnStar);
+actions.appendChild(btnView);
+actions.appendChild(btnDownload);
+actions.appendChild(btnDelete);
+
+wrapper.appendChild(actions);
+
   /* ========= IMAGEM REAL (MAIOR QUE A MOLDURA) ========= */
   const image = document.createElement("img");
   image.src = img.url;
@@ -340,6 +413,13 @@ image.addEventListener("wheel", (e) => {
   wrapper.appendChild(image);
   container.appendChild(wrapper);
 });
+
+  document.onmouseup = () => {
+  if (!DRAG_ATIVO) return;
+
+  DRAG_ATIVO = false;
+  DRAG_INDEX = null;
+};
 }
 
 async function uploadImagensItem(itemId) {
