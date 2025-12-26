@@ -98,34 +98,28 @@ function renderItens() {
 
         return `
           <div class="item-row">
-            <div class="item-thumb">
-              <div style="
-                position:relative;
-                width:70px;
-                height:70px;
-                overflow:hidden;
-                border-radius:8px;
-                background:#111;
-              ">
-                <img
-                  src="${capa?.url || "../img/imageplaceholder.jpg"}"
-                  style="
-                    position:absolute;
-                    top:50%;
-                    left:50%;
-                    transform:
-                      translate(
-                        calc(-50% + ${(capa?.offsetX ?? 0)}px),
-                        calc(-50% + ${(capa?.offsetY ?? 0)}px)
-                      )
-                      scale(${(capa?.scale ?? 1)});
-                    height:120%;
-                    width:auto;
-                    user-select:none;
-                  "
-                >
-              </div>
-            </div>
+           <div class="item-thumb">
+  <div class="item-thumb-wrapper">
+    <img
+      src="${capa?.url || "../img/imageplaceholder.jpg"}"
+      style="
+        position:absolute;
+        top:50%;
+        left:50%;
+        transform:
+          translate(
+            calc(-50% + ${(capa?.offsetX ?? 0)}px),
+            calc(-50% + ${(capa?.offsetY ?? 0)}px)
+          )
+          scale(${(capa?.scale ?? 1)});
+        transform-origin:center;
+        user-select:none;
+        width:auto;
+        height:100%;
+      "
+    >
+  </div>
+</div>
 
             <div class="item-info">
               <div class="item-nome">${item.nome}</div>
