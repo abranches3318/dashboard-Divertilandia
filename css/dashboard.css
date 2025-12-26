@@ -771,16 +771,23 @@ label {
 /* Container das imagens */
 #preview-imagens {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 12px;
-  margin-top: 8px;
-  margin-bottom: 24px; /* garante distância do botão Cancelar */
+
+  width: 100%;
+  max-width: 100%;
+
+  overflow-x: hidden;   /* não deixa estourar lateral */
+  overflow-y: hidden;
 }
 
 /* Card de cada imagem */
 .preview-item {
-  position: relative;
-  width: 100%;
+  flex: 0 0 90px;      /* largura fixa */
+  height: 90px;
+
+  display: flex;
+  flex-direction: column;
 }
 
 /* Área dos botões SUPERIORES (fora da imagem) */
