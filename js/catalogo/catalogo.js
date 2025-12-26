@@ -309,6 +309,11 @@ function renderPreviewImagens() {
   const container = document.getElementById("preview-imagens");
   if (!container) return;
 
+  /* mantém todas as imagens em uma linha */
+  container.style.display = "flex";
+  container.style.gap = "12px";
+  container.style.alignItems = "flex-start";
+
   container.innerHTML = "";
 
   CATALOGO_STATE.imagensTemp.forEach((img, index) => {
@@ -316,7 +321,7 @@ function renderPreviewImagens() {
     const wrapper = document.createElement("div");
     wrapper.className = "preview-item";
     wrapper.style.position = "relative";
-    wrapper.style.width = "100%";
+    wrapper.style.width = "120px";               // 🔧 FIXO (não 100%)
     wrapper.style.height = "90px";
     wrapper.style.borderRadius = "8px";
     wrapper.style.background = "#111";
@@ -327,12 +332,15 @@ function renderPreviewImagens() {
     topActions.className = "preview-top-actions";
     topActions.style.display = "flex";
     topActions.style.justifyContent = "flex-end";
-    topActions.style.gap = "8px";
+    topActions.style.gap = "10px";
     topActions.style.marginBottom = "6px";
+    topActions.style.pointerEvents = "auto";
 
     const btnView = document.createElement("button");
     btnView.innerHTML = VIEW_SVG;
-    btnView.title = "Abrir no navegador";
+    btnView.style.background = "none";
+    btnView.style.border = "none";
+    btnView.style.cursor = "pointer";
     btnView.onclick = (e) => {
       e.stopPropagation();
       window.open(img.url, "_blank");
@@ -340,7 +348,9 @@ function renderPreviewImagens() {
 
     const btnDownload = document.createElement("button");
     btnDownload.innerHTML = DOWNLOAD_SVG;
-    btnDownload.title = "Download";
+    btnDownload.style.background = "none";
+    btnDownload.style.border = "none";
+    btnDownload.style.cursor = "pointer";
     btnDownload.onclick = async (e) => {
       e.stopPropagation();
 
@@ -354,35 +364,11 @@ function renderPreviewImagens() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-
       URL.revokeObjectURL(url);
     };
 
     topActions.appendChild(btnView);
     topActions.appendChild(btnDownload);
-
-    /* ================= BOTÃO DELETE (QUINA DIREITA) ================= */
-    const btnDelete = document.createElement("button");
-    btnDelete.className = "preview-delete";
-    btnDelete.innerHTML = DELETE_SVG;
-    btnDelete.style.position = "absolute";
-    btnDelete.style.top = "6px";
-    btnDelete.style.right = "6px";
-    btnDelete.style.color = "#f44336";
-    btnDelete.style.zIndex = "10";
-
-    btnDelete.onclick = (e) => {
-      e.stopPropagation();
-
-      const eraPrincipal = img.principal;
-      CATALOGO_STATE.imagensTemp.splice(index, 1);
-
-      if (eraPrincipal && CATALOGO_STATE.imagensTemp.length) {
-        CATALOGO_STATE.imagensTemp[0].principal = true;
-      }
-
-      renderPreviewImagens();
-    };
 
     /* ================= IMAGE WRAPPER ================= */
     const imageWrapper = document.createElement("div");
@@ -390,6 +376,7 @@ function renderPreviewImagens() {
     imageWrapper.style.position = "relative";
     imageWrapper.style.width = "100%";
     imageWrapper.style.height = "100%";
+    imageWrapper.style.overflow = "hidden";
 
     /* ================= IMAGEM ================= */
     const image = document.createElement("img");
@@ -403,7 +390,7 @@ function renderPreviewImagens() {
     image.style.width = "auto";
     image.style.height = "120%";
 
-    /* ================= ESTADO PERSISTENTE ================= */
+    /* ================= ESTADO ================= */
     img.offsetX ??= 0;
     img.offsetY ??= 0;
     img.scale ??= 1;
@@ -445,7 +432,10 @@ function renderPreviewImagens() {
     btnStar.style.position = "absolute";
     btnStar.style.top = "6px";
     btnStar.style.left = "6px";
-    btnStar.style.zIndex = "10";
+    btnStar.style.zIndex = "5";
+    btnStar.style.background = "none";
+    btnStar.style.border = "none";
+    btnStar.style.cursor = "pointer";
 
     btnStar.onclick = (e) => {
       e.stopPropagation();
@@ -454,14 +444,45 @@ function renderPreviewImagens() {
       renderPreviewImagens();
     };
 
-    /* ================= MONTAGEM FINAL ================= */
-    imageWrapper.appendChild(btnStar);
-    imageWrapper.appendChild(image);
+    /* ================= BOTÃO DELETE (FORA DA IMAGEM) ================= */
+    const btnDelete = document.createElement("button");
+    btnDelete.innerHTML = DELETE_SVG;
+    btnDelete.style.position = "absolute";
+    btnDelete.style.top = "-6px";
+    btnDelete.style.right = "-6px";
+    btnDelete.style.background = "none";
+    btnDelete.style.border = "none";
+    btnDelete.style.cursor = "pointer";
+    btnDelete.style.color = "#f44336";
+    btnDelete.style.zIndex = "10";
 
-    wrapper.appendChild(topActions);
+    btnDelete.onclick = (e) => {
+      e.stopPropagation();
+
+      const eraPrincipal = img.principal;
+      CATALOGO_STATE.imagensTemp.splice(index, 1);
+
+      if (eraPrincipal && CATALOGO_STATE.imagensTemp.length) {
+        CATALOGO_STATE.imagensTemp[0].principal = true;
+      }
+
+      renderPreviewImagens();
+    };
+
+    /* ================= MONTAGEM ================= */
+    imageWrapper.appendChild(image);
+    imageWrapper.appendChild(btnStar);
+
     wrapper.appendChild(btnDelete);
     wrapper.appendChild(imageWrapper);
-    container.appendChild(wrapper);
+
+    const bloco = document.createElement("div");
+    bloco.style.display = "flex";
+    bloco.style.flexDirection = "column";
+    bloco.appendChild(topActions);
+    bloco.appendChild(wrapper);
+
+    container.appendChild(bloco);
   });
 
   document.onmouseup = () => {
