@@ -248,20 +248,32 @@ function handleSelecionarFotos(e) {
   const files = Array.from(e.target.files);
   if (!files.length) return;
 
-  files.forEach(file => {
+  for (const file of files) {
+
+    if (CATALOGO_STATE.imagensTemp.length >= 5) {
+      Swal.fire({
+        icon: "warning",
+        title: "Limite de imagens",
+        text: "Cada item pode ter no máximo 5 imagens."
+      });
+      break; // interrompe o loop, não adiciona mais
+    }
+
     CATALOGO_STATE.imagensTemp.push({
-  file,
-  url: URL.createObjectURL(file),
-  principal: CATALOGO_STATE.imagensTemp.length === 0,
-  offsetX: 0,
-  offsetY: 0,
-  scale: 1
-});
-  });
+      file,
+      url: URL.createObjectURL(file),
+      principal: CATALOGO_STATE.imagensTemp.length === 0,
+      offsetX: 0,
+      offsetY: 0,
+      scale: 1
+    });
+  }
 
   renderPreviewImagens();
   e.target.value = "";
 }
+
+
 
 
 const STAR_SVG = `
