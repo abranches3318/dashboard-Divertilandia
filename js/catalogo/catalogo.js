@@ -332,6 +332,7 @@ topActions.style.pointerEvents = "auto";
 
 const btnView = document.createElement("button");
 btnView.innerHTML = VIEW_SVG;
+btnView.title = "Visualizar";
 btnView.style.background = "none";
 btnView.style.border = "none";
 btnView.style.cursor = "pointer";
@@ -423,6 +424,7 @@ topActions.appendChild(btnDelete);
     const btnStar = document.createElement("button");
     btnStar.className = `preview-star ${img.principal ? "principal" : "nao-principal"}`;
     btnStar.innerHTML = STAR_SVG;
+    btnStar.title = "Salvar como capa do item";
     btnStar.style.position = "absolute";
     btnStar.style.top = "6px";
     btnStar.style.left = "6px";
