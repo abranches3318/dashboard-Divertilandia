@@ -346,25 +346,8 @@ function renderPreviewImagens() {
       window.open(img.url, "_blank");
     };
 
-    const btnDownload = document.createElement("button");
-    btnDownload.innerHTML = DOWNLOAD_SVG;
-    btnDownload.style.background = "none";
-    btnDownload.style.border = "none";
-    btnDownload.style.cursor = "pointer";
-    btnDownload.onclick = (e) => {
-  e.stopPropagation();
-
-  const a = document.createElement("a");
-  a.href = img.url;
-  a.download = ""; // força tentativa de download
-  a.rel = "noopener";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-};
-
     topActions.appendChild(btnView);
-    topActions.appendChild(btnDownload);
+   
 
     /* ================= IMAGE WRAPPER ================= */
     const imageWrapper = document.createElement("div");
