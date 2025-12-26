@@ -468,6 +468,54 @@ topActions.appendChild(btnDelete);
   };
 }
 
+
+// ============================
+// UPLOAD DE IMAGENS
+// ============================
+
+async function uploadImagensItem(itemId) {
+  const fotos = [];
+
+  for (const img of CATALOGO_STATE.imagensTemp) {
+
+    // Se a imagem já existe e não foi alterada
+    if (img.existente && img.url && !img.file) {
+      fotos.push({
+        url: img.url,
+        principal: img.principal || false,
+        offsetX: img.offsetX || 0,
+        offsetY: img.offsetY || 0,
+        scale: img.scale || 1
+      });
+      continue;
+    }
+
+    // Upload de nova imagem
+    const fileRef = firebase
+      .storage()
+      .ref()
+      .child(`itens/${itemId}/${Date.now()}_${img.file.name}`);
+
+    await fileRef.put(img.file);
+    const url = await fileRef.getDownloadURL();
+
+    fotos.push({
+      url,
+      principal: img.principal || false,
+      offsetX: img.offsetX || 0,
+      offsetY: img.offsetY || 0,
+      scale: img.scale || 1
+    });
+  }
+
+  // Garantia: sempre existir UMA principal
+  if (!fotos.some(f => f.principal) && fotos.length) {
+    fotos[0].principal = true;
+  }
+
+  return fotos;
+}
+
 // ============================
 // SALVAR ITEM
 // ============================
