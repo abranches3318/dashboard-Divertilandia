@@ -817,13 +817,13 @@ label {
 
 .preview-top-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 6px;
+  gap: 10px;
 }
 
 .preview-delete {
-  position: absolute;
   top: -6px;
   right: -6px;
   background: none;
@@ -873,4 +873,10 @@ label {
 
 #preview-imagens {
   margin-bottom: 16px;
+}
+
+.preview-top-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
