@@ -176,8 +176,8 @@ function abrirMenuItem(event, itemId) {
   MENU_ITEM_ATUAL = itemId;
 
   const rect = event.target.getBoundingClientRect();
-  menu.style.top = `${rect.bottom + 6}px`;
-  menu.style.left = `${rect.left - 120}px`;
+menu.style.top = `${rect.bottom + window.scrollY + 6}px`;
+menu.style.left = `${rect.right - 160}px`;
   menu.style.display = "block";
 }
 
