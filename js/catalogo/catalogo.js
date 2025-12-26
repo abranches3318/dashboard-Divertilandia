@@ -528,42 +528,55 @@ async function salvarNovoItem() {
     return;
   }
 
-  let ref;
+  mostrarLoading("Salvando item...");
 
-  if (ITEM_EDITANDO_ID) {
-    ref = db.collection("item").doc(ITEM_EDITANDO_ID);
-    await ref.update({
-      nome,
-      valor,
-      preco: valor,
-      quantidade,
-      descricao,
-      ativo: status === "ativo",
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } else {
-    ref = await db.collection("item").add({
-      nome,
-      valor,
-      preco: valor,
-      quantidade,
-      descricao,
-      ativo: status === "ativo",
-      fotos: [],
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+  try {
+    let ref;
+
+    if (ITEM_EDITANDO_ID) {
+      ref = db.collection("item").doc(ITEM_EDITANDO_ID);
+      await ref.update({
+        nome,
+        valor,
+        preco: valor,
+        quantidade,
+        descricao,
+        ativo: status === "ativo",
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } else {
+      ref = await db.collection("item").add({
+        nome,
+        valor,
+        preco: valor,
+        quantidade,
+        descricao,
+        ativo: status === "ativo",
+        fotos: [],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    if (CATALOGO_STATE.imagensTemp.length) {
+      const fotos = await uploadImagensItem(ref.id);
+      await ref.update({ fotos });
+    }
+
+    fecharLoading();
+    mostrarSucesso("Item salvo", "O item foi salvo com sucesso.");
+
+    fecharModalItem();
+    ITEM_EDITANDO_ID = null;
+    await carregarItens();
+    renderItens();
+
+  } catch (err) {
+    console.error(err);
+    fecharLoading();
+    mostrarErro("Erro ao salvar", "Não foi possível salvar o item.");
   }
-
-  if (CATALOGO_STATE.imagensTemp.length) {
-    const fotos = await uploadImagensItem(ref.id);
-    await ref.update({ fotos });
-  }
-
-  fecharModalItem();
-  ITEM_EDITANDO_ID = null;
-  await carregarItens();
-  renderItens();
 }
+
 
 // ============================
 // EXCLUIR
@@ -635,5 +648,38 @@ function bindTabs() {
         sec.classList.toggle("active", sec.id === `sec-${alvo}`);
       });
     });
+  });
+}
+
+function mostrarLoading(texto = "Processando...") {
+  Swal.fire({
+    title: texto,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+}
+
+function fecharLoading() {
+  Swal.close();
+}
+
+function mostrarErro(titulo = "Erro", mensagem = "Ocorreu um problema inesperado.") {
+  Swal.fire({
+    icon: "error",
+    title: titulo,
+    text: mensagem
+  });
+}
+
+function mostrarSucesso(titulo = "Sucesso", mensagem = "Operação concluída.") {
+  Swal.fire({
+    icon: "success",
+    title: titulo,
+    text: mensagem,
+    timer: 1500,
+    showConfirmButton: false
   });
 }
