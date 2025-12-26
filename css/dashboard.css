@@ -597,6 +597,15 @@ label {
   justify-content: center;
 }
 
+.item-thumb-wrapper {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #111;
+}
+
 .item-thumb img {
   width: 70px;
   height: 70px;
