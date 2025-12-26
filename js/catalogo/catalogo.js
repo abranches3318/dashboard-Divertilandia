@@ -346,7 +346,26 @@ function renderPreviewImagens() {
       window.open(img.url, "_blank");
     };
 
+    const btnDelete = document.createElement("button");
+btnDelete.className = "preview-delete";
+btnDelete.innerHTML = DELETE_SVG;
+btnDelete.title = "Excluir imagem";
+btnDelete.style.color = "#f44336";
+
+btnDelete.onclick = (e) => {
+  e.stopPropagation();
+
+  const eraPrincipal = img.principal;
+  CATALOGO_STATE.imagensTemp.splice(index, 1);
+
+  if (eraPrincipal && CATALOGO_STATE.imagensTemp.length) {
+    CATALOGO_STATE.imagensTemp[0].principal = true;
+  }
+
+  renderPreviewImagens();
+
     topActions.appendChild(btnView);
+    topActions.appendChild(btnDelete);
    
 
     /* ================= IMAGE WRAPPER ================= */
@@ -423,31 +442,7 @@ function renderPreviewImagens() {
       renderPreviewImagens();
     };
 
-    /* ================= BOTÃO DELETE (FORA DA IMAGEM) ================= */
-    const btnDelete = document.createElement("button");
-    btnDelete.innerHTML = DELETE_SVG;
-    btnDelete.style.position = "absolute";
-    btnDelete.style.top = "-6px";
-    btnDelete.style.right = "-6px";
-    btnDelete.style.background = "none";
-    btnDelete.style.border = "none";
-    btnDelete.style.cursor = "pointer";
-    btnDelete.style.color = "#f44336";
-    btnDelete.style.zIndex = "10";
-
-    btnDelete.onclick = (e) => {
-      e.stopPropagation();
-
-      const eraPrincipal = img.principal;
-      CATALOGO_STATE.imagensTemp.splice(index, 1);
-
-      if (eraPrincipal && CATALOGO_STATE.imagensTemp.length) {
-        CATALOGO_STATE.imagensTemp[0].principal = true;
-      }
-
-      renderPreviewImagens();
-    };
-
+    
     /* ================= MONTAGEM ================= */
     imageWrapper.appendChild(image);
     imageWrapper.appendChild(btnStar);
