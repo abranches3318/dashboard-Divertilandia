@@ -889,3 +889,37 @@ label {
   align-items: center;
   justify-content: center;
 }
+
+
+.menu-acoes {
+  position: absolute;
+  min-width: 160px;
+  background: #1e1e1e;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.45);
+  padding: 6px;
+  z-index: 1000;
+}
+
+.menu-acoes button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #eee;
+  padding: 10px 12px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.menu-acoes button:hover {
+  background: rgba(255,255,255,.08);
+}
+
+.menu-acoes .excluir {
+  color: #f44336;
+}
