@@ -327,26 +327,26 @@ function renderPreviewImagens() {
     wrapper.style.background = "#111";
     wrapper.style.overflow = "hidden";
 
-    /* ================= AÇÕES SUPERIORES (FORA DA IMAGEM) ================= */
-    const topActions = document.createElement("div");
-    topActions.className = "preview-top-actions";
-    topActions.style.display = "flex";
-    topActions.style.justifyContent = "flex-end";
-    topActions.style.gap = "10px";
-    topActions.style.marginBottom = "6px";
-    topActions.style.pointerEvents = "auto";
+/* ================= AÇÕES SUPERIORES (FORA DA IMAGEM) ================= */
+const topActions = document.createElement("div");
+topActions.className = "preview-top-actions";
+topActions.style.display = "flex";
+topActions.style.justifyContent = "flex-end";
+topActions.style.gap = "10px";
+topActions.style.marginBottom = "6px";
+topActions.style.pointerEvents = "auto";
 
-    const btnView = document.createElement("button");
-    btnView.innerHTML = VIEW_SVG;
-    btnView.style.background = "none";
-    btnView.style.border = "none";
-    btnView.style.cursor = "pointer";
-    btnView.onclick = (e) => {
-      e.stopPropagation();
-      window.open(img.url, "_blank");
-    };
+const btnView = document.createElement("button");
+btnView.innerHTML = VIEW_SVG;
+btnView.style.background = "none";
+btnView.style.border = "none";
+btnView.style.cursor = "pointer";
+btnView.onclick = (e) => {
+  e.stopPropagation();
+  window.open(img.url, "_blank");
+};
 
-    const btnDelete = document.createElement("button");
+const btnDelete = document.createElement("button");
 btnDelete.className = "preview-delete";
 btnDelete.innerHTML = DELETE_SVG;
 btnDelete.title = "Excluir imagem";
@@ -363,9 +363,11 @@ btnDelete.onclick = (e) => {
   }
 
   renderPreviewImagens();
+};
 
-    topActions.appendChild(btnView);
-    topActions.appendChild(btnDelete);
+/* 🔹 APPEND CORRETO (FORA DOS EVENTOS) */
+topActions.appendChild(btnView);
+topActions.appendChild(btnDelete);
    
 
     /* ================= IMAGE WRAPPER ================= */
