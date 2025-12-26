@@ -449,7 +449,7 @@ topActions.appendChild(btnDelete);
     imageWrapper.appendChild(image);
     imageWrapper.appendChild(btnStar);
 
-    wrapper.appendChild(btnDelete);
+
     wrapper.appendChild(imageWrapper);
 
     const bloco = document.createElement("div");
