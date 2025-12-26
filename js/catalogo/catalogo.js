@@ -263,191 +263,200 @@ function handleSelecionarFotos(e) {
   e.target.value = "";
 }
 
+
+const STAR_SVG = `
+<svg viewBox="0 0 24 24" width="18" height="18">
+  <path d="M12 2l2.9 6.3L22 9.2l-5 4.8L18.2 22 12 18.5 5.8 22 7 14 2 9.2l7.1-0.9L12 2z"/>
+</svg>
+`;
+
+const DELETE_SVG = `
+<svg viewBox="0 0 24 24" width="18" height="18">
+  <path d="M18 6L6 18M6 6l12 12"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"/>
+</svg>
+`;
+
+const VIEW_SVG = `
+<svg viewBox="0 0 24 24" width="22" height="22">
+  <path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"/>
+  <path d="M5 5h6V3H3v8h2V5z"/>
+</svg>
+`;
+
+const DOWNLOAD_SVG = `
+<svg viewBox="0 0 24 24" width="22" height="22">
+  <path d="M5 20h14v-2H5v2z"/>
+  <path d="M11 4h2v8h3l-4 4-4-4h3z"/>
+</svg>
+`;
+
 function renderPreviewImagens() {
   const container = document.getElementById("preview-imagens");
   if (!container) return;
 
   container.innerHTML = "";
 
-CATALOGO_STATE.imagensTemp.forEach((img, index) => {
-  const wrapper = document.createElement("div");
-  wrapper.className = "preview-item";
-  wrapper.style.position = "relative";
-  wrapper.style.width = "100%";
-  wrapper.style.height = "90px";
-  wrapper.style.overflow = "hidden";
-  wrapper.style.borderRadius = "8px";
-  wrapper.style.background = "#111";
+  CATALOGO_STATE.imagensTemp.forEach((img, index) => {
+    /* ================= WRAPPER ================= */
+    const wrapper = document.createElement("div");
+    wrapper.className = "preview-item";
+    wrapper.style.position = "relative";
+    wrapper.style.width = "100%";
+    wrapper.style.height = "90px";
+    wrapper.style.borderRadius = "8px";
+    wrapper.style.background = "#111";
+    wrapper.style.overflow = "hidden";
 
-  const actions = document.createElement("div");
-actions.className = "img-actions";
-actions.style.position = "absolute";
-actions.style.top = "6px";
-actions.style.right = "6px";
-actions.style.display = "flex";
-actions.style.flexDirection = "column";
-actions.style.gap = "6px";
-actions.style.zIndex = "5";
+    /* ================= AÇÕES SUPERIORES (FORA DA IMAGEM) ================= */
+    const topActions = document.createElement("div");
+    topActions.className = "preview-top-actions";
+    topActions.style.display = "flex";
+    topActions.style.justifyContent = "flex-end";
+    topActions.style.gap = "8px";
+    topActions.style.marginBottom = "6px";
 
-  const btnStar = document.createElement("button");
-btnStar.textContent = "⭐";
-btnStar.title = "Definir como principal";
-btnStar.style.cursor = "pointer";
-btnStar.style.opacity = img.principal ? "1" : "0.6";
+    const btnView = document.createElement("button");
+    btnView.innerHTML = VIEW_SVG;
+    btnView.title = "Abrir no navegador";
+    btnView.onclick = (e) => {
+      e.stopPropagation();
+      window.open(img.url, "_blank");
+    };
 
-btnStar.onclick = (e) => {
-  e.stopPropagation();
-  CATALOGO_STATE.imagensTemp.forEach(i => i.principal = false);
-  img.principal = true;
-  renderPreviewImagens(); // função que já re-renderiza o modal
-};
+    const btnDownload = document.createElement("button");
+    btnDownload.innerHTML = DOWNLOAD_SVG;
+    btnDownload.title = "Download";
+    btnDownload.onclick = async (e) => {
+      e.stopPropagation();
 
-  const btnDelete = document.createElement("button");
-btnDelete.textContent = "❌";
-btnDelete.title = "Excluir imagem";
-btnDelete.style.cursor = "pointer";
+      const response = await fetch(img.url);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
 
-btnDelete.onclick = (e) => {
-  e.stopPropagation();
-  const eraPrincipal = img.principal;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "imagem-catalogo.jpg";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
 
-  CATALOGO_STATE.imagensTemp.splice(index, 1);
+      URL.revokeObjectURL(url);
+    };
 
-  if (eraPrincipal && CATALOGO_STATE.imagensTemp.length) {
-    CATALOGO_STATE.imagensTemp[0].principal = true;
-  }
+    topActions.appendChild(btnView);
+    topActions.appendChild(btnDownload);
 
-  renderPreviewImagens();
-};
+    /* ================= BOTÃO DELETE (QUINA DIREITA) ================= */
+    const btnDelete = document.createElement("button");
+    btnDelete.className = "preview-delete";
+    btnDelete.innerHTML = DELETE_SVG;
+    btnDelete.style.position = "absolute";
+    btnDelete.style.top = "6px";
+    btnDelete.style.right = "6px";
+    btnDelete.style.color = "#f44336";
+    btnDelete.style.zIndex = "10";
 
-  const btnView = document.createElement("button");
-btnView.textContent = "🔍";
-btnView.title = "Abrir no navegador";
-btnView.style.cursor = "pointer";
+    btnDelete.onclick = (e) => {
+      e.stopPropagation();
 
-btnView.onclick = (e) => {
-  e.stopPropagation();
-  window.open(img.url, "_blank");
-};
+      const eraPrincipal = img.principal;
+      CATALOGO_STATE.imagensTemp.splice(index, 1);
 
-  const btnDownload = document.createElement("button");
-btnDownload.textContent = "⬇️";
-btnDownload.title = "Download";
-btnDownload.style.cursor = "pointer";
+      if (eraPrincipal && CATALOGO_STATE.imagensTemp.length) {
+        CATALOGO_STATE.imagensTemp[0].principal = true;
+      }
 
-btnDownload.onclick = async (e) => {
-  e.stopPropagation();
-  const a = document.createElement("a");
-  a.href = img.url;
-  a.download = "imagem-catalogo";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-};
+      renderPreviewImagens();
+    };
 
-  actions.appendChild(btnStar);
-actions.appendChild(btnView);
-actions.appendChild(btnDownload);
-actions.appendChild(btnDelete);
+    /* ================= IMAGE WRAPPER ================= */
+    const imageWrapper = document.createElement("div");
+    imageWrapper.className = "preview-image-wrapper";
+    imageWrapper.style.position = "relative";
+    imageWrapper.style.width = "100%";
+    imageWrapper.style.height = "100%";
 
-wrapper.appendChild(actions);
+    /* ================= IMAGEM ================= */
+    const image = document.createElement("img");
+    image.src = img.url;
+    image.style.position = "absolute";
+    image.style.top = "50%";
+    image.style.left = "50%";
+    image.style.transformOrigin = "center";
+    image.style.userSelect = "none";
+    image.style.cursor = "grab";
+    image.style.width = "auto";
+    image.style.height = "120%";
 
-  /* ========= IMAGEM REAL (MAIOR QUE A MOLDURA) ========= */
-  const image = document.createElement("img");
-  image.src = img.url;
-  image.style.position = "absolute";
-  image.style.top = "50%";
-  image.style.left = "50%";
-  image.style.transformOrigin = "center";
-  image.style.userSelect = "none";
-  image.style.cursor = "grab";
+    /* ================= ESTADO PERSISTENTE ================= */
+    img.offsetX ??= 0;
+    img.offsetY ??= 0;
+    img.scale ??= 1;
 
-  /* imagem maior que a moldura */
-  image.style.width = "auto";
-  image.style.height = "120%";
-
-  /* ========= ESTADO PERSISTENTE ========= */
-  img.offsetX ??= 0;
-  img.offsetY ??= 0;
-  img.scale ??= 1;
-
-  aplicarTransform();
-
-  function aplicarTransform() {
-    image.style.transform =
-      `translate(calc(-50% + ${img.offsetX}px), calc(-50% + ${img.offsetY}px)) scale(${img.scale})`;
-  }
-
-  /* =========================
-     DRAG — INÍCIO (SOMENTE AQUI)
-  ========================= */
-  image.addEventListener("mousedown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    DRAG_ATIVO = true;
-    DRAG_INDEX = index;
-    DRAG_START_X = e.clientX;
-    DRAG_START_Y = e.clientY;
-
-    image.style.cursor = "grabbing";
-  });
-
-  /* =========================
-   ZOOM — SCROLL
-========================= */
-image.addEventListener("wheel", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-
-  const delta = e.deltaY > 0 ? -0.05 : 0.05;
-
-  img.scale = Math.min(
-    3,               // zoom máximo
-    Math.max(1, img.scale + delta) // zoom mínimo
-  );
-
-  aplicarTransform();
-});
-
-  wrapper.appendChild(image);
-  container.appendChild(wrapper);
-});
-
-  document.onmouseup = () => {
-  if (!DRAG_ATIVO) return;
-
-  DRAG_ATIVO = false;
-  DRAG_INDEX = null;
-};
-}
-
-async function uploadImagensItem(itemId) {
-  const fotos = [];
-
-  for (const img of CATALOGO_STATE.imagensTemp) {
-    if (img.existente) {
-      fotos.push(img);
-      continue;
+    function aplicarTransform() {
+      image.style.transform =
+        `translate(calc(-50% + ${img.offsetX}px), calc(-50% + ${img.offsetY}px)) scale(${img.scale})`;
     }
 
-    const ref = storage
-      .ref()
-      .child(`catalogo/itens/${itemId}/${Date.now()}_${img.file.name}`);
+    aplicarTransform();
 
-    const snap = await ref.put(img.file);
-    const url = await snap.ref.getDownloadURL();
+    /* ================= DRAG ================= */
+    image.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    fotos.push({
-  url,
-  principal: img.principal === true,
-  offsetX: img.offsetX ?? 0,
-  offsetY: img.offsetY ?? 0,
-  scale: img.scale ?? 1
-});
-  }
+      DRAG_ATIVO = true;
+      DRAG_INDEX = index;
+      DRAG_START_X = e.clientX;
+      DRAG_START_Y = e.clientY;
 
-  return fotos;
+      image.style.cursor = "grabbing";
+    });
+
+    /* ================= ZOOM ================= */
+    image.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const delta = e.deltaY > 0 ? -0.05 : 0.05;
+      img.scale = Math.min(3, Math.max(1, img.scale + delta));
+      aplicarTransform();
+    });
+
+    /* ================= ESTRELA ================= */
+    const btnStar = document.createElement("button");
+    btnStar.className = `preview-star ${img.principal ? "principal" : "nao-principal"}`;
+    btnStar.innerHTML = STAR_SVG;
+    btnStar.style.position = "absolute";
+    btnStar.style.top = "6px";
+    btnStar.style.left = "6px";
+    btnStar.style.zIndex = "10";
+
+    btnStar.onclick = (e) => {
+      e.stopPropagation();
+      CATALOGO_STATE.imagensTemp.forEach(i => i.principal = false);
+      img.principal = true;
+      renderPreviewImagens();
+    };
+
+    /* ================= MONTAGEM FINAL ================= */
+    imageWrapper.appendChild(btnStar);
+    imageWrapper.appendChild(image);
+
+    wrapper.appendChild(topActions);
+    wrapper.appendChild(btnDelete);
+    wrapper.appendChild(imageWrapper);
+    container.appendChild(wrapper);
+  });
+
+  document.onmouseup = () => {
+    if (!DRAG_ATIVO) return;
+    DRAG_ATIVO = false;
+    DRAG_INDEX = null;
+  };
 }
 
 // ============================
