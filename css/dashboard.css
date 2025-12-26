@@ -815,11 +815,10 @@ label {
   cursor: pointer;
 }
 
-/* Ações acima da imagem */
 .preview-top-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 6px;
 }
 
