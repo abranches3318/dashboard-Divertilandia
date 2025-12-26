@@ -823,11 +823,13 @@ label {
   margin-bottom: 6px;
 }
 
-/* Delete (X) – fora da imagem */
 .preview-delete {
   position: absolute;
   top: -6px;
   right: -6px;
+  background: none;
+  border: none;
+  cursor: pointer;
   color: #f44336;
   z-index: 10;
 }
@@ -842,9 +844,10 @@ label {
   z-index: 6;
 }
 
-/* SVG padrão */
 .preview-star svg {
   fill: #999;
+  stroke: #000;
+  stroke-width: 1.2;
 }
 
 /* Principal */
@@ -867,4 +870,8 @@ label {
 .preview-top-actions svg:hover,
 .preview-delete svg:hover {
   opacity: 1;
+}
+
+#preview-imagens {
+  margin-bottom: 16px;
 }
