@@ -351,21 +351,17 @@ function renderPreviewImagens() {
     btnDownload.style.background = "none";
     btnDownload.style.border = "none";
     btnDownload.style.cursor = "pointer";
-    btnDownload.onclick = async (e) => {
-      e.stopPropagation();
+    btnDownload.onclick = (e) => {
+  e.stopPropagation();
 
-      const response = await fetch(img.url);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "imagem-catalogo.jpg";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    };
+  const a = document.createElement("a");
+  a.href = img.url;
+  a.download = ""; // força tentativa de download
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
 
     topActions.appendChild(btnView);
     topActions.appendChild(btnDownload);
