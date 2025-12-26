@@ -765,7 +765,7 @@ label {
 }
 
 /* ===============================
-   PREVIEW DE IMAGENS – LAYOUT FINAL
+   PREVIEW DE IMAGENS – LAYOUT FINAL (CORRIGIDO)
 ================================ */
 
 /* Container das imagens */
@@ -777,35 +777,15 @@ label {
   width: 100%;
   max-width: 100%;
 
-  overflow-x: hidden;   /* não deixa estourar lateral */
+  overflow-x: hidden;
   overflow-y: hidden;
 }
 
-/* Card de cada imagem */
+/* Item individual */
 .preview-item {
-  flex: 0 0 90px;      /* largura fixa */
-  height: 90px;
-
-  display: flex;
-  flex-direction: column;
-}
-
-/* Área dos botões SUPERIORES (fora da imagem) */
-.preview-top-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-/* Botões sem moldura */
-.preview-top-actions button,
-.preview-delete,
-.preview-star {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
+  position: relative;
+  width: 120px;
+  flex-shrink: 0;
 }
 
 /* Wrapper da imagem */
@@ -818,45 +798,73 @@ label {
   background: #111;
 }
 
-/* Estrela (EM CIMA da imagem – canto superior esquerdo) */
+/* Imagem real (drag / zoom dependem disso) */
+.preview-image-wrapper img {
+  pointer-events: auto; /* NÃO remover */
+}
+
+/* ================= BOTÕES ================= */
+
+/* Remove qualquer moldura padrão */
+.preview-top-actions button,
+.preview-delete,
+.preview-star {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Ações acima da imagem */
+.preview-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+/* Delete (X) – fora da imagem */
+.preview-delete {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  color: #f44336;
+  z-index: 10;
+}
+
+/* ================= ESTRELA ================= */
+
+/* Base */
 .preview-star {
   position: absolute;
   top: 6px;
   left: 6px;
-  z-index: 5;
-  font-size: 18px;
+  z-index: 6;
 }
 
-/* Estrela principal */
-.preview-star.principal {
-  color: #FFD700;
-  outline: 2px solid #4cafef;
-  border-radius: 50%;
+/* SVG padrão */
+.preview-star svg {
+  fill: #999;
 }
 
-/* Estrela não principal */
-.preview-star.nao-principal {
-  color: #999;
+/* Principal */
+.preview-star.principal svg {
+  fill: #ffd700;
+  stroke: #4cafef;
+  stroke-width: 1.5;
 }
 
-/* Botão excluir (FORA da imagem – quina superior direita) */
-.preview-delete {
-  position: absolute;
-  top: 0;
-  right: 0;
-  transform: translate(50%, -50%);
-  font-size: 18px;
-  color: #f44336;
-}
+/* ================= ÍCONES ================= */
 
-/* Ícones de ação */
-.preview-icon {
+.preview-top-actions svg,
+.preview-delete svg {
   width: 22px;
   height: 22px;
   fill: #fff;
   opacity: 0.85;
 }
 
-.preview-icon:hover {
+.preview-top-actions svg:hover,
+.preview-delete svg:hover {
   opacity: 1;
 }
