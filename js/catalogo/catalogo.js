@@ -1168,3 +1168,44 @@ function renderMiniaturasItensPacote(itensSelecionados = []) {
   preview.after(bloco);
 }
 
+function renderPreviewPacoteCompleto(itensSelecionados = []) {
+  const container = document.getElementById("preview-imagens");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const linha = document.createElement("div");
+  linha.className = "imagens-linha";
+  container.appendChild(linha);
+
+  // ===== CAPA DO PACOTE =====
+  CATALOGO_STATE.imagensTemp.forEach(img => {
+    const div = document.createElement("div");
+    div.className = "img-preview capa";
+
+    const image = document.createElement("img");
+    image.src = img.url;
+
+    div.appendChild(image);
+    linha.appendChild(div);
+  });
+
+  // ===== MINIATURAS DOS ITENS =====
+  itensSelecionados.forEach(sel => {
+    const item = CATALOGO_STATE.itens.find(i => i.id === sel.itemId);
+    if (!item || !item.fotos?.length) return;
+
+    const foto = item.fotos.find(f => f.principal) || item.fotos[0];
+    if (!foto) return;
+
+    const div = document.createElement("div");
+    div.className = "img-preview item";
+
+    const image = document.createElement("img");
+    image.src = foto.url;
+
+    div.appendChild(image);
+    linha.appendChild(div);
+  });
+}
+
