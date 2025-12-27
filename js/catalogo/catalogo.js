@@ -943,8 +943,7 @@ if (!linha) {
   }
 
   bloco.innerHTML = `
-    <label>Itens do pacote *</label>
-
+   
     <div class="pacote-dropdown">
       <div class="pacote-dropdown-header" onclick="toggleDropdownPacote()">
         Selecionar itens
