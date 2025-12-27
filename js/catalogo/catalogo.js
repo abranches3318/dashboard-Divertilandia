@@ -835,6 +835,9 @@ function abrirModalNovoPacote() {
   PACOTE_EDITANDO_ID = null;
   MODAL_CONTEXTO = "pacote";
 
+  const blocoPacote = document.getElementById("pacote-itens-bloco");
+  if (blocoPacote) blocoPacote.remove();
+  
   // título do modal
   document.getElementById("modal-item-titulo").textContent = "Novo Pacote";
 
@@ -863,7 +866,7 @@ function abrirModalNovoPacote() {
 // ============================
 function editarPacote() {
   MODAL_CONTEXTO = "pacote";
-  PACOTE_EDITANDO_ID = null;
+  PACOTE_EDITANDO_ID = pacote.id;
   
   const pacote = CATALOGO_STATE.pacotes.find(p => p.id === MENU_PACOTE_ATUAL);
   if (!pacote) return;
@@ -892,8 +895,6 @@ function editarPacote() {
   document.getElementById("modal-item").classList.add("active");
 }
 
-const blocoExistente = document.getElementById("pacote-itens-bloco");
-if (blocoExistente) blocoExistente.innerHTML = "";
 
 // ============================
 // montar pacotes com itens
@@ -1039,3 +1040,20 @@ async function uploadImagensPacote(pacoteId) {
   return fotos;
 }
 
+async function excluirPacote(pacoteId = MENU_PACOTE_ATUAL) {
+  if (!pacoteId) return;
+
+  const confirm = await Swal.fire({
+    icon: "warning",
+    title: "Excluir pacote?",
+    text: "Esta ação não pode ser desfeita.",
+    showCancelButton: true,
+    confirmButtonText: "Excluir"
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  await db.collection("pacotes").doc(pacoteId).delete();
+  await carregarPacotes();
+  renderPacotes();
+}
