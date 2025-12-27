@@ -907,17 +907,24 @@ function montarListaItensPacote(selecionados = []) {
     bloco = document.createElement("div");
     bloco.id = "pacote-itens-bloco";
     bloco.className = "form-group full";
-
-    const titulo = document.createElement("label");
-    titulo.textContent = "Itens do pacote *";
-    bloco.appendChild(titulo);
-
     const descricao = document.getElementById("item-descricao").parentElement;
     descricao.after(bloco);
   }
 
-  // remove somente os itens antigos (mantém o título)
-  bloco.querySelectorAll(".pacote-item").forEach(el => el.remove());
+  bloco.innerHTML = `
+    <label>Itens do pacote *</label>
+
+    <div class="pacote-dropdown">
+      <div class="pacote-dropdown-header" onclick="toggleDropdownPacote()">
+        Selecionar itens
+        <span class="seta">▾</span>
+      </div>
+
+      <div class="pacote-dropdown-lista" id="pacote-dropdown-lista"></div>
+    </div>
+  `;
+
+  const lista = document.getElementById("pacote-dropdown-lista");
 
   CATALOGO_STATE.itens.forEach(item => {
     const checked = selecionados.some(i => i.itemId === item.id);
@@ -929,7 +936,7 @@ function montarListaItensPacote(selecionados = []) {
     checkbox.type = "checkbox";
     checkbox.value = item.id;
     checkbox.checked = checked;
-    checkbox.addEventListener("change", atualizarPreviewItensPacote);
+    checkbox.onchange = atualizarPreviewItensPacote;
 
     const span = document.createElement("span");
     span.textContent = item.nome;
@@ -937,8 +944,27 @@ function montarListaItensPacote(selecionados = []) {
     label.appendChild(checkbox);
     label.appendChild(span);
 
-    bloco.appendChild(label);
+    lista.appendChild(label);
   });
+
+  atualizarPreviewItensPacote();
+}
+
+function toggleDropdownPacote() {
+  const lista = document.getElementById("pacote-dropdown-lista");
+  lista.classList.toggle("aberto");
+}
+
+function atualizarPreviewItensPacote() {
+  const checkboxes = document.querySelectorAll(
+    "#pacote-dropdown-lista input[type='checkbox']:checked"
+  );
+
+  const itensSelecionados = Array.from(checkboxes).map(cb => ({
+    itemId: cb.value
+  }));
+
+  renderMiniaturasItensPacote(itensSelecionados);
 }
 
 function atualizarPreviewItensPacote() {
