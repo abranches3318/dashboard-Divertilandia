@@ -14,6 +14,8 @@ const CATALOGO_STATE = {
 
 let ITEM_EDITANDO_ID = null;
 let MENU_ITEM_ATUAL = null;
+let PACOTE_EDITANDO_ID = null;
+let MENU_PACOTE_ATUAL = null;
 let DRAG_ATIVO = false;
 let DRAG_INDEX = null;
 let DRAG_START_X = 0;
@@ -30,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   criarMenuItem();
+  criarMenuPacote();
   carregarCatalogo();
   bindEventos();
   bindTabs();
@@ -683,3 +686,223 @@ function mostrarSucesso(titulo = "Sucesso", mensagem = "Operação concluída.")
     showConfirmButton: false
   });
 }
+
+// ============================
+// criar pacote
+// ============================
+function criarMenuPacote() {
+  if (document.getElementById("menu-pacote-flutuante")) return;
+
+  const menu = document.createElement("div");
+  menu.id = "menu-pacote-flutuante";
+  menu.className = "menu-acoes";
+  menu.style.display = "none";
+  menu.innerHTML = `
+    <button class="menu-item editar" onclick="editarPacote()">✏️ Editar</button>
+    <button class="menu-item excluir" onclick="excluirPacote()">🗑️ Excluir</button>
+  `;
+
+  document.body.appendChild(menu);
+
+  document.addEventListener("click", e => {
+  if (menu.style.display === "block" && !menu.contains(e.target)) {
+    menu.style.display = "none";
+    MENU_PACOTE_ATUAL = null;
+  }
+});
+}
+
+// ============================
+// abrir menu pacote
+// ============================
+function abrirMenuPacote(event, pacoteId) {
+  event.stopPropagation();
+
+  const menu = document.getElementById("menu-pacote-flutuante");
+  if (!menu) return;
+
+  MENU_PACOTE_ATUAL = pacoteId;
+
+  const rect = event.target.getBoundingClientRect();
+  menu.style.top = `${rect.bottom + window.scrollY + 6}px`;
+  menu.style.left = `${rect.right - 160}px`;
+  menu.style.display = "block";
+}
+
+
+// ============================
+// render pacotes
+// ============================
+
+function renderPacotes() {
+  const el = document.getElementById("lista-pacotes");
+  if (!el) return;
+
+  if (!CATALOGO_STATE.pacotes.length) {
+    el.innerHTML = `<p style="opacity:.7">Nenhum pacote cadastrado.</p>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="itens-lista">
+
+      <div class="itens-header">
+        <div></div>
+        <div>Pacote</div>
+        <div style="text-align:center;">Valor</div>
+        <div style="text-align:center;">Status</div>
+        <div></div>
+      </div>
+
+      ${CATALOGO_STATE.pacotes.map(pacote => {
+        const capa =
+          Array.isArray(pacote.fotos)
+            ? pacote.fotos.find(f => f.principal) || pacote.fotos[0]
+            : null;
+
+        return `
+          <div class="item-row">
+            <div class="item-thumb">
+              <div class="item-thumb-wrapper">
+                <img
+                  src="${capa?.url || "../img/imageplaceholder.jpg"}"
+                  style="
+                    position:absolute;
+                    top:50%;
+                    left:50%;
+                    transform:
+                      translate(
+                        calc(-50% + ${(capa?.offsetX ?? 0)}px),
+                        calc(-50% + ${(capa?.offsetY ?? 0)}px)
+                      )
+                      scale(${(capa?.scale ?? 1)});
+                    height:100%;
+                    width:100%;
+                    object-fit:cover;
+                  "
+                >
+              </div>
+            </div>
+
+            <div class="item-info">
+              <div class="item-nome">${pacote.nome}</div>
+              <div class="item-quantidade">
+                ${pacote.itens?.length || 0} itens
+              </div>
+            </div>
+
+            <div class="item-valor">
+              R$ ${(pacote.valor ?? 0).toFixed(2)}
+            </div>
+
+            <div class="item-status ${pacote.ativo === false ? "inativo" : "ativo"}">
+              ${pacote.ativo === false ? "Inativo" : "Ativo"}
+            </div>
+
+            <button class="item-acoes"
+              onclick="abrirMenuPacote(event,'${pacote.id}')">⋮</button>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+
+// ============================
+// menu novo pacote
+// ============================
+
+function abrirModalNovoPacote() {
+  PACOTE_EDITANDO_ID = null;
+
+  // título do modal
+  document.getElementById("modal-item-titulo").textContent = "Novo Pacote";
+
+  // campos comuns
+  document.getElementById("item-nome").value = "";
+  document.getElementById("item-preco").value = "";
+  document.getElementById("item-descricao").value = "";
+  document.getElementById("item-status").value = "ativo";
+
+  // quantidade não existe para pacote
+  document.getElementById("item-quantidade").parentElement.style.display = "none";
+
+  // imagens do pacote
+  CATALOGO_STATE.imagensTemp = [];
+  renderPreviewImagens();
+
+  // itens que compõem o pacote
+  montarListaItensPacote([]);
+
+  // abre o modal
+  document.getElementById("modal-item").classList.add("active");
+}
+
+// ============================
+// menu editar pacotes
+// ============================
+function editarPacote() {
+  const pacote = CATALOGO_STATE.pacotes.find(p => p.id === MENU_PACOTE_ATUAL);
+  if (!pacote) return;
+
+  PACOTE_EDITANDO_ID = pacote.id;
+
+  document.getElementById("modal-item-titulo").textContent = "Editar Pacote";
+  document.getElementById("item-nome").value = pacote.nome;
+  document.getElementById("item-preco").value = pacote.valor ?? 0;
+  document.getElementById("item-descricao").value = pacote.descricao || "";
+  document.getElementById("item-status").value = pacote.ativo ? "ativo" : "inativo";
+  document.getElementById("item-quantidade").parentElement.style.display = "none";
+
+  montarListaItensPacote(pacote.itens || []);
+
+  CATALOGO_STATE.imagensTemp = (pacote.fotos || []).map(f => ({
+    url: f.url,
+    principal: f.principal,
+    existente: true,
+    offsetX: f.offsetX ?? 0,
+    offsetY: f.offsetY ?? 0,
+    scale: f.scale ?? 1
+  }));
+
+  renderPreviewImagens();
+  document.getElementById("menu-pacote-flutuante").style.display = "none";
+  document.getElementById("modal-item").classList.add("active");
+}
+
+const blocoExistente = document.getElementById("pacote-itens-bloco");
+if (blocoExistente) blocoExistente.innerHTML = "";
+
+// ============================
+// montar pacotes com itens
+// ============================
+function montarListaItensPacote(selecionados = []) {
+  let bloco = document.getElementById("pacote-itens-bloco");
+
+  if (!bloco) {
+    bloco = document.createElement("div");
+    bloco.id = "pacote-itens-bloco";
+    bloco.className = "form-group full";
+    bloco.innerHTML = `<label>Itens do pacote *</label>`;
+    const descricao = document.getElementById("item-descricao").parentElement;
+descricao.after(bloco);
+  }
+
+  bloco.innerHTML = `<label>Itens do pacote *</label>`;
+
+  CATALOGO_STATE.itens.forEach(item => {
+    const checked = selecionados.some(i => i.itemId === item.id);
+
+    bloco.innerHTML += `
+      <label style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+        <input type="checkbox" value="${item.id}" ${checked ? "checked" : ""}>
+        ${item.nome}
+      </label>
+    `;
+  });
+}
+
+document.getElementById("btn-novo-pacote")
+  ?.addEventListener("click", abrirModalNovoPacote);
+
