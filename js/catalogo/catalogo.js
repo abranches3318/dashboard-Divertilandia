@@ -900,9 +900,6 @@ function editarPacote() {
 }
 
 
-// ============================
-// montar pacotes com itens
-// ============================
 function montarListaItensPacote(selecionados = []) {
   let bloco = document.getElementById("pacote-itens-bloco");
 
@@ -910,23 +907,37 @@ function montarListaItensPacote(selecionados = []) {
     bloco = document.createElement("div");
     bloco.id = "pacote-itens-bloco";
     bloco.className = "form-group full";
-    bloco.innerHTML = `<label>Itens do pacote *</label>`;
+
+    const titulo = document.createElement("label");
+    titulo.textContent = "Itens do pacote *";
+    bloco.appendChild(titulo);
+
     const descricao = document.getElementById("item-descricao").parentElement;
-descricao.after(bloco);
+    descricao.after(bloco);
   }
 
-  bloco.innerHTML = `<label>Itens do pacote *</label>`;
+  // remove somente os itens antigos (mantém o título)
+  bloco.querySelectorAll(".pacote-item").forEach(el => el.remove());
 
   CATALOGO_STATE.itens.forEach(item => {
     const checked = selecionados.some(i => i.itemId === item.id);
 
-    bloco.innerHTML += `
-      <label style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-        <input type="checkbox" value="${item.id}" ${checked ? "checked" : ""}
-        onchange="atualizarPreviewItensPacote()">
-        ${item.nome}
-      </label>
-    `;
+    const label = document.createElement("label");
+    label.className = "pacote-item";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = item.id;
+    checkbox.checked = checked;
+    checkbox.addEventListener("change", atualizarPreviewItensPacote);
+
+    const span = document.createElement("span");
+    span.textContent = item.nome;
+
+    label.appendChild(checkbox);
+    label.appendChild(span);
+
+    bloco.appendChild(label);
   });
 }
 
