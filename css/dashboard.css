@@ -923,3 +923,95 @@ label {
 .menu-acoes .excluir {
   color: #f44336;
 }
+
+
+/* =====================================================
+   PACOTES – AJUSTES VISUAIS (NOVO)
+   Não substitui regras existentes
+   ===================================================== */
+
+/* ---------- Lista de pacotes (capa maior) ---------- */
+
+#lista-pacotes .item-thumb {
+  width: 90px;
+  height: 70px;
+  flex-shrink: 0;
+}
+
+#lista-pacotes .item-thumb-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #111;
+}
+
+
+/* ---------- Modal mais largo e controlado ---------- */
+
+.modal-content.modal-lg {
+  width: 92vw;
+  max-width: 1100px;
+  max-height: 90vh;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+
+/* ---------- Organização dos campos (menos altura) ---------- */
+
+.form-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.form-group.full {
+  grid-column: span 4;
+}
+
+
+/* ---------- Itens do pacote (checkboxes) ---------- */
+
+#pacote-itens-bloco {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px 16px;
+  margin-top: 8px;
+}
+
+#pacote-itens-bloco label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#pacote-itens-bloco input[type="checkbox"] {
+  margin: 0;
+}
+
+
+/* ---------- Bloco de imagens (capa + miniaturas) ---------- */
+
+.imagens-bloco {
+  clear: both;
+}
+
+.preview-imagens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.preview-imagens .img-preview {
+  width: 90px;
+  height: 70px;
+  flex-shrink: 0;
+}
