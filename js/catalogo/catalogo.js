@@ -239,13 +239,13 @@ CATALOGO_STATE.imagensTemp = (item.fotos || []).map(f => ({
 
 function fecharModalItem() {
   document.getElementById("modal-item").classList.remove("active");
+
+  /* remove apenas seleção do pacote */
   const blocoPacote = document.getElementById("pacote-itens-bloco");
-  if (blocoPacote) blocoPacote.remove();
-  const previewItens = document.getElementById("pacote-itens-preview");
-if (previewItens) previewItens.remove();
+  if (blocoPacote) blocoPacote.innerHTML = `<label>Itens do pacote *</label>`;
+
   MODAL_CONTEXTO = "item";
 }
-
 function limparModalItem() {
   document.getElementById("item-nome").value = "";
   document.getElementById("item-preco").value = "";
@@ -907,17 +907,38 @@ function montarListaItensPacote(selecionados = []) {
     bloco = document.createElement("div");
     bloco.id = "pacote-itens-bloco";
     bloco.className = "form-group full";
-    const descricaoGroup = document.getElementById("item-descricao").parentElement;
+    
+    const descricaoGroup = document.getElementById("item-descricao")?.parentElement;
+if (!descricaoGroup) return;
 
+/* cria linha apenas uma vez */
 let linha = document.getElementById("linha-descricao-pacote");
+
 if (!linha) {
   linha = document.createElement("div");
   linha.id = "linha-descricao-pacote";
   linha.className = "linha-descricao-pacote";
 
+  /* cria placeholders */
+  const colunaDescricao = document.createElement("div");
+  colunaDescricao.id = "coluna-descricao-pacote";
+
+  const colunaItens = document.createElement("div");
+  colunaItens.id = "coluna-itens-pacote";
+
+  /* monta estrutura */
   descricaoGroup.after(linha);
-  linha.appendChild(descricaoGroup);
-  linha.appendChild(bloco);
+  linha.appendChild(colunaDescricao);
+  linha.appendChild(colunaItens);
+
+  colunaDescricao.appendChild(descricaoGroup);
+  colunaItens.appendChild(bloco);
+} else {
+  /* reaproveita colunas existentes */
+  const colunaItens = document.getElementById("coluna-itens-pacote");
+  if (colunaItens && !colunaItens.contains(bloco)) {
+    colunaItens.appendChild(bloco);
+  }
 }
   }
 
