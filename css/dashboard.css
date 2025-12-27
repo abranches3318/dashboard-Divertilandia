@@ -924,105 +924,101 @@ label {
   color: #f44336;
 }
 
-
 /* =====================================================
-   PACOTES – AJUSTES VISUAIS DEFINITIVOS
-   BLOCO NOVO – INSERIR NO FINAL DO CSS
+   PACOTES – AJUSTES VISUAIS DEFINITIVOS (CORRIGIDO)
    ===================================================== */
 
+
 /* =====================================================
-   LISTA DE PACOTES – CAPA MAIS LARGA
+   CARD LISTA PACOTES – IMAGEM SEM CORTAR
    ===================================================== */
 
 #lista-pacotes .item-thumb {
-  width: 140px;          /* MAIS LARGA */
-  height: 70px;          /* ALTURA OK */
+  width: 160px;
+  height: 80px;
   flex-shrink: 0;
 }
 
 #lista-pacotes .item-thumb-wrapper {
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  border-radius: 6px;
   background: #111;
-  position: relative;
+  border-radius: 6px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #lista-pacotes .item-thumb-wrapper img {
-  height: 100%;
-  width: auto;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 
 /* =====================================================
-   MODAL – LARGO, BAIXO E ORGANIZADO
+   MODAL – LARGO, SEM SCROLL INTERNO
    ===================================================== */
 
 .modal-content.modal-lg {
-  width: 95vw;
-  max-width: 1200px;
-  max-height: 90vh;
+  width: 96vw;
+  max-width: 1300px;
 
   display: flex;
   flex-direction: column;
 }
 
 .modal-body {
-  overflow-y: auto;
-  padding: 20px 24px;
+  padding: 24px 28px;
+  overflow: visible; /* REMOVE SCROLL INTERNO */
 }
 
 
 /* =====================================================
-   GRID DE CAMPOS – ALINHAMENTO REAL
+   FORMULÁRIO – GRID FUNCIONAL
    ===================================================== */
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px 20px;
-  align-items: start;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 18px 22px;
 }
 
 .form-group.full {
-  grid-column: span 4;
+  grid-column: 1 / -1;
 }
 
 
 /* =====================================================
-   ITENS DO PACOTE – 3 POR COLUNA
+   ITENS DO PACOTE – 3 ITENS POR COLUNA
    ===================================================== */
 
 #pacote-itens-bloco {
-  grid-column: span 4;
-  margin-top: 10px;
+  grid-column: 1 / -1;
+  margin-top: 14px;
 
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px 20px;
+  column-count: 3;
+  column-gap: 40px;
 }
 
 #pacote-itens-bloco > label {
-  grid-column: span 3;
+  display: block;
+  column-span: all;
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
-#pacote-itens-bloco label {
+#pacote-itens-bloco label:not(:first-child) {
   display: flex;
   align-items: center;
   gap: 6px;
 
   font-size: 14px;
   line-height: 1.2;
-  cursor: pointer;
+  margin-bottom: 8px;
+
+  break-inside: avoid;
 }
 
 #pacote-itens-bloco input[type="checkbox"] {
@@ -1031,19 +1027,21 @@ label {
 
 
 /* =====================================================
-   BLOCO DE IMAGENS – SEM INVADIR CAMPOS
+   IMAGENS – UMA LINHA SÓ
    ===================================================== */
 
 .preview-imagens {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 12px;
 
-  margin-top: 12px;
-  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 6px;
 }
 
-.preview-imagens > div {
+.preview-imagens .img-preview {
+  width: 90px;
+  height: 70px;
   flex-shrink: 0;
 }
 
