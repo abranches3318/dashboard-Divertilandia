@@ -2,8 +2,6 @@
 // CATÁLOGO — BASE
 // ============================
 
-console.log("catalogo.js carregado");
-
 // ---------- STATE ----------
 const CATALOGO_STATE = {
   itens: [],
@@ -12,6 +10,7 @@ const CATALOGO_STATE = {
   imagensTemp: []
 };
 
+let MODAL_CONTEXTO = "item";
 let ITEM_EDITANDO_ID = null;
 let MENU_ITEM_ATUAL = null;
 let PACOTE_EDITANDO_ID = null;
@@ -190,22 +189,21 @@ menu.style.left = `${rect.right - 160}px`;
 
 function abrirModalNovoItem() {
   ITEM_EDITANDO_ID = null;
-
-  // 🔥 REMOVE bloco de pacote se existir
+  MODAL_CONTEXTO = "item";
+  
   const blocoPacote = document.getElementById("pacote-itens-bloco");
   if (blocoPacote) blocoPacote.remove();
 
   limparModalItem();
 
-  // 🔥 garante que quantidade volte a aparecer
+ 
   document.getElementById("item-quantidade").parentElement.style.display = "";
-
   document.getElementById("modal-item-titulo").textContent = "Novo Item";
   document.getElementById("modal-item").classList.add("active");
 }
 
 function editarItem() {
-
+MODAL_CONTEXTO = "item";
   // 🔥 REMOVE bloco de pacote se existir
   const blocoPacote = document.getElementById("pacote-itens-bloco");
   if (blocoPacote) blocoPacote.remove();
@@ -243,6 +241,7 @@ function fecharModalItem() {
   document.getElementById("modal-item").classList.remove("active");
   const blocoPacote = document.getElementById("pacote-itens-bloco");
   if (blocoPacote) blocoPacote.remove();
+  MODAL_CONTEXTO = "item";
 }
 
 function limparModalItem() {
@@ -834,6 +833,7 @@ function renderPacotes() {
 
 function abrirModalNovoPacote() {
   PACOTE_EDITANDO_ID = null;
+  MODAL_CONTEXTO = "pacote";
 
   // título do modal
   document.getElementById("modal-item-titulo").textContent = "Novo Pacote";
@@ -862,10 +862,12 @@ function abrirModalNovoPacote() {
 // menu editar pacotes
 // ============================
 function editarPacote() {
+  MODAL_CONTEXTO = "pacote";
+  PACOTE_EDITANDO_ID = null;
+  
   const pacote = CATALOGO_STATE.pacotes.find(p => p.id === MENU_PACOTE_ATUAL);
   if (!pacote) return;
 
-  PACOTE_EDITANDO_ID = pacote.id;
 
   document.getElementById("modal-item-titulo").textContent = "Editar Pacote";
   document.getElementById("item-nome").value = pacote.nome;
@@ -926,7 +928,7 @@ document.getElementById("btn-novo-pacote")
   ?.addEventListener("click", abrirModalNovoPacote);
 
 async function salvarRegistro() {
-  if (PACOTE_EDITANDO_ID !== null) {
+  if (MODAL_CONTEXTO === "pacote") {
     return salvarPacote();
   }
 
@@ -934,6 +936,7 @@ async function salvarRegistro() {
 }
 
 async function salvarPacote() {
+  MODAL_CONTEXTO = "pacote";
   const nome = document.getElementById("item-nome").value.trim();
   const valor = Number(document.getElementById("item-preco").value);
   const descricao = document.getElementById("item-descricao").value.trim();
