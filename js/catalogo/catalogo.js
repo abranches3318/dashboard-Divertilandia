@@ -651,7 +651,7 @@ document.addEventListener("mouseup", () => {
 
 function bindEventos() {
   document.getElementById("btn-novo-item")?.addEventListener("click", abrirModalNovoItem);
-  document.getElementById("btn-salvar-item")?.addEventListener("click", salvarNovoItem);
+  document.getElementById("btn-salvar-item")?.addEventListener("click", salvarRegistro);
   document.getElementById("input-imagens")?.addEventListener("change", handleSelecionarFotos);
 }
 
@@ -924,4 +924,115 @@ descricao.after(bloco);
 
 document.getElementById("btn-novo-pacote")
   ?.addEventListener("click", abrirModalNovoPacote);
+
+async function salvarRegistro() {
+  if (PACOTE_EDITANDO_ID !== null) {
+    return salvarPacote();
+  }
+
+  return salvarNovoItem();
+}
+
+async function salvarPacote() {
+  const nome = document.getElementById("item-nome").value.trim();
+  const valor = Number(document.getElementById("item-preco").value);
+  const descricao = document.getElementById("item-descricao").value.trim();
+  const status = document.getElementById("item-status").value;
+
+  const checkboxes = document.querySelectorAll("#pacote-itens-bloco input[type='checkbox']:checked");
+  const itensSelecionados = Array.from(checkboxes).map(cb => ({
+    itemId: cb.value
+  }));
+
+  if (!nome || valor < 0 || !itensSelecionados.length) {
+    Swal.fire("Erro", "Preencha nome, valor e selecione ao menos um item.", "warning");
+    return;
+  }
+
+  mostrarLoading("Salvando pacote...");
+
+  try {
+    let ref;
+
+    const payload = {
+      nome,
+      valor,
+      descricao,
+      ativo: status === "ativo",
+      itens: itensSelecionados,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (PACOTE_EDITANDO_ID) {
+      ref = db.collection("pacotes").doc(PACOTE_EDITANDO_ID);
+      await ref.update(payload);
+    } else {
+      ref = await db.collection("pacotes").add({
+        ...payload,
+        fotos: [],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    // upload imagens do pacote
+    if (CATALOGO_STATE.imagensTemp.length) {
+      const fotos = await uploadImagensPacote(ref.id);
+      await ref.update({ fotos });
+    }
+
+    fecharLoading();
+    mostrarSucesso("Pacote salvo", "O pacote foi salvo com sucesso.");
+
+    fecharModalItem();
+    PACOTE_EDITANDO_ID = null;
+
+    await carregarPacotes();
+    renderPacotes();
+
+  } catch (err) {
+    console.error(err);
+    fecharLoading();
+    mostrarErro("Erro ao salvar pacote");
+  }
+}
+
+async function uploadImagensPacote(pacoteId) {
+  const fotos = [];
+
+  for (const img of CATALOGO_STATE.imagensTemp) {
+
+    if (img.existente && img.url && !img.file) {
+      fotos.push({
+        url: img.url,
+        principal: img.principal || false,
+        offsetX: img.offsetX || 0,
+        offsetY: img.offsetY || 0,
+        scale: img.scale || 1
+      });
+      continue;
+    }
+
+    const fileRef = firebase
+      .storage()
+      .ref()
+      .child(`pacotes/${pacoteId}/${Date.now()}_${img.file.name}`);
+
+    await fileRef.put(img.file);
+    const url = await fileRef.getDownloadURL();
+
+    fotos.push({
+      url,
+      principal: img.principal || false,
+      offsetX: img.offsetX || 0,
+      offsetY: img.offsetY || 0,
+      scale: img.scale || 1
+    });
+  }
+
+  if (!fotos.some(f => f.principal) && fotos.length) {
+    fotos[0].principal = true;
+  }
+
+  return fotos;
+}
 
