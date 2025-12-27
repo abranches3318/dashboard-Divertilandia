@@ -1021,16 +1021,18 @@ label {
 
 .preview-imagens {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 12px;
-
-  overflow-x: auto;
-  padding-bottom: 6px;
+  align-items: flex-start;
 }
 
 .preview-imagens .img-preview {
   width: 90px;
   height: 70px;
+  flex-shrink: 0;
+}
+
+.preview-imagens > div {
   flex-shrink: 0;
 }
 
@@ -1076,9 +1078,12 @@ label {
 }
 
 .pacote-dropdown-lista.aberto {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  max-height: 180px;
+  overflow-y: auto;
 }
 
 /* ---------- Item individual ---------- */
@@ -1098,3 +1103,17 @@ label {
   cursor: pointer;
 }
 
+/* =====================================================
+   DESCRIÇÃO + DROPDOWN NA MESMA LINHA
+   ===================================================== */
+
+.linha-descricao-pacote {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.linha-descricao-pacote .form-group {
+  margin-bottom: 0;
+}
