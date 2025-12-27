@@ -50,7 +50,7 @@ async function carregarCatalogo() {
 
   renderItens();
   renderPacotes();
-  renderPromocoes();
+
 }
 
 async function carregarItens() {
@@ -866,11 +866,12 @@ function abrirModalNovoPacote() {
 // ============================
 function editarPacote() {
   MODAL_CONTEXTO = "pacote";
-  PACOTE_EDITANDO_ID = pacote.id;
+
   
   const pacote = CATALOGO_STATE.pacotes.find(p => p.id === MENU_PACOTE_ATUAL);
   if (!pacote) return;
-
+  
+  PACOTE_EDITANDO_ID = pacote.id;
 
   document.getElementById("modal-item-titulo").textContent = "Editar Pacote";
   document.getElementById("item-nome").value = pacote.nome;
