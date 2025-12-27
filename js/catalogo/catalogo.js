@@ -241,6 +241,8 @@ function fecharModalItem() {
   document.getElementById("modal-item").classList.remove("active");
   const blocoPacote = document.getElementById("pacote-itens-bloco");
   if (blocoPacote) blocoPacote.remove();
+  const previewItens = document.getElementById("pacote-itens-preview");
+if (previewItens) previewItens.remove();
   MODAL_CONTEXTO = "item";
 }
 
@@ -894,6 +896,7 @@ function editarPacote() {
   renderPreviewImagens();
   document.getElementById("menu-pacote-flutuante").style.display = "none";
   document.getElementById("modal-item").classList.add("active");
+  renderMiniaturasItensPacote(pacote.itens || []);
 }
 
 
@@ -919,11 +922,24 @@ descricao.after(bloco);
 
     bloco.innerHTML += `
       <label style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-        <input type="checkbox" value="${item.id}" ${checked ? "checked" : ""}>
+        <input type="checkbox" value="${item.id}" ${checked ? "checked" : ""}
+        onchange="atualizarPreviewItensPacote()">
         ${item.nome}
       </label>
     `;
   });
+}
+
+function atualizarPreviewItensPacote() {
+  const checkboxes = document.querySelectorAll(
+    "#pacote-itens-bloco input[type='checkbox']:checked"
+  );
+
+  const itensSelecionados = Array.from(checkboxes).map(cb => ({
+    itemId: cb.value
+  }));
+
+  renderMiniaturasItensPacote(itensSelecionados);
 }
 
 document.getElementById("btn-novo-pacote")
@@ -1094,3 +1110,50 @@ async function excluirPacote(pacoteId = MENU_PACOTE_ATUAL) {
   await carregarPacotes();
   renderPacotes();
 }
+
+function renderMiniaturasItensPacote(itensSelecionados = []) {
+  // remove bloco antigo
+  let bloco = document.getElementById("pacote-itens-preview");
+  if (bloco) bloco.remove();
+
+  if (!itensSelecionados.length) return;
+
+  bloco = document.createElement("div");
+  bloco.id = "pacote-itens-preview";
+  bloco.style.display = "flex";
+  bloco.style.gap = "10px";
+  bloco.style.marginTop = "10px";
+  bloco.style.alignItems = "center";
+
+  itensSelecionados.forEach(sel => {
+    const item = CATALOGO_STATE.itens.find(i => i.id === sel.itemId);
+    if (!item) return;
+
+    const capa =
+      Array.isArray(item.fotos)
+        ? item.fotos.find(f => f.principal) || item.fotos[0]
+        : null;
+
+    const thumb = document.createElement("div");
+    thumb.style.width = "60px";
+    thumb.style.height = "45px";
+    thumb.style.borderRadius = "6px";
+    thumb.style.overflow = "hidden";
+    thumb.style.background = "#222";
+    thumb.title = item.nome;
+
+    const img = document.createElement("img");
+    img.src = capa?.url || "../img/imageplaceholder.jpg";
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.objectFit = "cover";
+
+    thumb.appendChild(img);
+    bloco.appendChild(thumb);
+  });
+
+  // insere logo após o preview principal
+  const preview = document.getElementById("preview-imagens");
+  preview.after(bloco);
+}
+
