@@ -937,6 +937,27 @@ async function salvarRegistro() {
   return salvarNovoItem();
 }
 
+
+function pacoteDuplicado(itensSelecionados, ignorarPacoteId = null) {
+  const chaveAtual = itensSelecionados
+    .map(i => i.itemId)
+    .sort()
+    .join("|");
+
+  return CATALOGO_STATE.pacotes.some(pacote => {
+    if (ignorarPacoteId && pacote.id === ignorarPacoteId) {
+      return false; // ignora o próprio pacote ao editar
+    }
+
+    const chaveExistente = (pacote.itens || [])
+      .map(i => i.itemId)
+      .sort()
+      .join("|");
+
+    return chaveExistente === chaveAtual;
+  });
+}
+
 async function salvarPacote() {
   MODAL_CONTEXTO = "pacote";
   const nome = document.getElementById("item-nome").value.trim();
@@ -948,6 +969,21 @@ async function salvarPacote() {
   const itensSelecionados = Array.from(checkboxes).map(cb => ({
     itemId: cb.value
   }));
+
+  // 🔒 REGRA ANTIDUPLICIDADE
+const duplicado = pacoteDuplicado(
+  itensSelecionados,
+  PACOTE_EDITANDO_ID
+);
+
+if (duplicado) {
+  Swal.fire({
+    icon: "warning",
+    title: "Pacote duplicado",
+    text: "Já existe um pacote com exatamente os mesmos itens."
+  });
+  return;
+}
 
   if (!nome || valor < 0 || !itensSelecionados.length) {
     Swal.fire("Erro", "Preencha nome, valor e selecione ao menos um item.", "warning");
