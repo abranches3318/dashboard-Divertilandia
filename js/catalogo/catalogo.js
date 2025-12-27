@@ -190,12 +190,29 @@ menu.style.left = `${rect.right - 160}px`;
 
 function abrirModalNovoItem() {
   ITEM_EDITANDO_ID = null;
+
+  // 🔥 REMOVE bloco de pacote se existir
+  const blocoPacote = document.getElementById("pacote-itens-bloco");
+  if (blocoPacote) blocoPacote.remove();
+
   limparModalItem();
+
+  // 🔥 garante que quantidade volte a aparecer
+  document.getElementById("item-quantidade").parentElement.style.display = "";
+
   document.getElementById("modal-item-titulo").textContent = "Novo Item";
   document.getElementById("modal-item").classList.add("active");
 }
 
 function editarItem() {
+
+  // 🔥 REMOVE bloco de pacote se existir
+  const blocoPacote = document.getElementById("pacote-itens-bloco");
+  if (blocoPacote) blocoPacote.remove();
+
+  // 🔥 garante que quantidade volte
+  document.getElementById("item-quantidade").parentElement.style.display = "";
+
   const item = CATALOGO_STATE.itens.find(i => i.id === MENU_ITEM_ATUAL);
   if (!item) return;
 
@@ -224,6 +241,8 @@ CATALOGO_STATE.imagensTemp = (item.fotos || []).map(f => ({
 
 function fecharModalItem() {
   document.getElementById("modal-item").classList.remove("active");
+  const blocoPacote = document.getElementById("pacote-itens-bloco");
+  if (blocoPacote) blocoPacote.remove();
 }
 
 function limparModalItem() {
