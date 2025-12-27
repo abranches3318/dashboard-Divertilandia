@@ -907,8 +907,18 @@ function montarListaItensPacote(selecionados = []) {
     bloco = document.createElement("div");
     bloco.id = "pacote-itens-bloco";
     bloco.className = "form-group full";
-    const descricao = document.getElementById("item-descricao").parentElement;
-    descricao.after(bloco);
+    const descricaoGroup = document.getElementById("item-descricao").parentElement;
+
+let linha = document.getElementById("linha-descricao-pacote");
+if (!linha) {
+  linha = document.createElement("div");
+  linha.id = "linha-descricao-pacote";
+  linha.className = "linha-descricao-pacote";
+
+  descricaoGroup.after(linha);
+  linha.appendChild(descricaoGroup);
+  linha.appendChild(bloco);
+}
   }
 
   bloco.innerHTML = `
