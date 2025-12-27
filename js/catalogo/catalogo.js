@@ -980,7 +980,7 @@ if (duplicado) {
   Swal.fire({
     icon: "warning",
     title: "Pacote duplicado",
-    text: "Já existe um pacote com exatamente os mesmos itens."
+    text: "Este pacote ja existe!"
   });
   return;
 }
