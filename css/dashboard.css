@@ -926,15 +926,17 @@ label {
 
 
 /* =====================================================
-   PACOTES – AJUSTES VISUAIS (NOVO)
-   Não substitui regras existentes
+   PACOTES – AJUSTES VISUAIS DEFINITIVOS
+   BLOCO NOVO – INSERIR NO FINAL DO CSS
    ===================================================== */
 
-/* ---------- Lista de pacotes (capa maior) ---------- */
+/* =====================================================
+   LISTA DE PACOTES – CAPA MAIS LARGA
+   ===================================================== */
 
 #lista-pacotes .item-thumb {
-  width: 90px;
-  height: 70px;
+  width: 140px;          /* MAIS LARGA */
+  height: 70px;          /* ALTURA OK */
   flex-shrink: 0;
 }
 
@@ -944,14 +946,23 @@ label {
   overflow: hidden;
   border-radius: 6px;
   background: #111;
+  position: relative;
+}
+
+#lista-pacotes .item-thumb-wrapper img {
+  height: 100%;
+  width: auto;
+  object-fit: cover;
 }
 
 
-/* ---------- Modal mais largo e controlado ---------- */
+/* =====================================================
+   MODAL – LARGO, BAIXO E ORGANIZADO
+   ===================================================== */
 
 .modal-content.modal-lg {
-  width: 92vw;
-  max-width: 1100px;
+  width: 95vw;
+  max-width: 1200px;
   max-height: 90vh;
 
   display: flex;
@@ -960,14 +971,24 @@ label {
 
 .modal-body {
   overflow-y: auto;
-  padding-right: 8px;
+  padding: 20px 24px;
 }
 
 
-/* ---------- Organização dos campos (menos altura) ---------- */
+/* =====================================================
+   GRID DE CAMPOS – ALINHAMENTO REAL
+   ===================================================== */
 
 .form-grid {
+  display: grid;
   grid-template-columns: repeat(4, 1fr);
+  gap: 16px 20px;
+  align-items: start;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
 }
 
 .form-group.full {
@@ -975,20 +996,32 @@ label {
 }
 
 
-/* ---------- Itens do pacote (checkboxes) ---------- */
+/* =====================================================
+   ITENS DO PACOTE – 3 POR COLUNA
+   ===================================================== */
 
 #pacote-itens-bloco {
+  grid-column: span 4;
+  margin-top: 10px;
+
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px 16px;
-  margin-top: 8px;
+  gap: 8px 20px;
+}
+
+#pacote-itens-bloco > label {
+  grid-column: span 3;
+  font-weight: 600;
+  margin-bottom: 6px;
 }
 
 #pacote-itens-bloco label {
   display: flex;
   align-items: center;
   gap: 6px;
+
   font-size: 14px;
+  line-height: 1.2;
   cursor: pointer;
 }
 
@@ -997,21 +1030,20 @@ label {
 }
 
 
-/* ---------- Bloco de imagens (capa + miniaturas) ---------- */
-
-.imagens-bloco {
-  clear: both;
-}
+/* =====================================================
+   BLOCO DE IMAGENS – SEM INVADIR CAMPOS
+   ===================================================== */
 
 .preview-imagens {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
+
+  margin-top: 12px;
+  max-width: 100%;
 }
 
-.preview-imagens .img-preview {
-  width: 90px;
-  height: 70px;
+.preview-imagens > div {
   flex-shrink: 0;
 }
+
