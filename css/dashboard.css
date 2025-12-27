@@ -994,37 +994,26 @@ label {
    ITENS DO PACOTE – 3 ITENS POR COLUNA
    ===================================================== */
 
+/* Itens do pacote – 3 itens por coluna reais */
+
 #pacote-itens-bloco {
-  grid-column: 1 / -1;
-  margin-top: 14px;
-
-  column-count: 3;
-  column-gap: 40px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px 32px;
+  margin-top: 12px;
 }
 
-#pacote-itens-bloco > label {
-  display: block;
-  column-span: all;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-#pacote-itens-bloco label:not(:first-child) {
+#pacote-itens-bloco .pacote-item {
   display: flex;
   align-items: center;
   gap: 6px;
-
   font-size: 14px;
-  line-height: 1.2;
-  margin-bottom: 8px;
-
-  break-inside: avoid;
+  white-space: nowrap;
 }
 
 #pacote-itens-bloco input[type="checkbox"] {
   margin: 0;
 }
-
 
 /* =====================================================
    IMAGENS – UMA LINHA SÓ
