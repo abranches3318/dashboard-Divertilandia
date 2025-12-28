@@ -996,41 +996,19 @@ label {
 
 /* Itens do pacote – 3 itens por coluna reais */
 
-#pacote-itens-bloco {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px 32px;
-  margin-top: 12px;
-}
 
-#pacote-itens-bloco .pacote-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  white-space: nowrap;
-}
 
 #pacote-itens-bloco input[type="checkbox"] {
   margin: 0;
 }
 
+#pacote-itens-preview > div {
+  width: 120px;
+  height: 90px;
+}
 /* =====================================================
    IMAGENS – UMA LINHA SÓ
    ===================================================== */
-
-.preview-imagens {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.preview-imagens .img-preview {
-  width: 90px;
-  height: 70px;
-  flex-shrink: 0;
-}
 
 .preview-imagens > div {
   flex-shrink: 0;
@@ -1067,7 +1045,7 @@ label {
   display: none;
   margin-top: 6px;
 
-  max-height: 180px;
+  max-height: 72px;
   overflow-y: auto;
 
   border: 1px solid #333;
@@ -1082,7 +1060,7 @@ label {
   flex-direction: column;
   gap: 6px;
 
-  max-height: 180px;
+  max-height: 72px;
   overflow-y: auto;
 }
 
@@ -1112,6 +1090,12 @@ label {
   grid-template-columns: 1.3fr 1fr;
   gap: 16px;
   align-items: flex-start;
+}
+
+.linha-descricao-pacote textarea {
+  min-height: 120px;
+  max-height: 120px;
+  resize: none;
 }
 
 .linha-descricao-pacote .form-group {
