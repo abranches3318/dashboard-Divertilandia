@@ -1230,11 +1230,11 @@ function renderMiniaturasItensPacote(itensSelecionados = []) {
     bloco.appendChild(thumb);
   });
 
-  // insere logo após o preview principal
-  const preview = document.getElementById("preview-imagens");
-  const preview = document.getElementById("preview-imagens");
-preview.appendChild(bloco);
+ const preview = document.getElementById("preview-imagens");
+if (preview) {
+  preview.appendChild(bloco);
 }
+  }
 
 
 
