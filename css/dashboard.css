@@ -1117,3 +1117,7 @@ label {
 .linha-descricao-pacote .form-group {
   margin-bottom: 0;
 }
+
+.preview-item.capa {
+  outline: 2px solid #4caf50;
+}
