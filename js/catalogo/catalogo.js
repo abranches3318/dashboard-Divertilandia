@@ -20,6 +20,11 @@ let DRAG_INDEX = null;
 let DRAG_START_X = 0;
 let DRAG_START_Y = 0;
 
+
+function setValorSeguro(id, valor = "") {
+  const el = document.getElementById(id);
+  if (el) el.value = valor;
+}
 // ============================
 // INIT
 // ============================
@@ -222,7 +227,9 @@ MODAL_CONTEXTO = "item";
   document.getElementById("item-nome").value = item.nome;
   document.getElementById("item-preco").value = item.valor ?? item.preco ?? 0;
   document.getElementById("item-quantidade").value = item.quantidade;
-  document.getElementById("item-descricao").value = item.descricao || "";
+ setTimeout(() => {
+  setValorSeguro("item-descricao", pacote.descricao || "");
+}, 0);
   document.getElementById("item-status").value = item.ativo ? "ativo" : "inativo";
 
 CATALOGO_STATE.imagensTemp = (item.fotos || []).map(f => ({
@@ -259,7 +266,8 @@ function limparModalItem() {
   document.getElementById("item-nome").value = "";
   document.getElementById("item-preco").value = "";
   document.getElementById("item-quantidade").value = "";
-  document.getElementById("item-descricao").value = "";
+  const desc = document.getElementById("item-descricao");
+if (desc) desc.value = "";
   document.getElementById("item-status").value = "ativo";
 
   CATALOGO_STATE.imagensTemp = [];
@@ -552,7 +560,7 @@ async function salvarNovoItem() {
   const nome = document.getElementById("item-nome").value.trim();
   const valor = Number(document.getElementById("item-preco").value);
   const quantidade = Number(document.getElementById("item-quantidade").value);
-  const descricao = document.getElementById("item-descricao").value.trim();
+  const descricao = document.getElementById("item-descricao")?.value.trim() || "";
   const status = document.getElementById("item-status").value;
 
   if (!nome || valor <= 0 || quantidade < 0) {
@@ -855,7 +863,9 @@ function abrirModalNovoPacote() {
   // campos comuns
   document.getElementById("item-nome").value = "";
   document.getElementById("item-preco").value = "";
-  document.getElementById("item-descricao").value = "";
+setTimeout(() => {
+  setValorSeguro("item-descricao", pacote.descricao || "");
+}, 0);
   document.getElementById("item-status").value = "ativo";
 
   // quantidade não existe para pacote
@@ -888,7 +898,9 @@ function editarPacote() {
   document.getElementById("modal-item-titulo").textContent = "Editar Pacote";
   document.getElementById("item-nome").value = pacote.nome;
   document.getElementById("item-preco").value = pacote.valor ?? 0;
-  document.getElementById("item-descricao").value = pacote.descricao || "";
+ setTimeout(() => {
+  setValorSeguro("item-descricao", pacote.descricao || "");
+}, 0);
   document.getElementById("item-status").value = pacote.ativo ? "ativo" : "inativo";
   document.getElementById("item-quantidade").parentElement.style.display = "none";
 
@@ -994,7 +1006,7 @@ if (!linha) {
 
 function toggleDropdownPacote() {
   const lista = document.getElementById("pacote-dropdown-lista");
-  lista.classList.toggle("aberto");
+  if (lista) lista.classList.toggle("aberto");
 }
 
 function atualizarPreviewItensPacote() {
@@ -1046,7 +1058,7 @@ async function salvarPacote() {
   MODAL_CONTEXTO = "pacote";
   const nome = document.getElementById("item-nome").value.trim();
   const valor = Number(document.getElementById("item-preco").value);
-  const descricao = document.getElementById("item-descricao").value.trim();
+ const descricao = document.getElementById("item-descricao")?.value.trim() || "";
   const status = document.getElementById("item-status").value;
 
   const checkboxes = document.querySelectorAll("#pacote-itens-bloco input[type='checkbox']:checked");
