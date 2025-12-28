@@ -349,8 +349,8 @@ function renderPreviewImagens() {
     wrapper.style.position = "relative";
     wrapper.style.width = "120px";               // 🔧 FIXO (não 100%)
     wrapper.style.height = "90px";
-    wrapper.style.borderRadius = "8px";
-    wrapper.style.background = "#111";
+    wrapper.style.borderRadius = "0";
+    wrapper.style.background = "none";
     wrapper.style.overflow = "hidden";
 
 /* ================= AÇÕES SUPERIORES (FORA DA IMAGEM) ================= */
@@ -941,8 +941,7 @@ if (!linha) {
   linha.appendChild(colunaDescricao);
   linha.appendChild(colunaItens);
 
-  colunaDescricao.appendChild(descricaoGroup.cloneNode(true));
-descricaoGroup.style.display = "none";
+  colunaDescricao.appendChild(descricaoGroup);
   colunaItens.appendChild(bloco);
 } else {
   /* reaproveita colunas existentes */
@@ -955,11 +954,13 @@ descricaoGroup.style.display = "none";
 
   bloco.innerHTML = `
    
-    <div class="pacote-dropdown">
-      <div class="pacote-dropdown-header" onclick="toggleDropdownPacote()">
-        Selecionar itens
-        <span class="seta">▾</span>
-      </div>
+    <div class="form-group">
+  <label>Selecionar itens</label>
+  <div class="pacote-dropdown-header" onclick="toggleDropdownPacote()">
+    Selecionar
+    <span class="seta">▾</span>
+  </div>
+</div>
 
       <div class="pacote-dropdown-lista" id="pacote-dropdown-lista"></div>
     </div>
@@ -1008,17 +1009,6 @@ function atualizarPreviewItensPacote() {
   renderMiniaturasItensPacote(itensSelecionados);
 }
 
-function atualizarPreviewItensPacote() {
-  const checkboxes = document.querySelectorAll(
-    "#pacote-itens-bloco input[type='checkbox']:checked"
-  );
-
-  const itensSelecionados = Array.from(checkboxes).map(cb => ({
-    itemId: cb.value
-  }));
-
-  renderMiniaturasItensPacote(itensSelecionados);
-}
 
 document.getElementById("btn-novo-pacote")
   ?.addEventListener("click", abrirModalNovoPacote);
@@ -1232,7 +1222,7 @@ function renderMiniaturasItensPacote(itensSelecionados = []) {
 
  const preview = document.getElementById("preview-imagens");
 if (preview) {
-  preview.appendChild(bloco);
+  preview.after(bloco);
 }
   }
 
