@@ -228,7 +228,7 @@ MODAL_CONTEXTO = "item";
   document.getElementById("item-preco").value = item.valor ?? item.preco ?? 0;
   document.getElementById("item-quantidade").value = item.quantidade;
  setTimeout(() => {
-  setValorSeguro("item-descricao", pacote.descricao || "");
+  setValorSeguro("item-descricao", item.descricao || "");
 }, 0);
   document.getElementById("item-status").value = item.ativo ? "ativo" : "inativo";
 
@@ -266,8 +266,7 @@ function limparModalItem() {
   document.getElementById("item-nome").value = "";
   document.getElementById("item-preco").value = "";
   document.getElementById("item-quantidade").value = "";
-  const desc = document.getElementById("item-descricao");
-if (desc) desc.value = "";
+  setValorSeguro("item-descricao", "");
   document.getElementById("item-status").value = "ativo";
 
   CATALOGO_STATE.imagensTemp = [];
@@ -864,7 +863,7 @@ function abrirModalNovoPacote() {
   document.getElementById("item-nome").value = "";
   document.getElementById("item-preco").value = "";
 setTimeout(() => {
-  setValorSeguro("item-descricao", pacote.descricao || "");
+  setValorSeguro("item-descricao", "");
 }, 0);
   document.getElementById("item-status").value = "ativo";
 
