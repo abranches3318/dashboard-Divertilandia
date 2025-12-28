@@ -243,12 +243,18 @@ function fecharModalItem() {
   document.getElementById("modal-item").classList.remove("active");
   limparPreviewImagens();
 
-  /* remove apenas seleção do pacote */
+  const descricaoGroup = document.getElementById("item-descricao")?.parentElement;
+  if (descricaoGroup) descricaoGroup.style.display = "";
+
   const blocoPacote = document.getElementById("pacote-itens-bloco");
-  if (blocoPacote) blocoPacote.innerHTML = `<label>Itens do pacote *</label>`;
+  if (blocoPacote) blocoPacote.remove();
+
+  const linha = document.getElementById("linha-descricao-pacote");
+  if (linha) linha.remove();
 
   MODAL_CONTEXTO = "item";
 }
+
 function limparModalItem() {
   document.getElementById("item-nome").value = "";
   document.getElementById("item-preco").value = "";
@@ -800,8 +806,8 @@ function renderPacotes() {
                       )
                       scale(${(capa?.scale ?? 1)});
                     height:100%;
-                    width:100%;
-                    object-fit:cover;
+                    width:auto;
+                   
                   "
                 >
               </div>
@@ -935,7 +941,8 @@ if (!linha) {
   linha.appendChild(colunaDescricao);
   linha.appendChild(colunaItens);
 
-  colunaDescricao.appendChild(descricaoGroup);
+  colunaDescricao.appendChild(descricaoGroup.cloneNode(true));
+descricaoGroup.style.display = "none";
   colunaItens.appendChild(bloco);
 } else {
   /* reaproveita colunas existentes */
@@ -1206,8 +1213,8 @@ function renderMiniaturasItensPacote(itensSelecionados = []) {
         : null;
 
     const thumb = document.createElement("div");
-    thumb.style.width = "60px";
-    thumb.style.height = "45px";
+    thumb.style.width = "90px";
+    thumb.style.height = "70px";
     thumb.style.borderRadius = "6px";
     thumb.style.overflow = "hidden";
     thumb.style.background = "#222";
@@ -1225,53 +1232,21 @@ function renderMiniaturasItensPacote(itensSelecionados = []) {
 
   // insere logo após o preview principal
   const preview = document.getElementById("preview-imagens");
-  preview.after(bloco);
+  const preview = document.getElementById("preview-imagens");
+preview.appendChild(bloco);
 }
 
-function renderPreviewPacoteCompleto(itensSelecionados = []) {
-  const container = document.getElementById("preview-imagens");
-  if (!container) return;
 
-  container.innerHTML = "";
-
-  const linha = document.createElement("div");
-  linha.className = "imagens-linha";
-  container.appendChild(linha);
-
-  // ===== CAPA DO PACOTE =====
-  CATALOGO_STATE.imagensTemp.forEach(img => {
-    const div = document.createElement("div");
-    div.className = "img-preview capa";
-
-    const image = document.createElement("img");
-    image.src = img.url;
-
-    div.appendChild(image);
-    linha.appendChild(div);
-  });
-
-  // ===== MINIATURAS DOS ITENS =====
-  itensSelecionados.forEach(sel => {
-    const item = CATALOGO_STATE.itens.find(i => i.id === sel.itemId);
-    if (!item || !item.fotos?.length) return;
-
-    const foto = item.fotos.find(f => f.principal) || item.fotos[0];
-    if (!foto) return;
-
-    const div = document.createElement("div");
-    div.className = "img-preview item";
-
-    const image = document.createElement("img");
-    image.src = foto.url;
-
-    div.appendChild(image);
-    linha.appendChild(div);
-  });
-}
 
 function limparPreviewImagens() {
-  const container = document.getElementById("imagens-preview");
+  const container = document.getElementById("preview-imagens");
   if (container) {
     container.innerHTML = "";
   }
+
+  // remove também miniaturas de itens do pacote
+  const mini = document.getElementById("pacote-itens-preview");
+  if (mini) mini.remove();
+
+  CATALOGO_STATE.imagensTemp = [];
 }
