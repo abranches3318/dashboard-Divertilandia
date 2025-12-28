@@ -188,6 +188,7 @@ menu.style.left = `${rect.right - 160}px`;
 // ============================
 
 function abrirModalNovoItem() {
+  limparPreviewImagens();
   ITEM_EDITANDO_ID = null;
   MODAL_CONTEXTO = "item";
   
@@ -203,6 +204,7 @@ function abrirModalNovoItem() {
 }
 
 function editarItem() {
+  limparPreviewImagens();
 MODAL_CONTEXTO = "item";
   // 🔥 REMOVE bloco de pacote se existir
   const blocoPacote = document.getElementById("pacote-itens-bloco");
@@ -239,6 +241,7 @@ CATALOGO_STATE.imagensTemp = (item.fotos || []).map(f => ({
 
 function fecharModalItem() {
   document.getElementById("modal-item").classList.remove("active");
+  limparPreviewImagens();
 
   /* remove apenas seleção do pacote */
   const blocoPacote = document.getElementById("pacote-itens-bloco");
@@ -867,6 +870,7 @@ function abrirModalNovoPacote() {
 // menu editar pacotes
 // ============================
 function editarPacote() {
+  limparPreviewImagens();
   MODAL_CONTEXTO = "pacote";
 
   
@@ -1265,3 +1269,9 @@ function renderPreviewPacoteCompleto(itensSelecionados = []) {
   });
 }
 
+function limparPreviewImagens() {
+  const container = document.getElementById("imagens-preview");
+  if (container) {
+    container.innerHTML = "";
+  }
+}
