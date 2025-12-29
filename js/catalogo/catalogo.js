@@ -22,6 +22,46 @@ function setValorSeguro(id, valor = "") {
   if (el) el.value = valor;
 }
 
+
+// ============================
+// HELPERS GLOBAIS (UTILS)
+// ============================
+
+// ---------- IMAGENS ----------
+
+function limparPreviewImagens() {
+  const preview = document.getElementById("preview-imagens");
+  if (preview) preview.innerHTML = "";
+
+  if (window.CATALOGO_STATE) {
+    CATALOGO_STATE.imagensTemp = [];
+  }
+}
+
+// ---------- SALVAR REGISTRO GENÉRICO ----------
+
+async function salvarRegistro({ colecao, id = null, dados, onSucesso }) {
+  try {
+    mostrarLoading("Salvando...");
+
+    if (id) {
+      await db.collection(colecao).doc(id).update(dados);
+    } else {
+      await db.collection(colecao).add(dados);
+    }
+
+    fecharLoading();
+    mostrarSucesso("Sucesso", "Registro salvo.");
+
+    if (typeof onSucesso === "function") onSucesso();
+
+  } catch (err) {
+    console.error(err);
+    fecharLoading();
+    mostrarErro("Erro ao salvar", err.message || "Erro inesperado");
+  }
+}
+
 // ============================
 // INIT
 // ============================
