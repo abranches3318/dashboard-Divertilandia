@@ -7,7 +7,9 @@ const CATALOGO_STATE = {
   itens: [],
   pacotes: [],
   promocoes: [],
-  imagensTemp: []
+
+  imagensTempItem: [],
+  imagensTempPacote: []
 };
 
 // ---------- CONTEXTO GLOBAL ----------
@@ -22,10 +24,16 @@ function setValorSeguro(id, valor = "") {
   if (el) el.value = valor;
 }
 
+function getImagensTempAtivas() {
+  return MODAL_CONTEXTO === "pacote"
+    ? CATALOGO_STATE.imagensTempPacote
+    : CATALOGO_STATE.imagensTempItem;
+}
 
 // ============================
 // HELPERS GLOBAIS (UTILS)
 // ============================
+
 
 // ---------- IMAGENS ----------
 
@@ -33,8 +41,10 @@ function limparPreviewImagens() {
   const preview = document.getElementById("preview-imagens");
   if (preview) preview.innerHTML = "";
 
-  if (window.CATALOGO_STATE) {
-    CATALOGO_STATE.imagensTemp = [];
+  if (MODAL_CONTEXTO === "pacote") {
+    CATALOGO_STATE.imagensTempPacote = [];
+  } else {
+    CATALOGO_STATE.imagensTempItem = [];
   }
 }
 
@@ -72,7 +82,7 @@ function renderPreviewImagens() {
 
   preview.innerHTML = "";
 
-  CATALOGO_STATE.imagensTemp.forEach((img, index) => {
+ getImagensTempAtivas().forEach((img, index) => {
     const div = document.createElement("div");
     div.className = "preview-item";
 
@@ -113,19 +123,21 @@ window.handleSelecionarFotos = function (e) {
   if (!files.length) return;
 
   for (const file of files) {
-    if (CATALOGO_STATE.imagensTemp.length >= 5) {
+    const imagens = getImagensTempAtivas();
+
+if (imagens.length >= 5) {
       Swal.fire("Limite de imagens", "Máximo de 5 imagens.", "warning");
       break;
     }
 
-    CATALOGO_STATE.imagensTemp.push({
-      file,
-      url: URL.createObjectURL(file),
-      principal: CATALOGO_STATE.imagensTemp.length === 0,
-      offsetX: 0,
-      offsetY: 0,
-      scale: 1
-    });
+    imagens.push({
+  file,
+  url: URL.createObjectURL(file),
+  principal: imagens.length === 0,
+  offsetX: 0,
+  offsetY: 0,
+  scale: 1
+});
   }
 
   renderPreviewImagens();
