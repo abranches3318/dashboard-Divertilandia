@@ -196,7 +196,14 @@ function montarListaItensPacote(selecionados = []) {
     bloco = document.createElement("div");
     bloco.id = "pacote-itens-bloco";
     bloco.className = "form-group full";
+
+    const container = document.getElementById("modal-item-body") 
+                   || document.getElementById("modal-item");
+
+    container.appendChild(bloco);
   }
+
+  bloco.style.display = "block";
 
   bloco.innerHTML = `
     <label>Selecionar itens *</label>
