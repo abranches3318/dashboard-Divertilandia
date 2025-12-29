@@ -136,7 +136,6 @@ function renderPacotes() {
 // ============================
 
 function abrirModalNovoPacote() {
-  limparPreviewImagens();
   PACOTE_EDITANDO_ID = null;
   MODAL_CONTEXTO = "pacote";
 
@@ -161,7 +160,7 @@ function abrirModalNovoPacote() {
 // ============================
 
 function editarPacote() {
-  limparPreviewImagens();
+  
   MODAL_CONTEXTO = "pacote";
 
   const pacote = CATALOGO_STATE.pacotes.find(p => p.id === MENU_PACOTE_ATUAL);
@@ -187,7 +186,7 @@ function editarPacote() {
     scale: f.scale ?? 1
   }));
 
-  renderPreviewImagens();
+
   document.getElementById("menu-pacote-flutuante").style.display = "none";
   document.getElementById("modal-item").classList.add("active");
 
