@@ -181,8 +181,9 @@ function editarItem() {
 
 function fecharModalItem() {
   document.getElementById("modal-item").classList.remove("active");
-  limparPreviewImagens();
+  limparContextoModal();
   ITEM_EDITANDO_ID = null;
+  PACOTE_EDITANDO_ID = null;
 }
 
 function limparModalItem() {
