@@ -109,6 +109,34 @@ function definirImagemPrincipal(index) {
 }
 
 // ============================
+// IMAGENS — PREVIEW / DRAG / ZOOM
+// ============================
+
+function handleSelecionarFotos(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  for (const file of files) {
+    if (CATALOGO_STATE.imagensTemp.length >= 5) {
+      Swal.fire("Limite de imagens", "Máximo de 5 imagens.", "warning");
+      break;
+    }
+
+    CATALOGO_STATE.imagensTemp.push({
+      file,
+      url: URL.createObjectURL(file),
+      principal: CATALOGO_STATE.imagensTemp.length === 0,
+      offsetX: 0,
+      offsetY: 0,
+      scale: 1
+    });
+  }
+
+  renderPreviewImagens();
+  e.target.value = "";
+}
+
+// ============================
 // INIT
 // ============================
 
