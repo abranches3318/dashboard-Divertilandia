@@ -167,14 +167,14 @@ function editarItem() {
   setValorSeguro("item-descricao", item.descricao || "");
   document.getElementById("item-status").value = item.ativo ? "ativo" : "inativo";
 
-  CATALOGO_STATE.imagensTemp = (item.fotos || []).map(f => ({
-    url: f.url,
-    principal: f.principal,
-    existente: true,
-    offsetX: f.offsetX ?? 0,
-    offsetY: f.offsetY ?? 0,
-    scale: f.scale ?? 1
-  }));
+  CATALOGO_STATE.imagensTempItem = (item.fotos || []).map(f => ({
+  url: f.url,
+  principal: f.principal,
+  existente: true,
+  offsetX: f.offsetX ?? 0,
+  offsetY: f.offsetY ?? 0,
+  scale: f.scale ?? 1
+}));
 
   renderPreviewImagens();
   document.getElementById("menu-item-flutuante").style.display = "none";
