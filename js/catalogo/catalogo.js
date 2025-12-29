@@ -63,6 +63,40 @@ async function salvarRegistro({ colecao, id = null, dados, onSucesso }) {
 }
 
 // ============================
+// PREVIEW DE IMAGENS (CORE)
+// ============================
+
+function renderPreviewImagens() {
+  const preview = document.getElementById("preview-imagens");
+  if (!preview) return;
+
+  preview.innerHTML = "";
+
+  CATALOGO_STATE.imagensTemp.forEach((img, index) => {
+    const div = document.createElement("div");
+    div.className = "preview-item";
+
+    div.innerHTML = `
+      <div class="preview-image-wrapper">
+        <img src="${img.url || img.preview}" />
+      </div>
+
+      <div class="preview-top-actions">
+        <button onclick="definirImagemPrincipal(${index})" title="Definir capa">
+          ⭐
+        </button>
+
+        <button onclick="removerImagem(${index})" title="Remover">
+          🗑️
+        </button>
+      </div>
+    `;
+
+    preview.appendChild(div);
+  });
+}
+
+// ============================
 // INIT
 // ============================
 
