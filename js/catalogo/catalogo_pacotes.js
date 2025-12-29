@@ -190,6 +190,8 @@ function editarPacote() {
 // ============================
 
 function montarListaItensPacote(selecionados = []) {
+  if (MODAL_CONTEXTO !== "pacote") return;
+
   let bloco = document.getElementById("pacote-itens-bloco");
 
   if (!bloco) {
@@ -197,17 +199,19 @@ function montarListaItensPacote(selecionados = []) {
     bloco.id = "pacote-itens-bloco";
     bloco.className = "form-group full";
 
-    const container = document.getElementById("modal-item-body") 
-                   || document.getElementById("modal-item");
+    const descricaoGroup =
+      document.getElementById("item-descricao")?.parentElement;
 
-    container.appendChild(bloco);
+    if (!descricaoGroup) return;
+
+    descricaoGroup.after(bloco);
   }
 
   bloco.style.display = "block";
-
+  
   bloco.innerHTML = `
     <label>Selecionar itens *</label>
-    <div class="pacote-dropdown-header" onclick="toggleDropdownPacote()">
+    <div class="pacote-dropdown-header" onclick="toggleDropdownPacote(event)">
       Selecionar itens
       <span>▾</span>
     </div>
@@ -239,11 +243,12 @@ function montarListaItensPacote(selecionados = []) {
   atualizarPreviewItensPacote();
 }
 
-function toggleDropdownPacote() {
-  document.getElementById("pacote-dropdown-lista")
+function toggleDropdownPacote(e) {
+  e?.stopPropagation();
+  document
+    .getElementById("pacote-dropdown-lista")
     ?.classList.toggle("aberto");
 }
-
 // ============================
 // MINIATURAS DOS ITENS
 // ============================
@@ -300,7 +305,7 @@ function renderMiniaturasItensPacote(itensSelecionados = []) {
   });
 
  const containerPacote = document.getElementById("pacote-itens-bloco");
-containerPacote.after(bloco);
+containerPacote.appendChild(bloco);
 }
 
 // ============================
