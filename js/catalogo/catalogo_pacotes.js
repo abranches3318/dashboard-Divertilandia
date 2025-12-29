@@ -177,14 +177,6 @@ function editarPacote() {
 
   montarListaItensPacote(pacote.itens || []);
 
-  CATALOGO_STATE.imagensTemp = (pacote.fotos || []).map(f => ({
-    url: f.url,
-    principal: f.principal,
-    existente: true,
-    offsetX: f.offsetX ?? 0,
-    offsetY: f.offsetY ?? 0,
-    scale: f.scale ?? 1
-  }));
 
 
   document.getElementById("menu-pacote-flutuante").style.display = "none";
