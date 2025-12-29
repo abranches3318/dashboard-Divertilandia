@@ -286,8 +286,8 @@ function bindEventosItens() {
   document.getElementById("btn-novo-item")
     ?.addEventListener("click", abrirModalNovoItem);
 
-  document.getElementById("btn-salvar-item")
-    ?.addEventListener("click", salvarRegistro);
+document.getElementById("btn-salvar-item")
+  ?.addEventListener("click", salvarNovoItem);
 
   document.getElementById("input-imagens")
     ?.addEventListener("change", handleSelecionarFotos);
