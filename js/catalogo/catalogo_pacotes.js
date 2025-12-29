@@ -381,10 +381,10 @@ async function salvarPacote() {
       });
     }
 
-    if (CATALOGO_STATE.imagensTemp.length) {
-      const fotos = await uploadImagensPacote(ref.id);
-      await ref.update({ fotos });
-    }
+    if (CATALOGO_STATE.imagensTempPacote.length) {
+  const fotos = await uploadImagensPacote(ref.id);
+  await ref.update({ fotos });
+}
 
     fecharLoading();
     mostrarSucesso("Pacote salvo");
