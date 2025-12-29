@@ -138,6 +138,7 @@ function abrirMenuItem(event, itemId) {
 // ============================
 
 function abrirModalNovoItem() {
+  limparContextoModal();
   limparPreviewImagens();
   ITEM_EDITANDO_ID = null;
   MODAL_CONTEXTO = "item";
@@ -150,6 +151,7 @@ function abrirModalNovoItem() {
 }
 
 function editarItem() {
+  limparContextoModal();
   limparPreviewImagens();
   MODAL_CONTEXTO = "item";
 
