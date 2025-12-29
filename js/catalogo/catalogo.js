@@ -247,13 +247,14 @@ function mostrarSucesso(titulo = "Sucesso", mensagem = "Operação concluída.")
 }
 
 function limparContextoModal() {
-  // remove estrutura de pacote
-  document.getElementById("linha-descricao-pacote")?.remove();
+  // remove bloco de itens do pacote
+  document.getElementById("pacote-itens-bloco")?.remove();
   document.getElementById("pacote-itens-preview")?.remove();
 
-  // limpa preview de item
-  limparPreviewImagens();
+  // fecha dropdown se existir
+  document.getElementById("pacote-dropdown-lista")?.classList.remove("aberto");
 
-  // reseta flags
-  MODAL_CONTEXTO = "item";
+  // restaura quantidade (default item)
+  const qtd = document.getElementById("item-quantidade")?.parentElement;
+  if (qtd) qtd.style.display = "";
 }
