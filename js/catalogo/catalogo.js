@@ -96,6 +96,17 @@ function renderPreviewImagens() {
   });
 }
 
+
+function removerImagem(index) {
+  CATALOGO_STATE.imagensTemp.splice(index, 1);
+  renderPreviewImagens();
+}
+
+function definirImagemPrincipal(index) {
+  CATALOGO_STATE.imagensTemp.forEach(img => img.principal = false);
+  CATALOGO_STATE.imagensTemp[index].principal = true;
+  renderPreviewImagens(
+
 // ============================
 // INIT
 // ============================
