@@ -196,27 +196,6 @@ function montarListaItensPacote(selecionados = []) {
     bloco = document.createElement("div");
     bloco.id = "pacote-itens-bloco";
     bloco.className = "form-group full";
-
-    const descricaoGroup = document.getElementById("item-descricao")?.parentElement;
-    if (!descricaoGroup) return;
-
-    let linha = document.getElementById("linha-descricao-pacote");
-    if (!linha) {
-      linha = document.createElement("div");
-      linha.id = "linha-descricao-pacote";
-      linha.className = "linha-descricao-pacote";
-
-      const colDesc = document.createElement("div");
-      const colItens = document.createElement("div");
-      colItens.id = "coluna-itens-pacote";
-
-      descricaoGroup.after(linha);
-      linha.appendChild(colDesc);
-      linha.appendChild(colItens);
-
-      colDesc.appendChild(descricaoGroup);
-      colItens.appendChild(bloco);
-    }
   }
 
   bloco.innerHTML = `
