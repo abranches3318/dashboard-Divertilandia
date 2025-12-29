@@ -176,7 +176,18 @@ function editarPacote() {
   document.getElementById("item-quantidade").parentElement.style.display = "none";
 
   montarListaItensPacote(pacote.itens || []);
+  
+  // 🔵 RESTAURA IMAGENS JÁ SALVAS DO PACOTE
+  CATALOGO_STATE.imagensTempPacote = (pacote.fotos || []).map(f => ({
+    url: f.url,
+    principal: f.principal,
+    existente: true,
+    offsetX: f.offsetX ?? 0,
+    offsetY: f.offsetY ?? 0,
+    scale: f.scale ?? 1
+  }));
 
+  renderPreviewImagens();
 
 
   document.getElementById("menu-pacote-flutuante").style.display = "none";
