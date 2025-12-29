@@ -247,7 +247,7 @@ function mostrarSucesso(titulo = "Sucesso", mensagem = "Operação concluída.")
 }
 
 function limparContextoModal() {
-  // remove bloco de itens do pacote
+  // limpa blocos específicos de pacote
   document.getElementById("pacote-itens-bloco")?.remove();
   document.getElementById("pacote-itens-preview")?.remove();
 
@@ -257,4 +257,9 @@ function limparContextoModal() {
   // restaura quantidade (default item)
   const qtd = document.getElementById("item-quantidade")?.parentElement;
   if (qtd) qtd.style.display = "";
+
+  // 🔴 NOVO: limpa imagens temporárias e preview
+  if (typeof limparPreviewImagens === "function") {
+    limparPreviewImagens();
+  }
 }
