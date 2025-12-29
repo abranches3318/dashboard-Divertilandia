@@ -287,8 +287,14 @@ function bindEventosItens() {
     ?.addEventListener("click", abrirModalNovoItem);
 
 document.getElementById("btn-salvar-item")
-  ?.addEventListener("click", salvarNovoItem);
-
+  ?.addEventListener("click", () => {
+    if (MODAL_CONTEXTO === "pacote") {
+      salvarPacote();
+    } else {
+      salvarNovoItem();
+    }
+  });
+  
   document.getElementById("input-imagens")
     ?.addEventListener("change", handleSelecionarFotos);
 }
