@@ -108,11 +108,7 @@ function definirImagemPrincipal(index) {
   renderPreviewImagens();
 }
 
-// ============================
-// IMAGENS — PREVIEW / DRAG / ZOOM
-// ============================
-
-function handleSelecionarFotos(e) {
+window.handleSelecionarFotos = function (e) {
   const files = Array.from(e.target.files);
   if (!files.length) return;
 
@@ -134,7 +130,7 @@ function handleSelecionarFotos(e) {
 
   renderPreviewImagens();
   e.target.value = "";
-}
+};
 
 // ============================
 // INIT
