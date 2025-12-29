@@ -245,3 +245,15 @@ function mostrarSucesso(titulo = "Sucesso", mensagem = "Operação concluída.")
     showConfirmButton: false
   });
 }
+
+function limparContextoModal() {
+  // remove estrutura de pacote
+  document.getElementById("linha-descricao-pacote")?.remove();
+  document.getElementById("pacote-itens-preview")?.remove();
+
+  // limpa preview de item
+  limparPreviewImagens();
+
+  // reseta flags
+  MODAL_CONTEXTO = "item";
+}
