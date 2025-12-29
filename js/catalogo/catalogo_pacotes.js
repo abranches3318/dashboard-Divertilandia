@@ -313,7 +313,8 @@ function renderMiniaturasItensPacote(itensSelecionados = []) {
     bloco.appendChild(thumb);
   });
 
-  document.getElementById("preview-imagens")?.after(bloco);
+ const containerPacote = document.getElementById("pacote-itens-bloco");
+containerPacote.after(bloco);
 }
 
 // ============================
