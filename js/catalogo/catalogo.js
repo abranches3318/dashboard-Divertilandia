@@ -105,7 +105,8 @@ function removerImagem(index) {
 function definirImagemPrincipal(index) {
   CATALOGO_STATE.imagensTemp.forEach(img => img.principal = false);
   CATALOGO_STATE.imagensTemp[index].principal = true;
-  renderPreviewImagens(
+  renderPreviewImagens();
+}
 
 // ============================
 // INIT
