@@ -136,10 +136,11 @@ function renderPacotes() {
 // ============================
 
 function abrirModalNovoPacote() {
+  limparPreviewImagens();
   PACOTE_EDITANDO_ID = null;
   MODAL_CONTEXTO = "pacote";
 
-  limparPreviewImagens();
+  
 
   document.getElementById("modal-item-titulo").textContent = "Novo Pacote";
   document.getElementById("item-nome").value = "";
