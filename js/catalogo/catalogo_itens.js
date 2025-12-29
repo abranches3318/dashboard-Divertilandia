@@ -242,7 +242,7 @@ async function salvarNovoItem() {
       });
     }
 
-    if (CATALOGO_STATE.imagensTemp.length) {
+   if (CATALOGO_STATE.imagensTempItem.length) {
       const fotos = await uploadImagensItem(ref.id);
       await ref.update({ fotos });
     }
