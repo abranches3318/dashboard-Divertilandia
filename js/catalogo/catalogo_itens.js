@@ -300,3 +300,18 @@ document.getElementById("btn-salvar-item")
   document.getElementById("input-imagens")
     ?.addEventListener("change", handleSelecionarFotos);
 }
+
+
+
+
+function habilitarZoomImagem(imgEl, estado) {
+  imgEl.addEventListener("wheel", (e) => {
+    e.preventDefault();
+
+    const delta = e.deltaY < 0 ? 0.1 : -0.1;
+
+    estado.scale = (estado.scale ?? 1) + delta;
+
+    aplicarTransformImagem(imgEl, estado);
+  }, { passive: false });
+}
