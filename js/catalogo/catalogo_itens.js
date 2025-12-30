@@ -242,11 +242,13 @@ async function salvarNovoItem() {
       });
     }
 
-   if (CATALOGO_STATE.imagensTempItem.length) {
-      const fotos = await uploadImagensItem(ref.id);
-      await ref.update({ fotos });
-    }
-
+   if (
+  typeof uploadImagensItem === "function" &&
+  CATALOGO_STATE.imagensTempItem.length
+) {
+  const fotos = await uploadImagensItem(ref.id);
+  await ref.update({ fotos });
+}
     fecharLoading();
     mostrarSucesso("Item salvo");
     fecharModalItem();
