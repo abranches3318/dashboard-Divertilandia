@@ -1140,3 +1140,28 @@ label {
 .form-grid > .linha-descricao-pacote {
   grid-column: 1 / -1;
 }
+
+/* ===== MODAL PACOTE – GRID DESCRIÇÃO + DROPDOWN ===== */
+
+#modal-pacote .form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+/* descrição ocupa 2 colunas */
+#modal-pacote .descricao-pacote {
+  grid-column: span 2;
+}
+
+/* dropdown ocupa 1 coluna */
+#modal-pacote .dropdown-pacote {
+  grid-column: span 1;
+}
+
+/* garante alinhamento vertical */
+#modal-pacote .descricao-pacote,
+#modal-pacote .dropdown-pacote {
+  display: flex;
+  flex-direction: column;
+}
