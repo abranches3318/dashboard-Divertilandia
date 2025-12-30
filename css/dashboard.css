@@ -1049,7 +1049,7 @@ label {
   display: none;
   margin-top: 6px;
 
-  max-height: 72px;
+  max-height: 220px;
   overflow-y: auto;
 
   border: 1px solid #333;
@@ -1064,7 +1064,7 @@ label {
   top: calc(100% + 6px);
   left: 0;
   width: 100%;
-  z-index: 50;
+ z-index: 1100;
 }
 
 .pacote-dropdown-lista.aberto {
@@ -1072,7 +1072,7 @@ label {
   flex-direction: column;
   gap: 6px;
 
-  max-height: 72px;
+  max-height: 220px;
   overflow-y: auto;
 }
 
@@ -1116,4 +1116,8 @@ label {
 
 .preview-item.capa {
   outline: 2px solid #4caf50;
+}
+
+.modal-content {
+  overflow: visible;
 }
