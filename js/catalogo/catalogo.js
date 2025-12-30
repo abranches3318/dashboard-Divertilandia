@@ -113,7 +113,7 @@ function removerImagem(index) {
   renderPreviewImagens();
 }
 
-unction definirImagemPrincipal(index) {
+function definirImagemPrincipal(index) {
   const imagens = getImagensTempAtivas();
 
   imagens.forEach(img => img.principal = false);
