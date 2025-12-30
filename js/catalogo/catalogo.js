@@ -72,6 +72,22 @@ async function salvarRegistro({ colecao, id = null, dados, onSucesso }) {
   }
 }
 
+
+function aplicarTransformImagem(imgEl, estado) {
+  // limites de segurança
+  const scale = Math.min(2.5, Math.max(0.7, estado.scale ?? 1));
+  const offsetX = Math.min(80, Math.max(-80, estado.offsetX ?? 0));
+  const offsetY = Math.min(50, Math.max(-50, estado.offsetY ?? 0));
+
+  // salva de volta (estado consistente)
+  estado.scale = scale;
+  estado.offsetX = offsetX;
+  estado.offsetY = offsetY;
+
+  imgEl.style.transformOrigin = "center center";
+  imgEl.style.transform =
+    `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+}
 // ============================
 // PREVIEW DE IMAGENS (CORE)
 // ============================
@@ -87,20 +103,28 @@ function renderPreviewImagens() {
     div.className = "preview-item";
 
     div.innerHTML = `
-      <div class="preview-image-wrapper">
-        <img src="${img.url || img.preview || ''}" />
-      </div>
+  <div class="preview-image-wrapper"></div>
 
-      <div class="preview-top-actions">
-        <button onclick="definirImagemPrincipal(${index})" title="Definir capa">
-          ⭐
-        </button>
+  <div class="preview-top-actions">
+    <button onclick="definirImagemPrincipal(${index})" title="Definir capa">
+      ⭐
+    </button>
 
-        <button onclick="removerImagem(${index})" title="Remover">
-          🗑️
-        </button>
-      </div>
-    `;
+    <button onclick="removerImagem(${index})" title="Remover">
+      🗑️
+    </button>
+  </div>
+`;
+
+   const wrapper = div.querySelector(".preview-image-wrapper");
+
+const image = document.createElement("img");
+image.src = img.url || img.preview || "";
+
+// aplica transform seguro (ainda neutro)
+aplicarTransformImagem(image, img);
+
+wrapper.appendChild(image);
 
     preview.appendChild(div);
   });
