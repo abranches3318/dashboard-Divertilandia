@@ -123,7 +123,8 @@ image.src = img.url || img.preview || "";
 
 // transforma (zoom + posição)
 aplicarTransformImagem(image, img);
-
+   //habilita zoom
+habilitarZoomImagem(image, img);
 // habilita drag
 habilitarDragImagem(image, img);
 
@@ -421,3 +422,16 @@ function habilitarDragImagem(imgEl, estado) {
     imgEl.style.cursor = "grab";
   });
 }
+
+function habilitarZoomImagem(imgEl, estado) {
+  imgEl.addEventListener("wheel", (e) => {
+    e.preventDefault();
+
+    const delta = e.deltaY < 0 ? 0.1 : -0.1;
+
+    estado.scale = (estado.scale ?? 1) + delta;
+
+    aplicarTransformImagem(imgEl, estado);
+  }, { passive: false });
+}
+
