@@ -808,6 +808,7 @@ label {
   display: flex;
   align-items: center;
   justify-content: center;
+   z-index: 1;
 }
 
 /* Imagem real (drag / zoom dependem disso) */
@@ -858,20 +859,28 @@ label {
   position: absolute;
   top: 6px;
   left: 6px;
-  z-index: 6;
+  z-index: 5;
+  cursor: pointer;
 }
 
 .preview-star svg {
+  width: 22px;
+  height: 22px;
   fill: #999;
   stroke: #000;
   stroke-width: 1.2;
+  opacity: 0.9;
 }
 
 /* Principal */
 .preview-star.principal svg {
-  fill: #ffd700;
+  fill: #ffd700;        /* dourado */
   stroke: #4cafef;
   stroke-width: 1.5;
+}
+
+.preview-star:hover svg {
+  opacity: 1;
 }
 
 /* ================= ÍCONES ================= */
