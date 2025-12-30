@@ -1117,24 +1117,3 @@ label {
 }
 
 
-
-/* ===== MODAL PACOTE – GRID DESCRIÇÃO + DROPDOWN ===== */
-
-
-
-/* descrição ocupa 2 colunas */
-#modal-pacote .descricao-pacote {
-  grid-column: span 2;
-}
-
-/* dropdown ocupa 1 coluna */
-#modal-pacote .dropdown-pacote {
-  grid-column: span 1;
-}
-
-/* garante alinhamento vertical */
-#modal-pacote .descricao-pacote,
-#modal-pacote .dropdown-pacote {
-  display: flex;
-  flex-direction: column;
-}
