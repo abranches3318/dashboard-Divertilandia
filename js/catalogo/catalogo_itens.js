@@ -175,7 +175,7 @@ function editarItem() {
   offsetY: f.offsetY ?? 0,
   scale: f.scale ?? 1
 }));
-
+garantirImagemPrincipal();
   renderPreviewImagens();
   document.getElementById("menu-item-flutuante").style.display = "none";
   document.getElementById("modal-item").classList.add("active");
