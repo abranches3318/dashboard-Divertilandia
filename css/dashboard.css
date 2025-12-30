@@ -801,15 +801,24 @@ label {
 .preview-image-wrapper {
   position: relative;
   width: 100%;
-  height: 90px;
-  overflow: hidden;
-  border-radius: 0;
-  background: none;
+  height: 140px;              /* altura fixa */
+  overflow: hidden;           /* 🔴 ISSO É A CHAVE */
+  border-radius: 8px;
+  background: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Imagem real (drag / zoom dependem disso) */
 .preview-image-wrapper img {
-  pointer-events: auto; /* NÃO remover */
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;        /* nunca distorce */
+  user-select: none;
+  pointer-events: auto;
+  transition: transform 0.08s linear;
+  will-change: transform;
 }
 
 /* ================= BOTÕES ================= */
