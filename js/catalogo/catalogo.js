@@ -88,6 +88,18 @@ function aplicarTransformImagem(imgEl, estado) {
   imgEl.style.transform =
     `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
 }
+
+function garantirImagemPrincipal() {
+  const imagens = getImagensTempAtivas();
+  if (!imagens || imagens.length === 0) return;
+
+  const existePrincipal = imagens.some(img => img.principal === true);
+
+  if (!existePrincipal) {
+    imagens[0].principal = true;
+  }
+}
+
 // ============================
 // PREVIEW DE IMAGENS (CORE)
 // ============================
@@ -105,10 +117,15 @@ function renderPreviewImagens() {
     div.innerHTML = `
   <div class="preview-image-wrapper"></div>
 
-  <div class="preview-top-actions">
-    <button onclick="definirImagemPrincipal(${index})" title="Definir capa">
-      ⭐
-    </button>
+  const isPrincipal = img.principal === true;
+
+<div class="preview-star ${isPrincipal ? 'principal' : ''}"
+     onclick="definirImagemPrincipal(${index})"
+     title="Definir como capa">
+  <svg viewBox="0 0 24 24">
+    <path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>
+  </svg>
+</div>
 
     <button onclick="removerImagem(${index})" title="Remover">
       🗑️
@@ -138,6 +155,7 @@ wrapper.appendChild(image);
 function removerImagem(index) {
   const imagens = getImagensTempAtivas();
   imagens.splice(index, 1);
+  garantirImagemPrincipal();
   renderPreviewImagens();
 }
 
@@ -174,7 +192,7 @@ if (imagens.length >= 5) {
   scale: 1
 });
   }
-
+garantirImagemPrincipal();
   renderPreviewImagens();
   e.target.value = "";
 };
@@ -433,5 +451,16 @@ function habilitarZoomImagem(imgEl, estado) {
 
     aplicarTransformImagem(imgEl, estado);
   }, { passive: false });
+}
+
+function definirImagemPrincipal(index) {
+  const imagens = getImagensTempAtivas();
+  if (!imagens || !imagens[index]) return;
+
+  imagens.forEach((img, i) => {
+    img.principal = i === index;
+  });
+
+  renderPreviewImagens();
 }
 
