@@ -110,43 +110,41 @@ function renderPreviewImagens() {
 
   preview.innerHTML = "";
 
- getImagensTempAtivas().forEach((img, index) => {
+  getImagensTempAtivas().forEach((img, index) => {
+
+    const isPrincipal = img.principal === true;
+
     const div = document.createElement("div");
     div.className = "preview-item";
 
     div.innerHTML = `
-  <div class="preview-image-wrapper"></div>
+      <div class="preview-image-wrapper"></div>
 
-  const isPrincipal = img.principal === true;
+      <div class="preview-star ${isPrincipal ? 'principal' : ''}"
+           onclick="definirImagemPrincipal(${index})"
+           title="Definir como capa">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>
+        </svg>
+      </div>
 
-<div class="preview-star ${isPrincipal ? 'principal' : ''}"
-     onclick="definirImagemPrincipal(${index})"
-     title="Definir como capa">
-  <svg viewBox="0 0 24 24">
-    <path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>
-  </svg>
-</div>
+      <button class="preview-delete"
+              onclick="removerImagem(${index})"
+              title="Remover">
+        🗑️
+      </button>
+    `;
 
-    <button onclick="removerImagem(${index})" title="Remover">
-      🗑️
-    </button>
-  </div>
-`;
+    const wrapper = div.querySelector(".preview-image-wrapper");
 
-   const wrapper = div.querySelector(".preview-image-wrapper");
+    const image = document.createElement("img");
+    image.src = img.url || img.preview || "";
 
-const image = document.createElement("img");
-image.src = img.url || img.preview || "";
+    aplicarTransformImagem(image, img);
+    habilitarZoomImagem(image, img);
+    habilitarDragImagem(image, img);
 
-// transforma (zoom + posição)
-aplicarTransformImagem(image, img);
-   //habilita zoom
-habilitarZoomImagem(image, img);
-// habilita drag
-habilitarDragImagem(image, img);
-
-wrapper.appendChild(image);
-
+    wrapper.appendChild(image);
     preview.appendChild(div);
   });
 }
