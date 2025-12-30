@@ -222,11 +222,13 @@ function montarListaItensPacote(selecionados = []) {
   
   bloco.innerHTML = `
     <label>Selecionar itens *</label>
-    <div class="pacote-dropdown-header" onclick="toggleDropdownPacote(event)">
-      Selecionar itens
-      <span>▾</span>
-    </div>
-    <div class="pacote-dropdown-lista" id="pacote-dropdown-lista"></div>
+    <div class="pacote-dropdown">
+  <div class="pacote-dropdown-header" id="pacote-dropdown-header">
+    Selecionar itens
+    <span>▾</span>
+  </div>
+  <div class="pacote-dropdown-lista" id="pacote-dropdown-lista"></div>
+</div>
   `;
 
   const lista = document.getElementById("pacote-dropdown-lista");
@@ -252,6 +254,7 @@ function montarListaItensPacote(selecionados = []) {
   });
 
   atualizarPreviewItensPacote();
+  bindDropdownPacote();
 }
 
 function toggleDropdownPacote(e) {
@@ -424,4 +427,26 @@ async function excluirPacote(pacoteId = MENU_PACOTE_ATUAL) {
 function bindEventosPacotes() {
   document.getElementById("btn-novo-pacote")
     ?.addEventListener("click", abrirModalNovoPacote);
+}
+
+function bindDropdownPacote() {
+  const header = document.getElementById("pacote-dropdown-header");
+  const lista = document.getElementById("pacote-dropdown-lista");
+
+  if (!header || !lista) return;
+
+  header.onclick = e => {
+    e.stopPropagation();
+    lista.classList.toggle("aberto");
+  };
+
+  lista.onclick = e => e.stopPropagation();
+
+  document.addEventListener("click", fecharDropdownPacote);
+}
+
+function fecharDropdownPacote() {
+  document
+    .getElementById("pacote-dropdown-lista")
+    ?.classList.remove("aberto");
 }
