@@ -1116,4 +1116,19 @@ label {
   overflow: visible;
 }
 
+/* =========================================
+   MODAL ITEM – DESCRIÇÃO + DROPDOWN EM 2 METADES
+   ========================================= */
 
+/* cria uma linha com 2 colunas */
+#modal-item .linha-descricao-dropdown {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+/* remove qualquer herança estranha */
+#modal-item .linha-descricao-dropdown .form-group {
+  margin: 0;
+}
