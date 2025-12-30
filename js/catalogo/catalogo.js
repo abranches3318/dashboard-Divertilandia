@@ -88,7 +88,7 @@ function renderPreviewImagens() {
 
     div.innerHTML = `
       <div class="preview-image-wrapper">
-        <img src="${img.url || img.preview}" />
+        <img src="${img.url || img.preview || ''}" />
       </div>
 
       <div class="preview-top-actions">
@@ -108,13 +108,20 @@ function renderPreviewImagens() {
 
 
 function removerImagem(index) {
-  CATALOGO_STATE.imagensTemp.splice(index, 1);
+  const imagens = getImagensTempAtivas();
+  imagens.splice(index, 1);
   renderPreviewImagens();
 }
 
-function definirImagemPrincipal(index) {
-  CATALOGO_STATE.imagensTemp.forEach(img => img.principal = false);
-  CATALOGO_STATE.imagensTemp[index].principal = true;
+unction definirImagemPrincipal(index) {
+  const imagens = getImagensTempAtivas();
+
+  imagens.forEach(img => img.principal = false);
+
+  if (imagens[index]) {
+    imagens[index].principal = true;
+  }
+
   renderPreviewImagens();
 }
 
@@ -142,6 +149,54 @@ if (imagens.length >= 5) {
 
   renderPreviewImagens();
   e.target.value = "";
+};
+
+async function uploadImagensRegistro({ colecao, registroId }) {
+  if (!colecao || !registroId) {
+    throw new Error("Parâmetros inválidos para upload de imagens");
+  }
+
+  const imagens = getImagensTempAtivas();
+  const fotos = [];
+
+  for (const img of imagens) {
+    // mantém imagens já existentes
+    if (img.existente) {
+      fotos.push(img);
+      continue;
+    }
+
+    const ref = firebase
+      .storage()
+      .ref(`${colecao}/${registroId}/${Date.now()}_${img.file.name}`);
+
+    await ref.put(img.file);
+    const url = await ref.getDownloadURL();
+
+    fotos.push({
+      url,
+      principal: img.principal || false,
+      offsetX: img.offsetX ?? 0,
+      offsetY: img.offsetY ?? 0,
+      scale: img.scale ?? 1
+    });
+  }
+
+  return fotos;
+}
+
+window.uploadImagensItem = async function (itemId) {
+  return uploadImagensRegistro({
+    colecao: "item",
+    registroId: itemId
+  });
+};
+
+window.uploadImagensPacote = async function (pacoteId) {
+  return uploadImagensRegistro({
+    colecao: "pacotes",
+    registroId: pacoteId
+  });
 };
 
 // ============================
