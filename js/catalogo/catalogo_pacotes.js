@@ -186,7 +186,7 @@ function editarPacote() {
     offsetY: f.offsetY ?? 0,
     scale: f.scale ?? 1
   }));
-
+garantirImagemPrincipal();
   renderPreviewImagens();
 
 
