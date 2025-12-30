@@ -1106,23 +1106,7 @@ label {
    DESCRIÇÃO + DROPDOWN NA MESMA LINHA
    ===================================================== */
 
-.linha-descricao-pacote {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr; /* MESMO GRID DO TOPO */
-  gap: 18px;
-  align-items: flex-start;
-}
 
-.linha-descricao-pacote textarea {
-  min-height: 120px;
-  max-height: 120px;
-  resize: none;
-    grid-column: 1 / span 2; /* Nome + Preço */
-}
-
-.linha-descricao-pacote .form-group {
-  margin-bottom: 0;
-}
 
 .preview-item.capa {
   outline: 2px solid #4caf50;
@@ -1132,22 +1116,11 @@ label {
   overflow: visible;
 }
 
-.linha-descricao-pacote .pacote-dropdown {
-  grid-column: 3; /* mesma coluna do STATUS */
-}
 
-/* FORÇA a linha descrição + dropdown a ocupar o grid inteiro */
-.form-grid > .linha-descricao-pacote {
-  grid-column: 1 / -1;
-}
 
 /* ===== MODAL PACOTE – GRID DESCRIÇÃO + DROPDOWN ===== */
 
-#modal-pacote .form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
+
 
 /* descrição ocupa 2 colunas */
 #modal-pacote .descricao-pacote {
