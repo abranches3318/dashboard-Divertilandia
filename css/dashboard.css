@@ -1135,3 +1135,8 @@ label {
 .linha-descricao-pacote .pacote-dropdown {
   grid-column: 3; /* mesma coluna do STATUS */
 }
+
+/* FORÇA a linha descrição + dropdown a ocupar o grid inteiro */
+.form-grid > .linha-descricao-pacote {
+  grid-column: 1 / -1;
+}
