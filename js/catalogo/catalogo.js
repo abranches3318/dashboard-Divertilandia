@@ -121,8 +121,11 @@ function renderPreviewImagens() {
 const image = document.createElement("img");
 image.src = img.url || img.preview || "";
 
-// aplica transform seguro (ainda neutro)
+// transforma (zoom + posição)
 aplicarTransformImagem(image, img);
+
+// habilita drag
+habilitarDragImagem(image, img);
 
 wrapper.appendChild(image);
 
@@ -383,6 +386,37 @@ function habilitarDragImagem(imgEl, estado) {
 
   window.addEventListener("mouseup", () => {
     if (!dragging) return;
+    dragging = false;
+    imgEl.style.cursor = "grab";
+  });
+}
+
+function habilitarDragImagem(imgEl, estado) {
+  let dragging = false;
+  let startX = 0;
+  let startY = 0;
+
+  imgEl.style.cursor = "grab";
+
+  imgEl.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    dragging = true;
+    imgEl.style.cursor = "grabbing";
+
+    startX = e.clientX - (estado.offsetX || 0);
+    startY = e.clientY - (estado.offsetY || 0);
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+
+    estado.offsetX = e.clientX - startX;
+    estado.offsetY = e.clientY - startY;
+
+    aplicarTransformImagem(imgEl, estado);
+  });
+
+  window.addEventListener("mouseup", () => {
     dragging = false;
     imgEl.style.cursor = "grab";
   });
