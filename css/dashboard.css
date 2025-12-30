@@ -1108,16 +1108,16 @@ label {
 
 .linha-descricao-pacote {
   display: grid;
-  grid-template-columns: 2fr 1.2fr;
-  gap: 20px;
+  grid-template-columns: 2fr 1fr 1fr; /* MESMO GRID DO TOPO */
+  gap: 18px;
   align-items: flex-start;
 }
-
 
 .linha-descricao-pacote textarea {
   min-height: 120px;
   max-height: 120px;
   resize: none;
+    grid-column: 1 / span 2; /* Nome + Preço */
 }
 
 .linha-descricao-pacote .form-group {
@@ -1130,4 +1130,8 @@ label {
 
 .modal-content {
   overflow: visible;
+}
+
+.linha-descricao-pacote .pacote-dropdown {
+  grid-column: 3; /* mesma coluna do STATUS */
 }
