@@ -1245,5 +1245,5 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 /* STATUS */
 .itens-header > div:nth-child(4),
 .item-row .item-status {
-  transform: translateX(-25px); /* ajuste fino */
+  transform: translateX(-30px); /* ajuste fino */
 }
