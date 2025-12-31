@@ -1108,6 +1108,11 @@ margin-bottom: 16px;
   display: none;
 }
 
+.preview-open {
+color: #4cafef;        /* 🔵 visível no fundo escuro */
+  cursor: pointer;
+   }
+
 .preview-actions-top {
   display: flex;
   justify-content: space-between;
@@ -1132,4 +1137,8 @@ margin-bottom: 16px;
 .preview-open:hover,
 .preview-delete:hover {
   opacity: 1;
+}
+
+.preview-open:hover {
+  color: #81d4fa;        /* hover sutil */
 }
