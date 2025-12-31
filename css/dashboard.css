@@ -1229,14 +1229,14 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   column-gap: 16px;
 }
 
-/* VALOR */
+/* VALOR – ok manter */
 .itens-header > div:nth-child(3),
 .item-row .item-valor {
   transform: translateX(-50px);
 }
 
-/* STATUS – SOMENTE CABEÇALHO */
+/* STATUS – SOMENTE ALINHAMENTO INTERNO */
 .itens-header > div:nth-child(4) {
-  justify-self: center;
-  transform: translateX(-20px);
+  display: flex;
+  justify-content: center;
 }
