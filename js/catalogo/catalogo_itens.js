@@ -142,6 +142,7 @@ function abrirModalNovoItem() {
   limparPreviewImagens();
   ITEM_EDITANDO_ID = null;
   MODAL_CONTEXTO = "item";
+  prepararModalItem();
 
   document.getElementById("item-quantidade").parentElement.style.display = "";
   document.getElementById("modal-item-titulo").textContent = "Novo Item";
@@ -154,6 +155,7 @@ function editarItem() {
   limparContextoModal();
   limparPreviewImagens();
   MODAL_CONTEXTO = "item";
+  prepararModalItem();
 
   const item = CATALOGO_STATE.itens.find(i => i.id === MENU_ITEM_ATUAL);
   if (!item) return;
