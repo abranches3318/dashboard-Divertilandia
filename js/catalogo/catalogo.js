@@ -445,25 +445,22 @@ function abrirImagemNoNavegador(url) {
 
 function prepararModalPacote() {
   const modal = document.getElementById("modal-item");
-
-  // ativa modo pacote
   modal.classList.add("modo-pacote");
 
-  // altera label
-  const label = modal.querySelector("label[for='item-nome']") 
-             || modal.querySelector("#item-nome")?.previousElementSibling;
-
-  if (label) {
-    label.textContent = "Nome do pacote *";
+  // label
+  const labelNome = document.getElementById("label-nome-item");
+  if (labelNome) {
+    labelNome.textContent = "Nome do pacote *";
   }
 
-  // faz o campo ocupar 2 colunas
-  const inputNome = document.getElementById("item-nome");
-  const formGroup = inputNome?.closest(".form-group");
+  // form-groups
+  const fgNome = document.getElementById("item-nome")?.closest(".form-group");
+  const fgPreco = document.getElementById("item-preco")?.closest(".form-group");
+  const fgStatus = document.getElementById("item-status")?.closest(".form-group");
 
-  if (formGroup) {
-    formGroup.classList.add("nome-principal");
-  }
+  fgNome?.classList.add("nome-principal");
+  fgPreco?.classList.add("preco");
+  fgStatus?.classList.add("status");
 }
 
 function prepararModalItem() {
@@ -488,5 +485,21 @@ function prepararModalItem() {
   if (formGroup) {
     formGroup.classList.remove("nome-principal");
   }
+}
+
+function limparModoPacote() {
+  const modal = document.getElementById("modal-item");
+  modal.classList.remove("modo-pacote");
+
+  const labelNome = document.getElementById("label-nome-item");
+  if (labelNome) {
+    labelNome.textContent = "Nome do item *";
+  }
+
+  modal.querySelectorAll(
+    ".form-group.nome-principal, .form-group.preco, .form-group.status"
+  ).forEach(el => {
+    el.classList.remove("nome-principal", "preco", "status");
+  });
 }
 
