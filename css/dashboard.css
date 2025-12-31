@@ -907,9 +907,13 @@ margin-bottom: 16px;
    ===================================================== */
 
 #lista-pacotes .item-thumb {
-  width: 160px;
-  height: 80px;
+  width: 140px;
+  height: 90px;
   flex-shrink: 0;
+}
+
+#lista-pacotes .item-info {
+  min-width: 0;               /* 🔴 ESSENCIAL */
 }
 
 #lista-pacotes .item-thumb-wrapper {
@@ -930,6 +934,31 @@ margin-bottom: 16px;
 }
 
 
+#lista-pacotes .item-row {
+  max-width: 950px;
+  min-height: 140px;
+  margin: 0 auto;              /* centraliza */
+  padding: 16px 24px;
+}
+
+#lista-pacotes .item-row {
+  display: grid;
+  grid-template-columns:
+    140px        /* imagem */
+    1fr          /* nome + info */
+    100px        /* valor */
+    90px         /* status */
+    40px;        /* ações */
+  column-gap: 20px;
+}
+
+
+#lista-pacotes .item-nome {
+  font-weight: 600;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+}
 /* =====================================================
    MODAL – LARGO, SEM SCROLL INTERNO
    ===================================================== */
