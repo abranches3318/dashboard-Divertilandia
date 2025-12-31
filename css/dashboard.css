@@ -956,16 +956,24 @@ margin-bottom: 16px;
    FORMULÁRIO – GRID FUNCIONAL
    ===================================================== */
 
-.form-grid {
+/* GRID CORRETO DO MODAL ITEM */
+#modal-item .form-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 18px 22px;
 }
 
+#modal-item #grupo-descricao {
+  grid-column: 1 / -1;
+}
 .form-group.full {
   grid-column: 1 / -1;
 }
 
+#modal-item .imagens-bloco {
+  grid-column: 1 / -1;
+  margin-top: 12px;
+}
 
 /* =====================================================
    ITENS DO PACOTE – 3 ITENS POR COLUNA
