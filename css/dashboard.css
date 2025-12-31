@@ -1248,28 +1248,23 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   transform: translateX(-18px);
 }
 
-/* ===============================
-   SCROLL SOMENTE NA LISTA
-   =============================== */
-
 .itens-lista {
-  height: calc(100vh - 320px);
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
 
-  scroll-behavior: smooth;
   padding-right: 6px;
+  scroll-behavior: smooth;
 }
 
-/* Cabeçalho fixo dentro da lista */
 .itens-header {
+  flex-shrink: 0;
   position: sticky;
   top: 0;
   z-index: 2;
   background: #1b1b1b;
 }
-
-/* Scrollbar elegante — Chrome / Edge */
 .itens-lista::-webkit-scrollbar {
   width: 6px;
 }
@@ -1283,7 +1278,7 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   background: rgba(255, 255, 255, 0.4);
 }
 
-/* Firefox */
 .itens-lista {
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,.35) transparent;
+}
