@@ -777,7 +777,7 @@ label {
    PREVIEW DE IMAGENS – LAYOUT FINAL (CORRIGIDO)
 ================================ */
 
-/* Container das imagens */
+
 #preview-imagens {
   display: flex;
   flex-direction: row;
@@ -788,6 +788,7 @@ label {
 
   overflow-x: hidden;
   overflow-y: hidden;
+     margin-bottom: 16px;
 }
 
 /* Item individual */
@@ -824,23 +825,20 @@ label {
 
 /* ================= BOTÕES ================= */
 
-/* Remove qualquer moldura padrão */
-.preview-top-actions button,
-.preview-delete,
+
 .preview-star {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 5;
+
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
 }
 
-.preview-top-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 6px;
-  gap: 10px;
-}
+
 
 .preview-delete {
   position: absolute;
@@ -862,16 +860,6 @@ label {
   z-index: 20;
 }
 
-/* ================= ESTRELA ================= */
-
-/* Base */
-.preview-star {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  z-index: 5;
-  cursor: pointer;
-}
 
 .preview-star svg {
   width: 22px;
@@ -895,44 +883,9 @@ label {
 
 /* ================= ÍCONES ================= */
 
-.preview-top-actions svg,
-.preview-delete svg {
-  width: 22px;
-  height: 22px;
-  fill: #fff;
-  opacity: 0.85;
-}
 
-.preview-open,
-.preview-delete {
-  position: absolute;
-  top: -28px; /* acima da imagem */
-  width: 28px;
-  height: 28px;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
 
-.preview-top-actions svg:hover,
-.preview-delete svg:hover {
-  opacity: 1;
-}
 
-#preview-imagens {
-  margin-bottom: 16px;
-}
-
-.preview-top-actions button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
 
 .menu-acoes {
@@ -1049,13 +1002,6 @@ label {
 #pacote-itens-preview > div {
   width: 120px;
   height: 90px;
-}
-/* =====================================================
-   IMAGENS – UMA LINHA SÓ
-   ===================================================== */
-
-.preview-imagens > div {
-  flex-shrink: 0;
 }
 
 /* =====================================================
