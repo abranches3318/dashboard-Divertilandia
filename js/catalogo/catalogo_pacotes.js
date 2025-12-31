@@ -138,6 +138,7 @@ function renderPacotes() {
 function abrirModalNovoPacote() {
   PACOTE_EDITANDO_ID = null;
   MODAL_CONTEXTO = "pacote";
+  prepararModalPacote();
 
   
 
@@ -162,6 +163,8 @@ function abrirModalNovoPacote() {
 function editarPacote() {
   
   MODAL_CONTEXTO = "pacote";
+
+  prepararModalPacote();
 
   const pacote = CATALOGO_STATE.pacotes.find(p => p.id === MENU_PACOTE_ATUAL);
   if (!pacote) return;
