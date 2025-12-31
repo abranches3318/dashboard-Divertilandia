@@ -35,7 +35,7 @@ function renderItens() {
   }
 
   el.innerHTML = `
-    <div class="itens-header">
+   <div class="itens-header">
   <div></div>
   <div>Item</div>
   <div class="col-valor">Valor</div>
