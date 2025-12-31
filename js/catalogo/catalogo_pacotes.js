@@ -69,14 +69,13 @@ function renderPacotes() {
   }
 
   el.innerHTML = `
-   <div class="itens-header">
+  <div class="itens-header">
   <div></div>
   <div>Pacote</div>
   <div class="col-valor">Valor</div>
   <div class="col-status">Status</div>
   <div></div>
 </div>
-
       ${CATALOGO_STATE.pacotes.map(pacote => {
         const capa =
           Array.isArray(pacote.fotos)
