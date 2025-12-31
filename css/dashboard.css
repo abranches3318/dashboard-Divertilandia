@@ -1293,12 +1293,3 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   scrollbar-color: rgba(255,255,255,.35) transparent;
 }
 
-.itens-header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: #1b1b1b;
-
-  /* ISOLA O STICKY */
-  isolation: isolate;
-}
