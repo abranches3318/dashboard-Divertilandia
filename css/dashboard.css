@@ -934,24 +934,28 @@ margin-bottom: 16px;
 }
 
 
-#lista-pacotes .item-row {
+#lista-pacotes .itens-container {
   max-width: 950px;
-  min-height: 140px;
-  margin: 0 auto;              /* centraliza */
-  padding: 16px 24px;
+}
+
+#lista-pacotes .itens-wrapper {
+  display: flex;
+  justify-content: flex-start; /* mantém alinhado à esquerda */
 }
 
 #lista-pacotes .item-row {
   display: grid;
   grid-template-columns:
-    140px        /* imagem */
-    1fr          /* nome + info */
-    100px        /* valor */
-    90px         /* status */
-    40px;        /* ações */
+    140px
+    1fr
+    100px
+    90px
+    40px;
   column-gap: 20px;
-}
 
+  width: 100%;
+  min-height: 140px;
+}
 
 #lista-pacotes .item-nome {
   font-weight: 600;
