@@ -1222,8 +1222,8 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   grid-template-columns:
     120px    /* imagem */
     1fr      /* nome */
-    100px    /* valor */
-    70px    /* status */
+    110px    /* valor */
+    90px    /* status */
     40px;    /* ações */
 
   align-items: center;
