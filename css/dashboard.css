@@ -103,22 +103,21 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: hidden;
-  height: 100vh;
   transition: margin-left 0.3s;
   padding: 0;
 }
 
 .pagina.ativa {
-  display: block;
-  height: 100%;
+  display: flex;
+   flex-direction: column;
   min-height: 0;   /* 🔴 FUNDAMENTAL para scroll interno funcionar */
 }
 
 .panel {
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-height: 0;
-  height: calc(100vh - 140px); 
 }
 
 /* ============================
@@ -1266,7 +1265,6 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   overflow-x: hidden;
 
   padding-right: 6px;
-  scroll-behavior: smooth;
 }
 
 .itens-header {
