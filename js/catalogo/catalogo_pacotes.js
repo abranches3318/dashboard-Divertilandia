@@ -69,14 +69,13 @@ function renderPacotes() {
   }
 
   el.innerHTML = `
-    <div class="itens-lista">
-      <div class="itens-header">
-        <div></div>
-        <div>Pacote</div>
-        <div style="text-align:center;">Valor</div>
-        <div style="text-align:center;">Status</div>
-        <div></div>
-      </div>
+   <div class="itens-header">
+  <div></div>
+  <div>Pacote</div>
+  <div class="col-valor">Valor</div>
+  <div class="col-status">Status</div>
+  <div></div>
+</div>
 
       ${CATALOGO_STATE.pacotes.map(pacote => {
         const capa =
