@@ -118,22 +118,16 @@ function renderPreviewImagens() {
     div.className = "preview-item";
 
     div.innerHTML = `
-  <div class="preview-actions">
-    <div></div>
+ <button class="preview-open"
+    onclick="abrirImagemNoNavegador('${img.url || img.preview}')"
+    title="Abrir imagem">
+  </button>
 
-    <div class="preview-actions-right">
-      <button class="preview-open"
-        onclick="abrirImagemNoNavegador('${img.url || img.preview}')"
-        title="Abrir imagem">
-      </button>
-
-      <button class="preview-delete"
-        onclick="removerImagem(${index})"
-        title="Remover">
-        ✖
-      </button>
-    </div>
-  </div>
+  <button class="preview-delete"
+    onclick="removerImagem(${index})"
+    title="Remover">
+    ✖
+  </button>
 
   <div class="preview-image-wrapper">
     <img />
