@@ -842,7 +842,7 @@ label {
 
 .preview-delete {
   position: absolute;
-  top: -32px;
+  top: -28px;
   right: 0;
 
   width: 28px;
@@ -1125,7 +1125,7 @@ label {
 
 .preview-open {
   position: absolute;
-  top: -32px;
+  top: -28px;
   left: 0;
 
   width: 28px;
