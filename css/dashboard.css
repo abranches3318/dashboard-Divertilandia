@@ -606,12 +606,6 @@ label {
   background: #f4f4f4;
 }
 
-.item-thumb img {
-  width: 70px;
-  height: 70px;
-  object-fit: cover;
-  border-radius: 8px;
-}
 
 .item-info {
   display: flex;
@@ -721,7 +715,7 @@ label {
 .item-row {
   display: grid;
   grid-template-columns:
-    80px        /* imagem */
+    120px        /* imagem */
     1fr         /* nome */
     120px       /* valor (mais para o meio) */
     110px        /* status (mais para o meio) */
@@ -762,7 +756,8 @@ label {
 }
 
 .item-row {
-  height: 100px;
+min-height: 130px;   /* cresce com a imagem */
+  padding: 12px 0;
   background: rgba(255,255,255,0.02);
   border-radius: 10px;
 }
