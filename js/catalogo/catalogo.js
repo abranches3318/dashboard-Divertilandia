@@ -118,28 +118,41 @@ function renderPreviewImagens() {
     div.className = "preview-item";
 
     div.innerHTML = `
-      <div class="preview-image-wrapper"></div>
+  <div class="preview-actions">
+    <div></div>
 
-      <div class="preview-star ${isPrincipal ? 'principal' : ''}"
-           onclick="definirImagemPrincipal(${index})"
-           title="Definir como capa">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>
-        </svg>
-      </div>
+    <div class="preview-actions-right">
+      <button class="preview-open"
+        onclick="abrirImagemNoNavegador('${img.url || img.preview}')"
+        title="Abrir imagem">
+      </button>
 
       <button class="preview-delete"
-              onclick="removerImagem(${index})"
-              title="Remover">
-        🗑️
+        onclick="removerImagem(${index})"
+        title="Remover">
+        ✖
       </button>
-    `;
+    </div>
+  </div>
+
+  <div class="preview-image-wrapper">
+    <img />
+
+    <div class="preview-star ${isPrincipal ? 'principal' : ''}"
+         onclick="definirImagemPrincipal(${index})"
+         title="Definir como capa">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>
+      </svg>
+    </div>
+  </div>
+`;
 
     const wrapper = div.querySelector(".preview-image-wrapper");
 
-    const image = document.createElement("img");
-    image.src = img.url || img.preview || "";
-
+   const image = div.querySelector("img");
+image.src = img.url || img.preview || "";
+    
     aplicarTransformImagem(image, img);
     habilitarZoomImagem(image, img);
     habilitarDragImagem(image, img);
@@ -460,5 +473,11 @@ function definirImagemPrincipal(index) {
   });
 
   renderPreviewImagens();
+}
+
+
+function abrirImagemNoNavegador(url) {
+  if (!url) return;
+  window.open(url, "_blank", "noopener");
 }
 
