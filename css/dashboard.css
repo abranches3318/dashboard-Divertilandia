@@ -710,19 +710,18 @@ label {
   color: #ff6b6b;
 }
 
+/* VALOR */
+.item-valor,
+.itens-header .col-valor {
+  justify-self: end;
+  text-align: right;
+}
 
-.itens-header,
-.item-row {
-  display: grid;
-  grid-template-columns:
-    120px        /* imagem */
-    1fr         /* nome */
-    120px       /* valor (mais para o meio) */
-    110px        /* status (mais para o meio) */
-    40px;       /* ações */
-  align-items: center;
-  column-gap: 20px;
-  padding: 0 24px;
+/* STATUS */
+.item-status,
+.itens-header .col-status {
+  justify-self: center;
+  text-align: center;
 }
 
 .itens-header {
@@ -732,12 +731,6 @@ label {
   opacity: 0.6;
   border-bottom: 1px solid rgba(255,255,255,0.08);
   margin-bottom: 12px;
-}
-
-
-.item-status {
-  justify-self: center;
-  text-align: center;
 }
 
 .item-row,
@@ -768,6 +761,15 @@ min-height: 130px;   /* cresce com a imagem */
   text-align: right;
 }
 
+
+.item-info {
+  min-width: 0;
+}
+
+.item-nome {
+  white-space: normal;
+  word-break: break-word;
+}
 /* ===============================
    PREVIEW DE IMAGENS – LAYOUT FINAL (CORRIGIDO)
 ================================ */
@@ -1212,4 +1214,18 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 /* Descrição */
 #modal-item.modo-pacote .form-group.full {
   grid-column: 1 / -1;
+}
+
+.itens-header,
+.item-row {
+  display: grid;
+  grid-template-columns:
+    140px    /* imagem */
+    1fr      /* nome */
+    120px    /* valor */
+    110px    /* status */
+    40px;    /* ações */
+
+  align-items: center;
+  column-gap: 20px;
 }
