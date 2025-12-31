@@ -588,21 +588,22 @@ label {
 }
 
 .item-thumb {
-  width: 72px;
-  height: 72px;
+  width: 110px;
+  height: 110px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+    flex-shrink: 0;
 }
 
 .item-thumb-wrapper {
   position: relative;
-  width: 70px;
-  height: 70px;
+  width: 100%;
+  height:  100%;
   overflow: hidden;
-  border-radius: 8px;
-  background: #111;
+  border-radius: 10px;
+  background: #f4f4f4;
 }
 
 .item-thumb img {
