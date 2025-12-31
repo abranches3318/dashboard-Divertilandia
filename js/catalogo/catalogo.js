@@ -30,6 +30,12 @@ function getImagensTempAtivas() {
     : CATALOGO_STATE.imagensTempItem;
 }
 
+function aplicarImagemCard(imgEl) {
+  imgEl.style.transform = "none";
+  imgEl.style.transformOrigin = "center center";
+  imgEl.style.objectFit = "contain";
+}
+
 // ============================
 // HELPERS GLOBAIS (UTILS)
 // ============================
