@@ -1249,11 +1249,11 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 }
 
 /* ===============================
-   SCROLL APENAS NA LISTA
+   SCROLL SOMENTE NA LISTA
    =============================== */
 
 .itens-lista {
-  max-height: 520px;
+  height: calc(100vh - 320px);
   overflow-y: auto;
   overflow-x: hidden;
 
@@ -1266,7 +1266,7 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #fff;
+  background: #1b1b1b;
 }
 
 /* Scrollbar elegante — Chrome / Edge */
@@ -1275,16 +1275,15 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 }
 
 .itens-lista::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.25);
   border-radius: 10px;
 }
 
 .itens-lista::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 /* Firefox */
 .itens-lista {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0,0,0,.3) transparent;
-}
+  scrollbar-color: rgba(255,255,255,.35) transparent;
