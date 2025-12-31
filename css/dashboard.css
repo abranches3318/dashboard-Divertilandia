@@ -1245,5 +1245,5 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 
 /* STATUS — AJUSTE FINO APENAS DO TEXTO */
 .itens-header > div:nth-child(4) {
-  transform: translateX(-10px);
+  transform: translateX(-18px);
 }
