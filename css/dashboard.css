@@ -1282,3 +1282,8 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,.35) transparent;
 }
+
+.itens-header {
+  border-top: 1px solid rgba(255,255,255,.12);
+  padding-top: 12px;
+}
