@@ -1230,11 +1230,11 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 }
 
 
-/* STATUS — grid correto */
-.item-status {
-  justify-self: center; /* controla posição na coluna */
-  text-align: center;
-  width: 100%;
+/* STATUS — DESLOCAMENTO DA COLUNA INTEIRA */
+.itens-header > div:nth-child(4),
+.item-row .item-status {
+  justify-self: center;
+  transform: translateX(-40px); /* ajuste visual */
 }
 
 /* VALOR */
@@ -1243,7 +1243,7 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   transform: translateX(-50px);
 }
 
+/* STATUS — AJUSTE FINO APENAS DO TEXTO */
 .itens-header > div:nth-child(4) {
-  justify-self: center;
-  text-align: center;
+  transform: translateX(-35px);
 }
