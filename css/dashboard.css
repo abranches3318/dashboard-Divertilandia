@@ -1239,11 +1239,11 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 /* VALOR */
 .itens-header > div:nth-child(3),
 .item-row .item-valor {
-  transform: translateX(-16px); /* ajuste fino */
+  transform: translateX(-30px); /* ajuste fino */
 }
 
 /* STATUS */
 .itens-header > div:nth-child(4),
 .item-row .item-status {
-  transform: translateX(-10px); /* ajuste fino */
+  transform: translateX(-15px); /* ajuste fino */
 }
