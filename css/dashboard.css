@@ -1230,10 +1230,6 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   column-gap: 16px;
 }
 
-.itens-header > div:nth-child(4) {
-  justify-self: center;
-  transform: translateX(40px);
-}
 
 
 /* VALOR */
@@ -1245,5 +1241,5 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 /* STATUS */
 .itens-header > div:nth-child(4),
 .item-row .item-status {
-  transform: translateX(-30px); /* ajuste fino */
+  transform: translateX(-36px); /* ajuste fino */
 }
