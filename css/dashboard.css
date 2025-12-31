@@ -1153,9 +1153,8 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 
 
 
-
-
-
 #modal-item.modo-pacote #item-descricao {
   grid-column: 1 / -1;
 }
+
+
