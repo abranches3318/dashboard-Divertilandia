@@ -1155,3 +1155,17 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 .preview-open:hover {
   color: #81d4fa;        /* hover sutil */
 }
+
+/* =========================================
+   MODAL PACOTE — AJUSTE LINHA 1
+   ========================================= */
+
+/* quando o modal estiver em contexto pacote */
+#modal-item.modo-pacote .form-grid {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+/* Nome do pacote ocupa 2 colunas */
+#modal-item.modo-pacote .form-group.nome-principal {
+  grid-column: 1 / span 2;
+}
