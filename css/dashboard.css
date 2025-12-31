@@ -1232,18 +1232,18 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 
 .itens-header > div:nth-child(4) {
   justify-self: center;
-  transform: translateX(16px);
+  transform: translateX(20px);
 }
 
 
 /* VALOR */
 .itens-header > div:nth-child(3),
 .item-row .item-valor {
-  transform: translateX(-30px); /* ajuste fino */
+  transform: translateX(-50px); /* ajuste fino */
 }
 
 /* STATUS */
 .itens-header > div:nth-child(4),
 .item-row .item-status {
-  transform: translateX(-15px); /* ajuste fino */
+  transform: translateX(-25px); /* ajuste fino */
 }
