@@ -117,32 +117,27 @@ function renderPreviewImagens() {
     const div = document.createElement("div");
     div.className = "preview-item";
 
-    div.innerHTML = `
- <button class="preview-open"
-  onclick="abrirImagemNoNavegador('${img.url || img.preview}')"
-  title="Abrir imagem">
-  <span class="sr-only">Abrir</span>
-</button>
+   div.innerHTML = `
+  <div class="preview-actions-top">
+    <button class="preview-open"
+      onclick="abrirImagemNoNavegador('${img.url || img.preview}')"
+      title="Abrir imagem"></button>
 
-  <button class="preview-delete"
-    onclick="removerImagem(${index})"
-    title="Remover">
-    ✖
-  </button>
+    <button class="preview-delete"
+      onclick="removerImagem(${index})"
+      title="Remover">✖</button>
+  </div>
 
   <div class="preview-image-wrapper">
     <img />
-
     <div class="preview-star ${isPrincipal ? 'principal' : ''}"
-         onclick="definirImagemPrincipal(${index})"
-         title="Definir como capa">
+      onclick="definirImagemPrincipal(${index})">
       <svg viewBox="0 0 24 24">
         <path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>
       </svg>
     </div>
   </div>
 `;
-
     const wrapper = div.querySelector(".preview-image-wrapper");
 
    const image = div.querySelector("img");
