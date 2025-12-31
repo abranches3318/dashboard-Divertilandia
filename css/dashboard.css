@@ -1294,6 +1294,11 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 }
 
 .itens-header {
-  border-top: 1px solid rgba(255,255,255,.12);
-  padding-top: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #1b1b1b;
+
+  /* ISOLA O STICKY */
+  isolation: isolate;
 }
