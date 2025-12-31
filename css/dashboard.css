@@ -1142,6 +1142,11 @@ label {
 
   cursor: pointer;
   z-index: 20;
+   
+}
+
+.preview-open span {
+  display: none;
 }
 
 
