@@ -975,11 +975,6 @@ margin-bottom: 16px;
   margin-top: 12px;
 }
 
-#modal-pacote #item-nome,
-#modal-pacote .form-group.nome-pacote {
-  grid-column: span 2;
-}
-
 /* =====================================================
    ITENS DO PACOTE – 3 ITENS POR COLUNA
    ===================================================== */
@@ -1156,35 +1151,10 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   color: #81d4fa;        /* hover sutil */
 }
 
-/* =========================================
-   MODAL PACOTE — AJUSTE LINHA 1
-   ========================================= */
 
-/* quando o modal estiver em contexto pacote */
-#modal-item.modo-pacote .form-grid {
-  grid-template-columns: 2fr 1fr 1fr;
-}
 
-/* Nome do pacote ocupa 2 colunas */
-#modal-item.modo-pacote .form-group.nome-principal {
-  grid-column: 1 / span 2;
-}
 
-/* ==========================
-   MODAL — PACOTE (LAYOUT)
-========================== */
 
-#modal-item.modo-pacote .form-grid {
-  grid-template-columns: 2fr 1fr 1fr;
-}
-
-#modal-item.modo-pacote .form-group {
-  grid-column: auto;
-}
-
-#modal-item.modo-pacote .form-group {
-  grid-column: auto;
-}
 
 #modal-item.modo-pacote #item-descricao {
   grid-column: 1 / -1;
