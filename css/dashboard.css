@@ -785,10 +785,7 @@ label {
 
   width: 100%;
   max-width: 100%;
-
-  overflow-x: hidden;
-  overflow-y: hidden;
-     margin-bottom: 16px;
+margin-bottom: 16px;
 }
 
 /* Item individual */
