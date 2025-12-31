@@ -466,3 +466,27 @@ function prepararModalPacote() {
   }
 }
 
+function prepararModalItem() {
+  const modal = document.getElementById("modal-item");
+  if (!modal) return;
+
+  // desativa modo pacote
+  modal.classList.remove("modo-pacote");
+
+  // restaura label
+  const label = modal.querySelector("label[for='item-nome']") 
+             || modal.querySelector("#item-nome")?.previousElementSibling;
+
+  if (label) {
+    label.textContent = "Nome do item *";
+  }
+
+  // restaura layout padrão
+  const inputNome = document.getElementById("item-nome");
+  const formGroup = inputNome?.closest(".form-group");
+
+  if (formGroup) {
+    formGroup.classList.remove("nome-principal");
+  }
+}
+
