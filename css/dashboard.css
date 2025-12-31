@@ -1229,14 +1229,21 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   column-gap: 16px;
 }
 
+/* STATUS — SOMENTE CABEÇALHO */
+.itens-header > div:nth-child(4) {
+  justify-self: center;
+  transform: translateX(40px);
+}
+
+/* STATUS */
+.itens-header > div:nth-child(4),
+.item-row .item-status {
+  transform: translateX(-30px);
+}
 /* VALOR */
 .itens-header > div:nth-child(3),
 .item-row .item-valor {
   transform: translateX(-50px);
 }
 
-/* STATUS — SOMENTE CABEÇALHO */
-.itens-header > div:nth-child(4) {
-  justify-self: center;
-  transform: translateX(40px);
-}
+
