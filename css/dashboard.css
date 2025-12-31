@@ -1220,26 +1220,23 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 .item-row {
   display: grid;
   grid-template-columns:
-    120px    /* imagem */
-    1fr      /* nome */
-    110px    /* valor */
-    90px    /* status */
-    40px;    /* ações */
-
+    120px
+    1fr
+    110px
+    90px
+    40px;
   align-items: center;
   column-gap: 16px;
 }
 
-
-
 /* VALOR */
 .itens-header > div:nth-child(3),
 .item-row .item-valor {
-  transform: translateX(-50px); /* ajuste fino */
+  transform: translateX(-50px);
 }
 
-/* STATUS */
-.itens-header > div:nth-child(4),
-.item-row .item-status {
-  transform: translateX(-36px); /* ajuste fino */
+/* STATUS – SOMENTE CABEÇALHO */
+.itens-header > div:nth-child(4) {
+  justify-self: center;
+  transform: translateX(-20px);
 }
