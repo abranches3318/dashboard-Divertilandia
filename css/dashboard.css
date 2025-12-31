@@ -1169,3 +1169,23 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 #modal-item.modo-pacote .form-group.nome-principal {
   grid-column: 1 / span 2;
 }
+
+/* ==========================
+   MODAL — PACOTE (LAYOUT)
+========================== */
+
+#modal-item.modo-pacote .form-grid {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+#modal-item.modo-pacote .form-group {
+  grid-column: auto;
+}
+
+#modal-item.modo-pacote .form-group {
+  grid-column: auto;
+}
+
+#modal-item.modo-pacote #item-descricao {
+  grid-column: 1 / -1;
+}
