@@ -443,3 +443,26 @@ function abrirImagemNoNavegador(url) {
   window.open(url, "_blank", "noopener");
 }
 
+function prepararModalPacote() {
+  const modal = document.getElementById("modal-item");
+
+  // ativa modo pacote
+  modal.classList.add("modo-pacote");
+
+  // altera label
+  const label = modal.querySelector("label[for='item-nome']") 
+             || modal.querySelector("#item-nome")?.previousElementSibling;
+
+  if (label) {
+    label.textContent = "Nome do pacote *";
+  }
+
+  // faz o campo ocupar 2 colunas
+  const inputNome = document.getElementById("item-nome");
+  const formGroup = inputNome?.closest(".form-group");
+
+  if (formGroup) {
+    formGroup.classList.add("nome-principal");
+  }
+}
+
