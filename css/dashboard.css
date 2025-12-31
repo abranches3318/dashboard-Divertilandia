@@ -1150,3 +1150,24 @@ label {
 #modal-item .linha-descricao-dropdown .form-group {
   margin: 0;
 }
+
+.preview-open {
+  width: 22px;
+  height: 22px;
+  background: url("../img/icon-open.png") no-repeat center;
+  background-size: contain;
+  border: none;
+  cursor: pointer;
+}
+
+.preview-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.preview-actions-right {
+  display: flex;
+  gap: 10px;
+}
+
