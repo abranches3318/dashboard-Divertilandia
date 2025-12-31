@@ -120,8 +120,10 @@ function renderPreviewImagens() {
    div.innerHTML = `
   <div class="preview-actions-top">
     <button class="preview-open"
-      onclick="abrirImagemNoNavegador('${img.url || img.preview}')"
-      title="Abrir imagem"></button>
+  onclick="abrirImagemNoNavegador('${img.url || img.preview}')"
+  title="Abrir em nova aba">
+  🡕
+</button>
 
     <button class="preview-delete"
       onclick="removerImagem(${index})"
