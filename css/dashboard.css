@@ -1103,15 +1103,6 @@ margin-bottom: 16px;
   margin: 0;
 }
 
-.preview-open {
-
-  background-color: #fff;
- background-image: url("/dashboard-Divertilandia/img/icone-abrir.png");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 16px;
-
-}
 
 .preview-open span {
   display: none;
@@ -1123,11 +1114,22 @@ margin-bottom: 16px;
 }
 .preview-open,
 .preview-delete {
-  width: 28px;
-  height: 28px;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+
+  background: transparent;
+  border: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   cursor: pointer;
   z-index: 10;
+  opacity: 0.75;
+}
+
+.preview-open:hover,
+.preview-delete:hover {
+  opacity: 1;
 }
