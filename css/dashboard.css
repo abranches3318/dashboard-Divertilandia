@@ -1249,23 +1249,19 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
 }
 
 /* ===============================
-   SCROLL INTERNO — LISTAS CATÁLOGO
-   (Itens e Pacotes)
+   SCROLL APENAS NA LISTA
    =============================== */
 
 .itens-lista {
-  max-height: 520px;            /* controla a área visível */
+  max-height: 520px;
   overflow-y: auto;
   overflow-x: hidden;
 
-  /* suavidade */
   scroll-behavior: smooth;
-  padding-right: 6px;           /* espaço p/ scrollbar não colar no conteúdo */
+  padding-right: 6px;
 }
 
-/* -------------------------------
-   Cabeçalho fixo (não rola)
-   ------------------------------- */
+/* Cabeçalho fixo dentro da lista */
 .itens-header {
   position: sticky;
   top: 0;
@@ -1273,30 +1269,22 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   background: #fff;
 }
 
-/* -------------------------------
-   Scrollbar elegante (Chrome / Edge)
-   ------------------------------- */
+/* Scrollbar elegante — Chrome / Edge */
 .itens-lista::-webkit-scrollbar {
   width: 6px;
 }
 
-.itens-lista::-webkit-scrollbar-track {
-  background: transparent;
-}
-
 .itens-lista::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.25);
   border-radius: 10px;
 }
 
 .itens-lista::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.4);
 }
 
-/* -------------------------------
-   Scrollbar elegante (Firefox)
-   ------------------------------- */
+/* Firefox */
 .itens-lista {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+  scrollbar-color: rgba(0,0,0,.3) transparent;
 }
