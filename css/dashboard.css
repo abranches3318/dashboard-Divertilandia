@@ -975,6 +975,11 @@ margin-bottom: 16px;
   margin-top: 12px;
 }
 
+#modal-pacote #item-nome,
+#modal-pacote .form-group.nome-pacote {
+  grid-column: span 2;
+}
+
 /* =====================================================
    ITENS DO PACOTE – 3 ITENS POR COLUNA
    ===================================================== */
