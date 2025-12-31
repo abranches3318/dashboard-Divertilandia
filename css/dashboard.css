@@ -1229,3 +1229,8 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   align-items: center;
   column-gap: 16px;
 }
+
+.itens-header > div:nth-child(4) {
+  justify-self: center;
+  transform: translateX(6px);
+}
