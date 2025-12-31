@@ -1157,4 +1157,30 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   grid-column: 1 / -1;
 }
 
+/* =========================================
+   MODAL PACOTE — GRID LINHA 1
+========================================= */
 
+#modal-item.modo-pacote .form-grid {
+  grid-template-columns: 2fr 1fr 1fr; /* 50% | 25% | 25% */
+}
+
+/* Nome */
+#modal-item.modo-pacote .form-group.nome-principal {
+  grid-column: 1 / 2;
+}
+
+/* Preço */
+#modal-item.modo-pacote .form-group.preco {
+  grid-column: 2 / 3;
+}
+
+/* Status */
+#modal-item.modo-pacote .form-group.status {
+  grid-column: 3 / 4;
+}
+
+/* Descrição */
+#modal-item.modo-pacote .form-group.full {
+  grid-column: 1 / -1;
+}
