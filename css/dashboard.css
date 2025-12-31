@@ -102,7 +102,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow-y: hidden;
   height: 100vh;
   transition: margin-left 0.3s;
   padding: 0;
@@ -118,6 +118,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: calc(100vh - 140px); 
 }
 
 /* ============================
@@ -354,6 +355,7 @@ label {
   justify-content: center;
   align-items: center;
   backdrop-filter: blur(3px);
+    z-index: 5000;
 }
 
 .modal.active {
@@ -1271,7 +1273,7 @@ color: #4cafef;        /* 🔵 visível no fundo escuro */
   flex-shrink: 0;
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 1;
   background: #1b1b1b;
 }
 .itens-lista::-webkit-scrollbar {
