@@ -118,6 +118,7 @@ body {
   flex-direction: column;
   flex: 1;
   min-height: 0;
+   margin-bottom: 0; 
 }
 
 /* ============================
