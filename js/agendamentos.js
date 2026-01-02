@@ -14,7 +14,7 @@ if (!storage) console.warn("agendamentos.js: Firebase Storage não encontrado. U
 
 // ---------- DOM ----------
 const painelTabela = document.getElementById("painelTabela");
-const listaEl = document.getElementById("listaAgendamentos");
+const listaEl = document.getElementById("listaEl");
 
 const btnFiltrar = document.getElementById("btnFiltrar");
 const btnNovoAg = document.getElementById("btnNovoAg");
