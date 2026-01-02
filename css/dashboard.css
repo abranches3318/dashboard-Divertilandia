@@ -1178,23 +1178,6 @@ label {
     background: #1b1b1b;
 }
 
-.itens-lista::-webkit-scrollbar {
-    width: 6px;
-}
-
-.itens-lista::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 10px;
-}
-
-.itens-lista::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4);
-}
-
-.itens-lista {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, .35) transparent;
-}
 
 .itens-header {
     border-top: 1px solid rgba(255, 255, 255, .12);
