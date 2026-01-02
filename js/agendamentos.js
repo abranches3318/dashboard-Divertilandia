@@ -178,7 +178,7 @@ function renderTabela(lista, origem = "auto") {
     }
     return;
   }
-  painelTabela.style.display = "block";
+  painelTabela.style.display = "flex";
 
   lista.forEach(a => {
     const dt = parseDateField(a.data);
