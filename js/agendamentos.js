@@ -153,12 +153,9 @@ function renderTabela(lista, origem = "auto") {
   if (!listaEl || !painelTabela) return;
   listaEl.innerHTML = "";
 
-
-
   if (!Array.isArray(lista) || lista.length === 0) {
     painelTabela.style.display = "none";
 
-    // ALERTA SÓ SE VIER DE FILTRO MANUAL
     if (origem === "filtro") {
       Swal.fire({
         title: "Nenhum agendamento encontrado",
@@ -167,7 +164,7 @@ function renderTabela(lista, origem = "auto") {
         showCancelButton: true,
         confirmButtonText: "Criar novo",
         cancelButtonText: "Fechar",
-        customClass: { popup: 'swal-high-z' }
+        customClass: { popup: "swal-high-z" }
       }).then(res => {
         if (res.isConfirmed) {
           abrirModalNovo(
@@ -180,6 +177,7 @@ function renderTabela(lista, origem = "auto") {
     }
     return;
   }
+
   painelTabela.style.display = "flex";
 
   lista.forEach(a => {
@@ -196,77 +194,94 @@ function renderTabela(lista, origem = "auto") {
     const itemName = a.pacoteNome || a.itemNome || a.pacoteId || "---";
     const valor = Number(a.valor_final ?? a.preco ?? 0);
 
-const row = document.createElement("div");
-row.className = "ag-row";
-row.dataset.id = a.id;
+    const row = document.createElement("div");
+    row.className = "ag-row";
+    row.dataset.id = a.id;
 
-row.innerHTML = `
-  <div>${dateStr}</div>
-  <div>${horario}</div>
-  <div>${a.cliente || "---"}</div>
-  <div>${a.telefone || "---"}</div>
-  <div>${enderecoStr || "---"}</div>
-  <div>${itemName}</div>
-  <div class="status-cell">${a.status || "pendente"}</div>
-  <div>${formatNumberToCurrencyString(valor)}</div>
-  <div class="actions-cell"></div>
-`;
+    row.innerHTML = `
+      <div>${dateStr}</div>
+      <div>${horario}</div>
+      <div>${a.cliente || "---"}</div>
+      <div>${a.telefone || "---"}</div>
+      <div>${enderecoStr || "---"}</div>
+      <div>${itemName}</div>
+      <div class="status-cell">${a.status || "pendente"}</div>
+      <div>${formatNumberToCurrencyString(valor)}</div>
 
-listaEl.appendChild(row);
+      <div class="actions-cell">
+        <button class="ag-menu-btn" data-id="${a.id}">⋮</button>
+        <div class="ag-menu-dropdown">
+          <button class="ag-menu-item" data-action="detalhes">Detalhes</button>
 
-    // style status cell by class
+          ${
+            (a.status || "pendente").toLowerCase() === "cancelado"
+              ? `<button class="ag-menu-item danger" data-action="excluir-full">Excluir</button>`
+              : `
+                <button class="ag-menu-item" data-action="editar">Editar</button>
+                <button class="ag-menu-item danger" data-action="cancelar">Cancelar</button>
+              `
+          }
+        </div>
+      </div>
+    `;
+
+    listaEl.appendChild(row);
+
+    // status visual
     const statusCell = row.querySelector(".status-cell");
     if (statusCell) {
       const st = (a.status || "pendente").toLowerCase();
       statusCell.style.fontWeight = "700";
-      if (st === "confirmado") statusCell.style.color = "#4cafef"; // azul
-      else if (st === "pendente") statusCell.style.color = "#e6b800"; // amarelo
-      else if (st === "cancelado") statusCell.style.color = "#d32f2f"; // vermelho
-      else if (st === "concluido" || st === "finalizado" || st === "concluido") statusCell.style.color = "#2e7d32"; // verde
+      if (st === "confirmado") statusCell.style.color = "#4cafef";
+      else if (st === "pendente") statusCell.style.color = "#e6b800";
+      else if (st === "cancelado") statusCell.style.color = "#d32f2f";
+      else if (st === "concluido" || st === "finalizado") statusCell.style.color = "#2e7d32";
     }
+  });
 
-    // build action buttons depending on status
-   const actions = row.querySelector(".actions-cell");
-
-const btnDetalhes = document.createElement("button");
-btnDetalhes.className = "btn btn-dark btn-detalhes";
-btnDetalhes.textContent = "Detalhes";
-btnDetalhes.dataset.id = a.id;
-actions.appendChild(btnDetalhes);
-
-if ((a.status || "pendente").toLowerCase() === "cancelado") {
-  const btnExcluir = document.createElement("button");
-  btnExcluir.className = "btn btn-danger btn-excluir-full";
-  btnExcluir.textContent = "Excluir";
-  btnExcluir.dataset.id = a.id;
-  actions.appendChild(btnExcluir);
-} else {
-  const btnEditar = document.createElement("button");
-  btnEditar.className = "btn btn-dark btn-editar";
-  btnEditar.textContent = "Editar";
-  btnEditar.dataset.id = a.id;
-  actions.appendChild(btnEditar);
-
-  const btnCancelar = document.createElement("button");
-  btnCancelar.className = "btn btn-danger btn-excluir";
-  btnCancelar.textContent = "Cancelar";
-  btnCancelar.dataset.id = a.id;
-  actions.appendChild(btnCancelar);
+  aplicarMenuAcoesAgendamentos();
 }
+
+  function aplicarMenuAcoesAgendamentos() {
+  // abrir / fechar menu
+  listaEl.querySelectorAll(".ag-menu-btn").forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+
+      const dropdown = btn.nextElementSibling;
+
+      document.querySelectorAll(".ag-menu-dropdown").forEach(d => {
+        if (d !== dropdown) d.style.display = "none";
+      });
+
+      dropdown.style.display =
+        dropdown.style.display === "block" ? "none" : "block";
+    };
   });
 
-  // attach handlers
-  listaEl.querySelectorAll(".btn-editar").forEach(btn => {
-    btn.onclick = onEditarClick;
+  // ações do menu
+  listaEl.querySelectorAll(".ag-menu-item").forEach(item => {
+    item.onclick = e => {
+      e.stopPropagation();
+
+      const action = item.dataset.action;
+      const row = item.closest(".ag-row");
+      const id = row.dataset.id;
+
+      if (action === "detalhes") onDetalhesClick({ target: { dataset: { id } } });
+      if (action === "editar") onEditarClick({ target: { dataset: { id } } });
+      if (action === "cancelar") onExcluirClick({ target: { dataset: { id } } });
+      if (action === "excluir-full") onExcluirPermanenteClick({ target: { dataset: { id } } });
+
+      item.parentElement.style.display = "none";
+    };
   });
-  listaEl.querySelectorAll(".btn-excluir").forEach(btn => {
-    btn.onclick = onExcluirClick;
-  });
-  listaEl.querySelectorAll(".btn-excluir-full").forEach(btn => {
-    btn.onclick = onExcluirPermanenteClick;
-  });
-  listaEl.querySelectorAll(".btn-detalhes").forEach(btn => {
-    btn.onclick = onDetalhesClick;
+
+  // fechar ao clicar fora
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".ag-menu-dropdown").forEach(d => {
+      d.style.display = "none";
+    });
   });
 }
 
