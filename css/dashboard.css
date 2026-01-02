@@ -125,8 +125,13 @@ body {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-   margin-bottom: 0; 
+   margin-bottom: 0;
+  background: #1a1a1a;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
 }
+
 
 /* ============================
    TOPBAR
@@ -197,10 +202,15 @@ body {
   display: flex;
   flex-direction: column;
   flex: 1;
-   overflow-y: auto; 
   min-height: 0;
-  padding: 25px;   /* ✔ agora é seguro */
+  overflow: hidden; /* 🔴 NÃO ROLA MAIS */
+  padding: 25px;
+
+   #sec-agendamentos {
+  flex: 1;
+  min-height: 0;
 }
+
 
 /* ============================
    CARDS
@@ -239,12 +249,7 @@ body {
 /* ============================
    PANELS
 ============================ */
-.panel {
-  background: #1a1a1a;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.3);
-}
+
 
 .panel h2 {
   margin-bottom: 20px;
@@ -747,15 +752,28 @@ label {
   text-align: center;
 }
 
+
+/* cabeçalho fixo */
 .itens-header {
+  flex-shrink: 0;
   height: 44px;
+  display: grid;
+  grid-template-columns:
+    120px
+    1fr
+    110px
+    90px
+    40px;
+
+  align-items: center;
   font-size: 12px;
   text-transform: uppercase;
-  opacity: 0.6;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  margin-bottom: 12px;
+  opacity: .6;
+margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: #1a1a1a;
 }
-
+   
 .item-row,
 .itens-header {
   padding-left: 25px;
@@ -768,7 +786,6 @@ label {
 }
 
 .itens-container {
-  width: 100%;
     display: flex;
   flex-direction: column;
   flex: 1;
