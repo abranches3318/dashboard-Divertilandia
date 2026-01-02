@@ -1235,26 +1235,6 @@ label {
 
 /* ===== AGENDAMENTOS — LISTA COM SCROLL ISOLADO ===== */
 
-#painelTabela {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 300px);
-}
-
-/* cabeçalho fixo */
-.tabela-ag-header {
-  display: grid;
-  grid-template-columns:
-    90px
-    80px
-    1fr
-    140px
-    1.2fr
-    1fr
-    100px
-    100px
-    140px; /* ações */
-}
 
 /* lista */
 #listaEl {
@@ -1263,48 +1243,196 @@ label {
   gap: 8px;
 }
 
-/* cada linha (no JS você já monta isso) */
-.ag-row {
-  display: grid;
-  grid-template-columns:
-   90px
-    80px
-    1fr
-    140px
-    1.2fr
-    1fr
-    100px
-    100px
-    140px;
-  padding: 12px;
-  border-radius: 8px;
-  background: rgba(255,255,255,.02);
+/* =========================================================
+   AGENDAMENTOS — TABELA COM SCROLL ISOLADO
+   ========================================================= */
+
+/* ---------- CONTAINER PRINCIPAL ---------- */
+#painelTabela {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 280px);
+  width: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
-/* scroll isolado */
-.itens-scroll {
+/* ---------- CABEÇALHO FIXO ---------- */
+.tabela-ag-header {
+  display: grid;
+  grid-template-columns:
+    90px    /* data */
+    80px    /* hora */
+    1.2fr   /* cliente */
+    140px   /* telefone */
+    1.6fr   /* endereço */
+    1.2fr   /* item/pacote */
+    110px   /* status */
+    110px   /* valor */
+    44px;   /* ações */
+
+  padding: 12px 14px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #cfcfcf;
+
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: rgba(20,20,20,.85);
+
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+/* ---------- ÁREA COM SCROLL ---------- */
+#listaAgendamentos {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-}
 
-/* ===== AGENDAMENTOS — AÇÕES ===== */
-.actions-cell {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  align-items: stretch;
+  gap: 8px;
+
+  padding: 10px 0;
 }
 
-.actions-cell .btn {
-  padding: 6px 10px;
+/* ---------- LINHA (CARD) ---------- */
+.ag-row {
+  display: grid;
+  grid-template-columns:
+    90px
+    80px
+    1.2fr
+    140px
+    1.6fr
+    1.2fr
+    110px
+    110px
+    44px;
+
+  align-items: center;
+  gap: 0;
+
+  padding: 14px;
+  margin: 0 6px;
+
+  border-radius: 10px;
+  background: rgba(255,255,255,.03);
+  transition: background .2s ease;
+}
+
+.ag-row:hover {
+  background: rgba(255,255,255,.06);
+}
+
+/* ---------- CELULAS ---------- */
+.ag-row > div {
   font-size: 13px;
-  width: 100%;
+  color: #e6e6e6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ===== AGENDAMENTOS — RESET DE TRANSFORMS ===== */
-#painelTabela .item-valor,
-#painelTabela .item-status {
-  transform: none !important;
+/* status já colorido via JS */
+.status-cell {
+  text-transform: capitalize;
 }
+
+/* ---------- COLUNA DE AÇÕES ---------- */
+.actions-cell {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+/* botão ⋮ */
+.ag-menu-btn {
+  background: transparent;
+  border: none;
+  color: #ddd;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.ag-menu-btn:hover {
+  background: rgba(255,255,255,.1);
+}
+
+/* ---------- MENU DROPDOWN ---------- */
+.ag-menu-dropdown {
+  position: absolute;
+  top: 28px;
+  right: 0;
+
+  display: none;
+  flex-direction: column;
+
+  min-width: 150px;
+  padding: 6px;
+
+  background: #1f1f1f;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.45);
+
+  z-index: 20;
+}
+
+/* ---------- OPÇÕES DO MENU ---------- */
+.ag-menu-item {
+  background: none;
+  border: none;
+  color: #eaeaea;
+  font-size: 13px;
+  text-align: left;
+
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+
+  transition: background .15s ease;
+}
+
+.ag-menu-item:hover {
+  background: rgba(255,255,255,.08);
+}
+
+/* ação perigosa */
+.ag-menu-item.danger {
+  color: #ff5c5c;
+}
+
+.ag-menu-item.danger:hover {
+  background: rgba(255,92,92,.15);
+}
+
+/* ---------- SCROLLBAR ELEGANTE ---------- */
+#listaAgendamentos::-webkit-scrollbar {
+  width: 8px;
+}
+
+#listaAgendamentos::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#listaAgendamentos::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.15);
+  border-radius: 6px;
+}
+
+#listaAgendamentos::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,.25);
+}
+
+/* ---------- GARANTIAS CONTRA MODAIS ---------- */
+.modal,
+.swal2-container {
+  z-index: 1000;
+}
+
+
