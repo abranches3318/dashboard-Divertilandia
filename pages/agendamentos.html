@@ -117,23 +117,32 @@
 
   <!-- TABELA -->
   <div class="panel" id="painelTabela">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Horário</th>
-          <th>Cliente</th>
-          <th>Telefone</th>
-          <th>Endereço</th>
-          <th>Item/Pacote</th>
-          <th>Status</th>
-          <th>Valor</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="listaAgendamentos"></tbody>
+
+  <!-- ================= CABEÇALHO FIXO ================= -->
+  <table class="table tabela-header">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Horário</th>
+        <th>Cliente</th>
+        <th>Telefone</th>
+        <th>Endereço</th>
+        <th>Item / Pacote</th>
+        <th>Status</th>
+        <th>Valor</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+  </table>
+
+  <!-- ================= SCROLL APENAS NA LISTA ================= -->
+  <div class="tabela-scroll">
+    <table class="table tabela-body">
+      <tbody id="listaEl"></tbody>
     </table>
   </div>
+
+</div>
 
 </main>
 
