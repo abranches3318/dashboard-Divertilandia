@@ -1232,32 +1232,51 @@ label {
   overflow-y: auto;
 }
 
-.tabela-scroll {
-  max-height: calc(100vh - 360px);
+
+/* ===== AGENDAMENTOS — LISTA COM SCROLL ISOLADO ===== */
+
+#painelTabela {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 300px);
+}
+
+/* cabeçalho fixo */
+.tabela-ag-header {
+  display: grid;
+  grid-template-columns:
+    90px   /* data */
+    80px   /* hora */
+    1fr    /* cliente */
+    140px  /* telefone */
+    1.2fr  /* endereço */
+    1fr    /* item */
+    100px  /* status */
+    100px  /* valor */
+    40px;  /* ações */
+}
+
+/* lista */
+#listaEl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* cada linha (no JS você já monta isso) */
+.ag-row {
+  display: grid;
+  grid-template-columns:
+    90px 80px 1fr 140px 1.2fr 1fr 100px 100px 40px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.02);
+}
+
+/* scroll isolado */
+.itens-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-}
-
-.tabela-scroll {
-  max-height: calc(100vh - 360px);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.tabela-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-
-.tabela-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,.25);
-  border-radius: 10px;
-}
-
-.tabela-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,.4);
-}
-
-.tabela-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,.35) transparent;
 }
