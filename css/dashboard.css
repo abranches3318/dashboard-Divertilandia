@@ -1219,3 +1219,16 @@ label {
   scrollbar-color: rgba(255,255,255,.35) transparent;
 }
 
+/* CONTÊINER DO SCROLL — PACOTES */
+#lista-pacotes {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 320px); /* mesmo valor dos itens */
+}
+
+#lista-pacotes > .itens-lista {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
