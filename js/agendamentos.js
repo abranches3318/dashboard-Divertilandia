@@ -232,54 +232,75 @@ function renderTabela(lista, origem = "auto") {
 
 function aplicarMenuAcoesAgendamentos() {
   const menu = document.getElementById("ag-menu-global");
+  if (!menu) return;
 
+  let currentId = null;
+
+  // abrir menu
   document.querySelectorAll(".ag-menu-btn").forEach(btn => {
     btn.onclick = (e) => {
       e.stopPropagation();
 
-      const row = btn.closest(".ag-row");
-      const id = btn.dataset.id;
       const rect = btn.getBoundingClientRect();
+      const status = btn.closest(".ag-row")
+        ?.querySelector(".status-cell")
+        ?.textContent
+        ?.toLowerCase() || "pendente";
 
-      // monta opções
-      const ag = STATE.todos.find(x => x.id === id);
-      if (!ag) return;
+      currentId = btn.dataset.id;
 
-      menu.innerHTML = `
-        <button class="ag-menu-item" data-action="detalhes" data-id="${id}">Detalhes</button>
-        ${
-          (ag.status || "").toLowerCase() === "cancelado"
-            ? `<button class="ag-menu-item danger" data-action="excluir-full" data-id="${id}">Excluir</button>`
-            : `
-              <button class="ag-menu-item" data-action="editar" data-id="${id}">Editar</button>
-              <button class="ag-menu-item danger" data-action="cancelar" data-id="${id}">Cancelar</button>
-            `
-        }
-      `;
-
-      // posiciona
-      menu.style.display = "flex";
-      menu.style.left = rect.right - 160 + "px";
+      // posiciona menu
       menu.style.top = rect.bottom + window.scrollY + "px";
+      menu.style.left = rect.left + window.scrollX - 120 + "px";
+      menu.style.display = "flex";
+
+      // controla itens por status
+      menu.querySelector('[data-action="editar"]').style.display =
+        status === "cancelado" ? "none" : "block";
+
+      menu.querySelector('[data-action="cancelar"]').style.display =
+        status === "cancelado" ? "none" : "block";
+
+      menu.querySelector('[data-action="excluir-full"]').style.display =
+        status === "cancelado" ? "block" : "none";
     };
   });
 
-  menu.onclick = (e) => {
-    e.stopPropagation();
-    const action = e.target.dataset.action;
-    const id = e.target.dataset.id;
-    if (!action || !id) return;
+  // ações do menu
+  menu.querySelectorAll(".ag-menu-item").forEach(item => {
+    item.onclick = (e) => {
+      e.stopPropagation();
 
-    menu.style.display = "none";
+      if (!currentId) return;
 
-    if (action === "detalhes") abrirModalDetalhes(id);
-    if (action === "editar") abrirModalEditar(id);
-    if (action === "cancelar") cancelarAgendamento(id);
-    if (action === "excluir-full") excluirPermanente(id);
-  };
+      const action = item.dataset.action;
 
+      menu.style.display = "none";
+
+      switch (action) {
+        case "detalhes":
+          onDetalhesClick({ currentTarget: { getAttribute: () => currentId } });
+          break;
+
+        case "editar":
+          onEditarClick({ currentTarget: { getAttribute: () => currentId } });
+          break;
+
+        case "cancelar":
+          onExcluirClick({ currentTarget: { getAttribute: () => currentId } });
+          break;
+
+        case "excluir-full":
+          onExcluirPermanenteClick({ currentTarget: { getAttribute: () => currentId } });
+          break;
+      }
+    };
+  });
+
+  // fechar ao clicar fora
   document.addEventListener("click", () => {
     menu.style.display = "none";
+    currentId = null;
   });
 }
 
