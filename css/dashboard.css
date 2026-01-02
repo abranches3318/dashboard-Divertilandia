@@ -1200,3 +1200,10 @@ label {
     border-top: 1px solid rgba(255, 255, 255, .12);
     padding-top: 12px;
 }
+
+/* contêiner da lista */
+#lista-itens {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 320px); /* mesmo valor que você já usa */
+}
