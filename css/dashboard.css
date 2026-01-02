@@ -1,6 +1,4 @@
-/* ============================
-   RESET
-============================ */
+/* ============================ RESET ============================ */
 * {
   margin: 0;
   padding: 0;
@@ -16,7 +14,6 @@ body {
   overflow: hidden;
 }
 
-
 /* SweetAlert acima de tudo */
 .swal-high-z {
   position: fixed !important;
@@ -26,9 +23,7 @@ body {
   z-index: 2147483647 !important;
 }
 
-/* ============================
-   SIDEBAR
-============================ */
+/* ============================ SIDEBAR ============================ */
 .sidebar {
   width: 260px;
   background: #0d0d0d;
@@ -77,9 +72,7 @@ body {
   border-left: 3px solid #4cafef;
 }
 
-/* ============================
-   HAMBURGER MOBILE
-============================ */
+/* ============================ HAMBURGER MOBILE ============================ */
 .btn-hamburger {
   display: none;
   background: #4cafef;
@@ -95,47 +88,18 @@ body {
   z-index: 1100;
 }
 
-/* ============================
-   CONTENT AREA
-============================ */
+/* ============================ CONTENT AREA ============================ */
 .content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: hidden;
+  overflow-y: auto;
+  height: 100vh;
   transition: margin-left 0.3s;
   padding: 0;
-    min-height: 0;
 }
 
- .content {
-    margin-left: 0;
-    padding: 15px;
-  }
-
-.pagina.ativa {
-  display: flex;
-   flex-direction: column;
-   flex: 1;
-  min-height: 0;   /* 🔴 FUNDAMENTAL para scroll interno funcionar */
-}
-
-.panel {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-   margin-bottom: 0;
-  background: #1a1a1a;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.3);
-}
-
-
-/* ============================
-   TOPBAR
-============================ */
+/* ============================ TOPBAR ============================ */
 .topbar {
   background: #1a1a1a;
   border-bottom: 1px solid #222;
@@ -188,33 +152,17 @@ body {
   border-radius: 8px;
 }
 
-/* ============================
-   PÁGINAS
-============================ */
+/* ============================ PÁGINAS ============================ */
 .pagina {
   display: none;
-    flex: 1;
-  min-height: 0;
- 
-}
-
-.pagina-inner {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden; /* 🔴 NÃO ROLA MAIS */
   padding: 25px;
-
-   #sec-agendamentos {
-  flex: 1;
-  min-height: 0;
 }
 
+.pagina.ativa {
+  display: block;
+}
 
-/* ============================
-   CARDS
-============================ */
+/* ============================ CARDS ============================ */
 .cards {
   display: flex;
   gap: 25px;
@@ -246,10 +194,14 @@ body {
   font-weight: bold;
 }
 
-/* ============================
-   PANELS
-============================ */
-
+/* ============================ PANELS ============================ */
+.panel {
+  background: #1a1a1a;
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
 
 .panel h2 {
   margin-bottom: 20px;
@@ -258,9 +210,7 @@ body {
   padding-left: 12px;
 }
 
-/* ============================
-   CALENDAR
-============================ */
+/* ============================ CALENDAR ============================ */
 #calendar {
   background: #fff;
   color: #000;
@@ -271,7 +221,8 @@ body {
   overflow-y: auto;
 }
 
-#calendar .dia, #calendar .dia-semana {
+#calendar .dia,
+#calendar .dia-semana {
   color: #000;
   cursor: pointer;
 }
@@ -286,9 +237,7 @@ body {
   display: inline-block;
 }
 
-/* ============================
-   LISTAGENS / TABELAS
-============================ */
+/* ============================ TABELAS ============================ */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -305,9 +254,7 @@ body {
   background: #222;
 }
 
-/* ============================
-   BOTÕES
-============================ */
+/* ============================ BOTÕES ============================ */
 .btn {
   padding: 10px 18px;
   background: #4cafef;
@@ -338,10 +285,20 @@ body {
   background: #333;
 }
 
-/* ============================
-   FORMULÁRIOS
-============================ */
-input, select, textarea {
+.btn-secondary {
+  background: #e9ecef;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.btn-secondary:hover {
+  background: #dde2e6;
+}
+
+/* ============================ FORMULÁRIOS ============================ */
+input,
+select,
+textarea {
   width: 100%;
   padding: 12px;
   margin-top: 8px;
@@ -362,9 +319,7 @@ label {
   font-size: 14px;
 }
 
-/* ============================
-   MODAIS
-============================ */
+/* ============================ MODAIS ============================ */
 .modal {
   position: fixed;
   left: 0;
@@ -376,7 +331,6 @@ label {
   justify-content: center;
   align-items: center;
   backdrop-filter: blur(3px);
-    z-index: 5000;
 }
 
 .modal.active {
@@ -390,939 +344,15 @@ label {
   width: 90%;
   max-width: 450px;
   box-shadow: 0 0 25px rgba(0,0,0,0.5);
+  overflow: visible;
 }
 
-/* ============================
-   ANIMAÇÕES
-============================ */
+/* ============================ ANIMAÇÕES ============================ */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .ativa {
   animation: fadeIn 0.3s ease;
 }
-
-/* ============================
-   RESPONSIVIDADE
-============================ */
-@media (max-width: 1024px) {
-  .cards {
-    justify-content: center;
-  }
-}
-
-@media (max-width: 768px) {
-  .btn-hamburger {
-    display: block;
-  }
-
-  .sidebar {
-    position: fixed;
-    left: -260px;
-    top: 0;
-    height: 100%;
-    z-index: 1000;
-  }
-
-  .sidebar.active {
-    left: 0;
-  }
-
-
-
-  .sidebar.active ~ .content {
-    margin-left: 260px;
-  }
-
-  .cards {
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  #calendar {
-    height: 350px;
-    padding: 15px;
-  }
-
-  .topbar .top-right {
-    gap: 10px;
-  }
-
-  .table {
-    display: block;
-    overflow-x: auto;
-  }
-
-  .panel {
-    padding: 15px;
-  }
-}
-
-@media (max-width: 480px) {
-  .topbar h1 {
-    font-size: 18px;
-  }
-
-  .notif {
-    padding: 6px 10px;
-    font-size: 16px;
-  }
-
-  .user-info {
-    font-size: 12px;
-    padding: 6px 10px;
-  }
-
-  .card {
-    width: 100%;
-    font-size: 14px;
-  }
-
-  #calendar {
-    height: 300px;
-    padding: 10px;
-  }
-
-  .panel h2 {
-    font-size: 18px;
-  }
-}
-
-.monitores-wrapper {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  max-height: 160px;
-  overflow-y: auto;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #fafafa;
-}
-
-.monitor-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.monitor-item:hover {
-  background: #f0f0f0;
-}
-
-.monitor-item input[type="checkbox"] {
-  cursor: pointer;
-}
-.dropdown-selected {
-  font-size: 14px; /* mesmo dos outros inputs */
-}
-
-.dropdown-selected span {
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-#ag-monitores,
-#ag-monitores * {
-  font-size: 14px !important;
-  font-weight: 400 !important;
-  line-height: 1.4 !important;
-  font-family: inherit !important;
-}
-
-/* CALENDÁRIO — HOVER */
-.fc .fc-daygrid-day {
-  transition: background-color 0.15s ease, transform 0.15s ease;
-}
-
-.fc .fc-daygrid-day:hover {
-  background-color: #f2f2f2;
-  cursor: pointer;
-}
-
-.fc .fc-daygrid-day:hover .fc-daygrid-day-frame {
-  transform: scale(1.02);
-}
-
-
-.preview-imagens {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.preview-item {
-  width: 120px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.btn-secondary {
-  background: #e9ecef;
-  color: #333;
-  border: 1px solid #ccc;
-}
-
-.btn-secondary:hover {
-  background: #dde2e6;
-}
-/* ===== Upload de imagens no catálogo ===== */
-
-.imagens-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.imagens-header label.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 14px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-#modal-item .modal-content {
-  max-width: 780px;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.itens-lista {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-
-.item-row {
-  display: grid;
-  align-items: center;
- 
-}
-
-.item-thumb {
-  width: 110px;
-  height: 110px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-    flex-shrink: 0;
-}
-
-.item-thumb-wrapper {
-  position: relative;
-  width: 100%;
-  height:  100%;
-  overflow: hidden;
-  border-radius: 10px;
-  background: #f4f4f4;
-}
-
-
-.item-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.item-nome {
-  font-weight: 600;
-}
-
-.item-quantidade {
-  font-size: 13px;
-  opacity: .7;
-}
-
-.item-valor {
-  font-weight: 600;
-  text-align: right;
-}
-
-.item-status {
-  text-align: center;
-  font-weight: 500;
-}
-
-.item-status.ativo {
-  color: #4cafef;
-}
-
-.item-status.inativo {
-  color: #f44336;
-}
-
-.item-acoes {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-.catalogo-topbar {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.tab-btn {
-  padding: 10px 18px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  background: rgba(255,255,255,0.05);
-  color: #fff;
-  font-weight: 500;
-}
-
-.tab-btn.active {
-  background: #4cafef;
-  color: #000;
-}
-
-.catalogo-section {
-  display: none;
-}
-
-.catalogo-section.active {
-  display: block;
-}
-
-.item-acoes {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-#menu-item-flutuante {
-  background: #1c1c1c;
-  border-radius: 10px;
-  min-width: 200px;          /* 🔼 mais largo */
-  box-shadow: 0 10px 30px rgba(0,0,0,.6);
-  padding: 6px 0;
-}
-
-#menu-item-flutuante .menu-item {
-  padding: 12px 18px;        /* 🔼 mais alto */
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-#menu-item-flutuante .menu-item:hover {
-  background: rgba(255,255,255,.08);
-}
-
-#menu-item-flutuante .menu-item.danger {
-  color: #ff6b6b;
-}
-
-/* VALOR */
-.item-valor,
-.itens-header .col-valor {
-  justify-self: end;
-  text-align: right;
-}
-
-/* STATUS */
-.item-status,
-.itens-header .col-status {
-  justify-self: center;
-  text-align: center;
-}
-
-
-/* cabeçalho fixo */
-.itens-header {
-  flex-shrink: 0;
-  height: 44px;
-  display: grid;
-  grid-template-columns:
-    120px
-    1fr
-    110px
-    90px
-    40px;
-
-  align-items: center;
-  font-size: 12px;
-  text-transform: uppercase;
-  opacity: .6;
-margin-bottom: 12px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-  background: #1a1a1a;
-}
-   
-.item-row,
-.itens-header {
-  padding-left: 25px;
-  padding-right: 25px;
-}
-
-.itens-wrapper {
-  margin-left: -25px;
-  margin-right: -25px;
-}
-
-.itens-container {
-    display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-
-.item-row {
-min-height: 130px;   /* cresce com a imagem */
-  padding: 12px 0;
-  background: rgba(255,255,255,0.02);
-  border-radius: 10px;
-}
-
-.item-valor {
-  font-weight: 600;
-  justify-self: end;
-  text-align: right;
-}
-
-
-.item-info {
-  min-width: 0;
-}
-
-.item-nome {
-  white-space: normal;
-  word-break: break-word;
-}
-/* ===============================
-   PREVIEW DE IMAGENS – LAYOUT FINAL (CORRIGIDO)
-================================ */
-
-
-#preview-imagens {
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
-
-  width: 100%;
-  max-width: 100%;
-margin-bottom: 16px;
-}
-
-/* Item individual */
-.preview-item {
-  position: relative;
-  width: 120px;
-  flex-shrink: 0;
-}
-
-/* Wrapper da imagem */
-.preview-image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 140px;              /* altura fixa */
-  overflow: hidden;           /* 🔴 ISSO É A CHAVE */
-  border-radius: 8px;
-  background: #f4f4f4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-   z-index: 1;
-}
-
-/* Imagem real (drag / zoom dependem disso) */
-.preview-image-wrapper img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;        /* nunca distorce */
-  user-select: none;
-  pointer-events: auto;
-  transition: transform 0.08s linear;
-  will-change: transform;
-}
-
-/* ================= BOTÕES ================= */
-
-
-.preview-star {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  z-index: 5;
-
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-
-
-.preview-delete {
-  color: #f44336;
-}
-
-
-.preview-star svg {
-  width: 22px;
-  height: 22px;
-  fill: #999;
-  stroke: #000;
-  stroke-width: 1.2;
-  opacity: 0.9;
-}
-
-/* Principal */
-.preview-star.principal svg {
-  fill: #ffd700;        /* dourado */
-  stroke: #4cafef;
-  stroke-width: 1.5;
-}
-
-.preview-star:hover svg {
-  opacity: 1;
-}
-
-/* ================= ÍCONES ================= */
-
-
-
-
-
-
-.menu-acoes {
-  position: absolute;
-  min-width: 160px;
-  background: #1e1e1e;
-  border-radius: 10px;
-  box-shadow: 0 8px 30px rgba(0,0,0,.45);
-  padding: 6px;
-  z-index: 1000;
-}
-
-.menu-acoes button {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: #eee;
-  padding: 10px 12px;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.menu-acoes button:hover {
-  background: rgba(255,255,255,.08);
-}
-
-.menu-acoes .excluir {
-  color: #f44336;
-}
-
-/* =====================================================
-   PACOTES – AJUSTES VISUAIS DEFINITIVOS (CORRIGIDO)
-   ===================================================== */
-
-
-/* =====================================================
-   CARD LISTA PACOTES – IMAGEM SEM CORTAR
-   ===================================================== */
-
-#lista-pacotes .item-thumb {
-  width: 140px;
-  height: 90px;
-  flex-shrink: 0;
-}
-
-#lista-pacotes .item-info {
-  min-width: 0;               /* 🔴 ESSENCIAL */
-}
-
-#lista-pacotes .item-thumb-wrapper {
-  width: 100%;
-  height: 100%;
-  background: #111;
-  border-radius: 6px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#lista-pacotes .item-thumb-wrapper img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-
-#lista-pacotes .itens-container {
-  max-width: 950px;
-}
-
-#lista-pacotes .itens-wrapper {
-  display: flex;
-  justify-content: flex-start; /* mantém alinhado à esquerda */
-}
-
-#lista-pacotes .item-row {
-  display: grid;
-  grid-template-columns:
-    140px
-    1fr
-    100px
-    90px
-    40px;
-  column-gap: 20px;
-
-  width: 100%;
-  min-height: 140px;
-}
-
-#lista-pacotes .item-nome {
-  font-weight: 600;
-  white-space: normal;
-  word-break: break-word;
-  line-height: 1.3;
-}
-/* =====================================================
-   MODAL – LARGO, SEM SCROLL INTERNO
-   ===================================================== */
-
-.modal-content.modal-lg {
-  width: 96vw;
-  max-width: 1300px;
-
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-body {
-  padding: 24px 28px;
-  overflow: visible; /* REMOVE SCROLL INTERNO */
-}
-
-
-/* =====================================================
-   FORMULÁRIO – GRID FUNCIONAL
-   ===================================================== */
-
-/* GRID CORRETO DO MODAL ITEM */
-#modal-item .form-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 18px 22px;
-}
-
-#modal-item #grupo-descricao {
-  grid-column: 1 / -1;
-}
-.form-group.full {
-  grid-column: 1 / -1;
-}
-
-#modal-item .imagens-bloco {
-  grid-column: 1 / -1;
-  margin-top: 12px;
-}
-
-/* =====================================================
-   ITENS DO PACOTE – 3 ITENS POR COLUNA
-   ===================================================== */
-
-/* Itens do pacote – 3 itens por coluna reais */
-
-
-
-#pacote-itens-bloco input[type="checkbox"] {
-  margin: 0;
-}
-
-#pacote-itens-preview > div {
-  width: 120px;
-  height: 90px;
-}
-
-/* =====================================================
-   DROPDOWN DE ITENS DO PACOTE (ESCALÁVEL)
-   ===================================================== */
-
-.pacote-dropdown {
-  margin-top: 6px;
-  width: 100%;
-}
-
-.pacote-dropdown {
-  position: relative;
-}
-
-.pacote-dropdown-header {
-  background: #1c1c1c;
-  border: 1px solid #333;
-  border-radius: 6px;
-  padding: 10px 12px;
-  cursor: pointer;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  font-size: 14px;
-}
-
-.pacote-dropdown-header:hover {
-  background: #222;
-}
-
-.pacote-dropdown-header {
-  min-height: 42px;
-  line-height: 1.4;
-}
-
-.pacote-dropdown-lista {
-  display: none;
-  margin-top: 6px;
-
-  max-height: 220px;
-  overflow-y: auto;
-
-  border: 1px solid #333;
-  border-radius: 6px;
-  background: #111;
-
-  padding: 8px;
-}
-
-.pacote-dropdown-lista {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  width: 100%;
- z-index: 1100;
-}
-
-.pacote-dropdown-lista.aberto {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  max-height: 160px;
-  overflow-y: auto;
-}
-
-/* ---------- Item individual ---------- */
-
-.pacote-item {
-  display: grid;
-  grid-template-columns: 20px 1fr;
-  align-items: center;
-  gap: 10px;
-
-  padding: 4px 6px;
-  border-radius: 4px;
-
-  font-size: 14px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.pacote-item input[type="checkbox"] {
-  margin: 0;
-  justify-self: center;
-}
-
-/* =====================================================
-   DESCRIÇÃO + DROPDOWN NA MESMA LINHA
-   ===================================================== */
-
-
-
-.preview-item.capa {
-  outline: 2px solid #4caf50;
-}
-
-.modal-content {
-  overflow: visible;
-}
-
-/* =========================================
-   MODAL ITEM – DESCRIÇÃO + DROPDOWN EM 2 METADES
-   ========================================= */
-
-/* cria uma linha com 2 colunas */
-#modal-item .linha-descricao-dropdown {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
-}
-
-/* remove qualquer herança estranha */
-#modal-item .linha-descricao-dropdown .form-group {
-  margin: 0;
-}
-
-
-.preview-open span {
-  display: none;
-}
-
-.preview-open {
-color: #4cafef;        /* 🔵 visível no fundo escuro */
-  cursor: pointer;
-   }
-
-.preview-actions-top {
-  display: flex;
-  justify-content: space-between;
-}
-.preview-open,
-.preview-delete {
-  width: 26px;
-  height: 26px;
-
-  background: transparent;
-  border: none;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  cursor: pointer;
-  z-index: 10;
-  opacity: 0.75;
-}
-
-.preview-open:hover,
-.preview-delete:hover {
-  opacity: 1;
-}
-
-.preview-open:hover {
-  color: #81d4fa;        /* hover sutil */
-}
-
-
-
-#modal-item.modo-pacote #item-descricao {
-  grid-column: 1 / -1;
-}
-
-/* =========================================
-   MODAL PACOTE — GRID LINHA 1
-========================================= */
-
-#modal-item.modo-pacote .form-grid {
-  grid-template-columns: 2fr 1fr 1fr; /* 50% | 25% | 25% */
-}
-
-/* Nome */
-#modal-item.modo-pacote .form-group.nome-principal {
-  grid-column: 1 / 2;
-}
-
-/* Preço */
-#modal-item.modo-pacote .form-group.preco {
-  grid-column: 2 / 3;
-}
-
-/* Status */
-#modal-item.modo-pacote .form-group.status {
-  grid-column: 3 / 4;
-}
-
-/* Descrição */
-#modal-item.modo-pacote .form-group.full {
-  grid-column: 1 / -1;
-}
-
-.itens-header,
-.item-row {
-  display: grid;
-  grid-template-columns:
-    120px
-    1fr
-    110px
-    90px
-    40px;
-  align-items: center;
-  column-gap: 16px;
-}
-
-
-/* STATUS — DESLOCAMENTO DA COLUNA INTEIRA */
-.itens-header > div:nth-child(4),
-.item-row .item-status {
-  justify-self: center;
-  transform: translateX(-40px); /* ajuste visual */
-}
-
-/* VALOR */
-.itens-header > div:nth-child(3),
-.item-row .item-valor {
-  transform: translateX(-50px);
-}
-
-/* STATUS — AJUSTE FINO APENAS DO TEXTO */
-.itens-header > div:nth-child(4) {
-  transform: translateX(-18px);
-}
-
-.itens-lista {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  padding-right: 6px;
-}
-
-.itens-header {
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: #1b1b1b;
-}
-.itens-lista::-webkit-scrollbar {
-  width: 6px;
-}
-
-.itens-lista::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 10px;
-}
-
-.itens-lista::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
-}
-
-.itens-lista {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,.35) transparent;
-}
-
