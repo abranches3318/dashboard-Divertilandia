@@ -1207,3 +1207,31 @@ label {
   flex-direction: column;
   height: calc(100vh - 320px); /* mesmo valor que você já usa */
 }
+
+/* SOMENTE A LISTA ROLA */
+.itens-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+}
+
+/* scrollbar elegante */
+.itens-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.itens-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.25);
+  border-radius: 10px;
+}
+
+.itens-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,.4);
+}
+
+.itens-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.35) transparent;
+}
+
