@@ -242,46 +242,58 @@ function renderTabela(lista, origem = "auto") {
   aplicarMenuAcoesAgendamentos();
 }
 
-  function aplicarMenuAcoesAgendamentos() {
-  // abrir / fechar menu
-  listaEl.querySelectorAll(".ag-menu-btn").forEach(btn => {
-    btn.onclick = e => {
+ function aplicarMenuAcoesAgendamentos() {
+  // botão ⋮
+  document.querySelectorAll(".ag-menu-btn").forEach(btn => {
+    btn.onclick = (e) => {
       e.stopPropagation();
 
-      const dropdown = btn.nextElementSibling;
+      const cell = btn.closest(".actions-cell");
+      const menu = cell.querySelector(".ag-menu-dropdown");
 
-      document.querySelectorAll(".ag-menu-dropdown").forEach(d => {
-        if (d !== dropdown) d.style.display = "none";
+      // fecha outros menus
+      document.querySelectorAll(".ag-menu-dropdown").forEach(m => {
+        if (m !== menu) m.style.display = "none";
       });
 
-      dropdown.style.display =
-        dropdown.style.display === "block" ? "none" : "block";
+      // toggle
+      menu.style.display =
+        menu.style.display === "flex" ? "none" : "flex";
     };
   });
 
   // ações do menu
-  listaEl.querySelectorAll(".ag-menu-item").forEach(item => {
-    item.onclick = e => {
+  document.querySelectorAll(".ag-menu-item").forEach(item => {
+    item.onclick = (e) => {
       e.stopPropagation();
 
       const action = item.dataset.action;
       const row = item.closest(".ag-row");
-      const id = row.dataset.id;
+      const id = row?.dataset.id;
 
-      if (action === "detalhes") onDetalhesClick({ target: { dataset: { id } } });
-      if (action === "editar") onEditarClick({ target: { dataset: { id } } });
-      if (action === "cancelar") onExcluirClick({ target: { dataset: { id } } });
-      if (action === "excluir-full") onExcluirPermanenteClick({ target: { dataset: { id } } });
+      // fecha menu
+      item.closest(".ag-menu-dropdown").style.display = "none";
 
-      item.parentElement.style.display = "none";
+      if (!id) return;
+
+      switch (action) {
+        case "detalhes":
+          onDetalhesClick({ target: { dataset: { id } } });
+          break;
+
+        case "editar":
+          onEditarClick({ target: { dataset: { id } } });
+          break;
+
+        case "cancelar":
+          onExcluirClick({ target: { dataset: { id } } });
+          break;
+
+        case "excluir-full":
+          onExcluirPermanenteClick({ target: { dataset: { id } } });
+          break;
+      }
     };
-  });
-
-  // fechar ao clicar fora
-  document.addEventListener("click", () => {
-    document.querySelectorAll(".ag-menu-dropdown").forEach(d => {
-      d.style.display = "none";
-    });
   });
 }
 
