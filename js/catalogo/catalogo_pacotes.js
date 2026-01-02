@@ -68,61 +68,63 @@ function renderPacotes() {
     return;
   }
 
-  el.innerHTML = `
+ el.innerHTML = `
   <div class="itens-header">
-  <div></div>
-  <div>Pacote</div>
-  <div class="col-valor">Valor</div>
-  <div class="col-status">Status</div>
-  <div></div>
-</div>
-      ${CATALOGO_STATE.pacotes.map(pacote => {
-        const capa =
-          Array.isArray(pacote.fotos)
-            ? pacote.fotos.find(f => f.principal) || pacote.fotos[0]
-            : null;
+    <div></div>
+    <div>Pacote</div>
+    <div class="col-valor">Valor</div>
+    <div class="col-status">Status</div>
+    <div></div>
+  </div>
 
-        return `
-          <div class="item-row">
-            <div class="item-thumb">
-              <div class="item-thumb-wrapper">
-                <img
-  src="${capa?.url || "../img/imageplaceholder.jpg"}"
-  style="
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform: translate(-50%, -50%);
-    height:100%;
-    width:auto;
-    object-fit: contain;
-  "
->
-              </div>
+  <div class="itens-lista">
+    ${CATALOGO_STATE.pacotes.map(pacote => {
+      const capa =
+        Array.isArray(pacote.fotos)
+          ? pacote.fotos.find(f => f.principal) || pacote.fotos[0]
+          : null;
+
+      return `
+        <div class="item-row">
+          <div class="item-thumb">
+            <div class="item-thumb-wrapper">
+              <img
+                src="${capa?.url || "../img/imageplaceholder.jpg"}"
+                style="
+                  position:absolute;
+                  top:50%;
+                  left:50%;
+                  transform: translate(-50%, -50%);
+                  height:100%;
+                  width:auto;
+                  object-fit: contain;
+                "
+              >
             </div>
-
-            <div class="item-info">
-              <div class="item-nome">${pacote.nome}</div>
-              <div class="item-quantidade">
-                ${(pacote.itens || []).length} itens
-              </div>
-            </div>
-
-            <div class="item-valor">
-              R$ ${(pacote.valor ?? 0).toFixed(2)}
-            </div>
-
-            <div class="item-status ${pacote.ativo === false ? "inativo" : "ativo"}">
-              ${pacote.ativo === false ? "Inativo" : "Ativo"}
-            </div>
-
-            <button class="item-acoes"
-              onclick="abrirMenuPacote(event,'${pacote.id}')">⋮</button>
           </div>
-        `;
-      }).join("")}
-    </div>
-  `;
+
+          <div class="item-info">
+            <div class="item-nome">${pacote.nome}</div>
+            <div class="item-quantidade">
+              ${(pacote.itens || []).length} itens
+            </div>
+          </div>
+
+          <div class="item-valor">
+            R$ ${(pacote.valor ?? 0).toFixed(2)}
+          </div>
+
+          <div class="item-status ${pacote.ativo === false ? "inativo" : "ativo"}">
+            ${pacote.ativo === false ? "Inativo" : "Ativo"}
+          </div>
+
+          <button class="item-acoes"
+            onclick="abrirMenuPacote(event,'${pacote.id}')">⋮</button>
+        </div>
+      `;
+    }).join("")}
+  </div>
+`;
 }
 
 // ============================
