@@ -194,24 +194,23 @@ function renderTabela(lista, origem = "auto") {
     const itemName = a.pacoteNome || a.itemNome || a.pacoteId || "---";
     const valor = Number(a.valor_final ?? a.preco ?? 0);
 
-    const tr = document.createElement("tr");
+const row = document.createElement("div");
+row.className = "ag-row";
+row.dataset.id = a.id;
 
-    // Create cells in desired order: Data | Horário | Cliente | Telefone | Endereço | Item/Pacote | Status | Valor | Actions
-    tr.innerHTML = `
-      <td>${dateStr}</td>
-      <td>${horario}</td>
-      <td>${a.cliente || "---"}</td>
-      <td>${a.telefone || "---"}</td>
-      <td>${enderecoStr || "---"}</td>
-      <td>${itemName}</td>
-      <td class="status-cell">${a.status || "pendente"}</td>
-      <td>${formatNumberToCurrencyString(valor)}</td>
-      <td class="actions-cell"></td>
-    `;
-    // add data-id so handlers can reference
-    tr.dataset.id = a.id;
+row.innerHTML = `
+  <div>${dateStr}</div>
+  <div>${horario}</div>
+  <div>${a.cliente || "---"}</div>
+  <div>${a.telefone || "---"}</div>
+  <div>${enderecoStr || "---"}</div>
+  <div>${itemName}</div>
+  <div class="status-cell">${a.status || "pendente"}</div>
+  <div>${formatNumberToCurrencyString(valor)}</div>
+  <div class="actions-cell"></div>
+`;
 
-    listaEl.appendChild(tr);
+listaEl.appendChild(row);
 
     // style status cell by class
     const statusCell = tr.querySelector(".status-cell");
@@ -225,40 +224,33 @@ function renderTabela(lista, origem = "auto") {
     }
 
     // build action buttons depending on status
-    const actionsTd = tr.querySelector(".actions-cell");
-    if (actionsTd) {
-      // Details always present
-      const btnDetalhes = document.createElement("button");
-      btnDetalhes.className = "btn btn-dark btn-detalhes";
-      btnDetalhes.textContent = "Detalhes";
-      btnDetalhes.dataset.id = a.id;
-      actionsTd.appendChild(btnDetalhes);
+   const actions = row.querySelector(".actions-cell");
 
-      if ((a.status || "pendente").toLowerCase() === "cancelado") {
-        // only show Excluir
-        const btnExcluir = document.createElement("button");
-        btnExcluir.className = "btn btn-danger btn-excluir-full";
-        btnExcluir.style.marginLeft = "6px";
-        btnExcluir.textContent = "Excluir";
-        btnExcluir.dataset.id = a.id;
-        actionsTd.appendChild(btnExcluir);
-      } else {
-        // show Editar + Cancelar
-        const btnEditar = document.createElement("button");
-        btnEditar.className = "btn btn-dark btn-editar";
-        btnEditar.style.marginLeft = "6px";
-        btnEditar.textContent = "Editar";
-        btnEditar.dataset.id = a.id;
-        actionsTd.appendChild(btnEditar);
+const btnDetalhes = document.createElement("button");
+btnDetalhes.className = "btn btn-dark btn-detalhes";
+btnDetalhes.textContent = "Detalhes";
+btnDetalhes.dataset.id = a.id;
+actions.appendChild(btnDetalhes);
 
-        const btnCancelar = document.createElement("button");
-        btnCancelar.className = "btn btn-danger btn-excluir";
-        btnCancelar.style.marginLeft = "6px";
-        btnCancelar.textContent = "Cancelar";
-        btnCancelar.dataset.id = a.id;
-        actionsTd.appendChild(btnCancelar);
-      }
-    }
+if ((a.status || "pendente").toLowerCase() === "cancelado") {
+  const btnExcluir = document.createElement("button");
+  btnExcluir.className = "btn btn-danger btn-excluir-full";
+  btnExcluir.textContent = "Excluir";
+  btnExcluir.dataset.id = a.id;
+  actions.appendChild(btnExcluir);
+} else {
+  const btnEditar = document.createElement("button");
+  btnEditar.className = "btn btn-dark btn-editar";
+  btnEditar.textContent = "Editar";
+  btnEditar.dataset.id = a.id;
+  actions.appendChild(btnEditar);
+
+  const btnCancelar = document.createElement("button");
+  btnCancelar.className = "btn btn-danger btn-excluir";
+  btnCancelar.textContent = "Cancelar";
+  btnCancelar.dataset.id = a.id;
+  actions.appendChild(btnCancelar);
+}
   });
 
   // attach handlers
