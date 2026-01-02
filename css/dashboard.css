@@ -1232,3 +1232,32 @@ label {
   overflow-y: auto;
 }
 
+.tabela-scroll {
+  max-height: calc(100vh - 360px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.tabela-scroll {
+  max-height: calc(100vh - 360px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.tabela-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tabela-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.25);
+  border-radius: 10px;
+}
+
+.tabela-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,.4);
+}
+
+.tabela-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.35) transparent;
+}
