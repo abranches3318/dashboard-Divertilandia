@@ -35,14 +35,15 @@ function renderItens() {
   }
 
   el.innerHTML = `
-   <div class="itens-header">
-  <div></div>
-  <div>Item</div>
-  <div class="col-valor">Valor</div>
-  <div class="col-status">Status</div>
-  <div></div>
-</div>
+    <div class="itens-header">
+      <div></div>
+      <div>Item</div>
+      <div class="col-valor">Valor</div>
+      <div class="col-status">Status</div>
+      <div></div>
+    </div>
 
+    <div class="itens-scroll">
       ${CATALOGO_STATE.itens.map(item => {
         const capa =
           Array.isArray(item.fotos)
@@ -53,22 +54,22 @@ function renderItens() {
           <div class="item-row">
             <div class="item-thumb">
               <div class="item-thumb-wrapper">
-               <img
-  src="${capa?.url || "../img/imageplaceholder.jpg"}"
-  style="
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:
-      translate(
-        calc(-50% + ${(capa?.offsetX ?? 0)}px),
-        calc(-50% + ${(capa?.offsetY ?? 0)}px)
-      )
-      scale(${(capa?.scale ?? 1)});
-    height:100%;
-    width:auto;
-  "
->
+                <img
+                  src="${capa?.url || "../img/imageplaceholder.jpg"}"
+                  style="
+                    position:absolute;
+                    top:50%;
+                    left:50%;
+                    transform:
+                      translate(
+                        calc(-50% + ${(capa?.offsetX ?? 0)}px),
+                        calc(-50% + ${(capa?.offsetY ?? 0)}px)
+                      )
+                      scale(${(capa?.scale ?? 1)});
+                    height:100%;
+                    width:auto;
+                  "
+                >
               </div>
             </div>
 
@@ -92,7 +93,6 @@ function renderItens() {
     </div>
   `;
 }
-
 // ============================
 // MENU FLUTUANTE
 // ============================
