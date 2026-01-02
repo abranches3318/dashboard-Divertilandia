@@ -296,7 +296,11 @@ function renderTabela(lista, origem = "auto") {
     };
   });
 }
-
+document.addEventListener("click", () => {
+  document.querySelectorAll(".ag-menu-dropdown").forEach(menu => {
+    menu.style.display = "none";
+  });
+});
 // ---------- TABELA BUTTONS ----------
 function onEditarClick(e) {
   const id = e.currentTarget.getAttribute("data-id");
