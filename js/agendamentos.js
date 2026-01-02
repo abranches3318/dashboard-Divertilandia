@@ -213,7 +213,7 @@ row.innerHTML = `
 listaEl.appendChild(row);
 
     // style status cell by class
-    const statusCell = tr.querySelector(".status-cell");
+    const statusCell = row.querySelector(".status-cell");
     if (statusCell) {
       const st = (a.status || "pendente").toLowerCase();
       statusCell.style.fontWeight = "700";
