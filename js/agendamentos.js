@@ -153,8 +153,7 @@ function renderTabela(lista, origem = "auto") {
   if (!listaEl || !painelTabela) return;
   listaEl.innerHTML = "";
 
-  console.log("listaEl:", listaEl);
-console.log("painelTabela:", painelTabela);
+
 
   if (!Array.isArray(lista) || lista.length === 0) {
     painelTabela.style.display = "none";
