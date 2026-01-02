@@ -134,7 +134,7 @@ function abrirModalNovaPromocao() {
   setValorSeguro("item-descricao", "");
   setValorSeguro("item-status", "ativo");
 
-  document.getElementById("item-quantidade")?.closest(".form-group").style.display = "none";
+  document.getElementById("item-quantidade")?.closest(".form-group")?.style.display = "none";
 
   montarBlocosPromocao();
 
