@@ -198,32 +198,20 @@ function renderTabela(lista, origem = "auto") {
     row.className = "ag-row";
     row.dataset.id = a.id;
 
-    row.innerHTML = `
-      <div>${dateStr}</div>
-      <div>${horario}</div>
-      <div>${a.cliente || "---"}</div>
-      <div>${a.telefone || "---"}</div>
-      <div>${enderecoStr || "---"}</div>
-      <div>${itemName}</div>
-      <div class="status-cell">${a.status || "pendente"}</div>
-      <div>${formatNumberToCurrencyString(valor)}</div>
+   row.innerHTML = `
+  <div>${dateStr}</div>
+  <div>${horario}</div>
+  <div>${a.cliente || "---"}</div>
+  <div>${a.telefone || "---"}</div>
+  <div>${enderecoStr || "---"}</div>
+  <div>${itemName}</div>
+  <div class="status-cell">${a.status || "pendente"}</div>
+  <div>${formatNumberToCurrencyString(valor)}</div>
 
-      <div class="actions-cell">
-        <button class="ag-menu-btn" data-id="${a.id}">⋮</button>
-        <div class="ag-menu-dropdown">
-          <button class="ag-menu-item" data-action="detalhes">Detalhes</button>
-
-          ${
-            (a.status || "pendente").toLowerCase() === "cancelado"
-              ? `<button class="ag-menu-item danger" data-action="excluir-full">Excluir</button>`
-              : `
-                <button class="ag-menu-item" data-action="editar">Editar</button>
-                <button class="ag-menu-item danger" data-action="cancelar">Cancelar</button>
-              `
-          }
-        </div>
-      </div>
-    `;
+  <div class="actions-cell">
+    <button class="ag-menu-btn" data-id="${a.id}">⋮</button>
+  </div>
+`;
 
     listaEl.appendChild(row);
 
@@ -242,65 +230,65 @@ function renderTabela(lista, origem = "auto") {
   aplicarMenuAcoesAgendamentos();
 }
 
- function aplicarMenuAcoesAgendamentos() {
-  // botão ⋮
+function aplicarMenuAcoesAgendamentos() {
+  const menu = document.getElementById("ag-menu-global");
+
   document.querySelectorAll(".ag-menu-btn").forEach(btn => {
     btn.onclick = (e) => {
       e.stopPropagation();
 
-      const cell = btn.closest(".actions-cell");
-      const menu = cell.querySelector(".ag-menu-dropdown");
+      const row = btn.closest(".ag-row");
+      const id = btn.dataset.id;
+      const rect = btn.getBoundingClientRect();
 
-      // fecha outros menus
-      document.querySelectorAll(".ag-menu-dropdown").forEach(m => {
-        if (m !== menu) m.style.display = "none";
-      });
+      // monta opções
+      const ag = STATE.todos.find(x => x.id === id);
+      if (!ag) return;
 
-      // toggle
-      menu.style.display =
-        menu.style.display === "flex" ? "none" : "flex";
+      menu.innerHTML = `
+        <button class="ag-menu-item" data-action="detalhes" data-id="${id}">Detalhes</button>
+        ${
+          (ag.status || "").toLowerCase() === "cancelado"
+            ? `<button class="ag-menu-item danger" data-action="excluir-full" data-id="${id}">Excluir</button>`
+            : `
+              <button class="ag-menu-item" data-action="editar" data-id="${id}">Editar</button>
+              <button class="ag-menu-item danger" data-action="cancelar" data-id="${id}">Cancelar</button>
+            `
+        }
+      `;
+
+      // posiciona
+      menu.style.display = "flex";
+      menu.style.left = rect.right - 160 + "px";
+      menu.style.top = rect.bottom + window.scrollY + "px";
     };
   });
 
-  // ações do menu
-  document.querySelectorAll(".ag-menu-item").forEach(item => {
-    item.onclick = (e) => {
-      e.stopPropagation();
+  menu.onclick = (e) => {
+    e.stopPropagation();
+    const action = e.target.dataset.action;
+    const id = e.target.dataset.id;
+    if (!action || !id) return;
 
-      const action = item.dataset.action;
-      const row = item.closest(".ag-row");
-      const id = row?.dataset.id;
+    menu.style.display = "none";
 
-      // fecha menu
-      item.closest(".ag-menu-dropdown").style.display = "none";
+    if (action === "detalhes") abrirModalDetalhes(id);
+    if (action === "editar") abrirModalEditar(id);
+    if (action === "cancelar") cancelarAgendamento(id);
+    if (action === "excluir-full") excluirPermanente(id);
+  };
 
-      if (!id) return;
-
-      switch (action) {
-        case "detalhes":
-          onDetalhesClick({ target: { dataset: { id } } });
-          break;
-
-        case "editar":
-          onEditarClick({ target: { dataset: { id } } });
-          break;
-
-        case "cancelar":
-          onExcluirClick({ target: { dataset: { id } } });
-          break;
-
-        case "excluir-full":
-          onExcluirPermanenteClick({ target: { dataset: { id } } });
-          break;
-      }
-    };
+  document.addEventListener("click", () => {
+    menu.style.display = "none";
   });
 }
+
 document.addEventListener("click", () => {
   document.querySelectorAll(".ag-menu-dropdown").forEach(menu => {
     menu.style.display = "none";
   });
 });
+
 // ---------- TABELA BUTTONS ----------
 function onEditarClick(e) {
   const id = e.currentTarget.getAttribute("data-id");
