@@ -26,6 +26,7 @@ function renderPromocoes() {
   const container = document.getElementById("lista-promocoes");
   if (!container) return;
 
+  // Cabeçalho SEMPRE visível
   let html = `
     <div class="itens-header">
       <div></div>
@@ -36,6 +37,7 @@ function renderPromocoes() {
     </div>
   `;
 
+  // Sem promoções
   if (!CATALOGO_STATE.promocoes || !CATALOGO_STATE.promocoes.length) {
     html += `
       <div class="itens-lista">
@@ -45,26 +47,33 @@ function renderPromocoes() {
       </div>
     `;
   } else {
+    // Lista de promoções
     html += `
       <div class="itens-lista">
-        ${CATALOGO_STATE.promocoes.map(p => (
-          `<div class="item-row">
-            <div class="item-thumb">
-              <div class="item-thumb-wrapper">
-                <img src="${Array.isArray(p.fotos) ? (p.fotos.find(f => f.principal)?.url || p.fotos[0]?.url) : "../img/imageplaceholder.jpg"}">
+        ${CATALOGO_STATE.promocoes.map(p => {
+          const capa = Array.isArray(p.fotos)
+            ? (p.fotos.find(f => f.principal)?.url || p.fotos[0]?.url)
+            : "../img/imageplaceholder.jpg";
+
+          return `
+            <div class="item-row">
+              <div class="item-thumb">
+                <div class="item-thumb-wrapper">
+                  <img src="${capa}">
+                </div>
               </div>
-            </div>
-            <div class="item-info">
-              <div class="item-nome">${p.nome || "Promoção sem nome"}</div>
-              <div class="item-quantidade">
-                ${p.origem?.tipo || "-"} · até ${p.periodo?.fim ? formatarData(p.periodo.fim) : "-"}
+              <div class="item-info">
+                <div class="item-nome">${p.nome || "Promoção sem nome"}</div>
+                <div class="item-quantidade">
+                  ${p.origem?.tipo || "-"} · até ${p.periodo?.fim ? formatarData(p.periodo.fim) : "-"}
+                </div>
               </div>
+              <div class="item-valor">R$ ${(p.valorFinal ?? 0).toFixed(2)}</div>
+              <div class="item-status ${p.status || "inativo"}">${p.status || "inativo"}</div>
+              <button class="item-acoes" onclick="abrirMenuPromocao(event,'${p.id}')">⋮</button>
             </div>
-            <div class="item-valor">R$ ${(p.valorFinal ?? 0).toFixed(2)}</div>
-            <div class="item-status ${p.status || "inativo"}">${p.status || "inativo"}</div>
-            <button class="item-acoes" onclick="abrirMenuPromocao(event,'${p.id}')">⋮</button>
-          </div>`
-        )).join("")}
+          `;
+        }).join("")}
       </div>
     `;
   }
