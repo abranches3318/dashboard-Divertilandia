@@ -1245,15 +1245,15 @@ label {
 .tabela-ag-header {
   display: grid;
   grid-template-columns:
-    90px   /* data */
-    80px   /* hora */
-    1fr    /* cliente */
-    140px  /* telefone */
-    1.2fr  /* endereço */
-    1fr    /* item */
-    100px  /* status */
-    100px  /* valor */
-    40px;  /* ações */
+    90px
+    80px
+    1fr
+    140px
+    1.2fr
+    1fr
+    100px
+    100px
+    140px; /* ações */
 }
 
 /* lista */
@@ -1267,7 +1267,15 @@ label {
 .ag-row {
   display: grid;
   grid-template-columns:
-    90px 80px 1fr 140px 1.2fr 1fr 100px 100px 40px;
+   90px
+    80px
+    1fr
+    140px
+    1.2fr
+    1fr
+    100px
+    100px
+    140px;
   padding: 12px;
   border-radius: 8px;
   background: rgba(255,255,255,.02);
@@ -1279,4 +1287,24 @@ label {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* ===== AGENDAMENTOS — AÇÕES ===== */
+.actions-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.actions-cell .btn {
+  padding: 6px 10px;
+  font-size: 13px;
+  width: 100%;
+}
+
+/* ===== AGENDAMENTOS — RESET DE TRANSFORMS ===== */
+#painelTabela .item-valor,
+#painelTabela .item-status {
+  transform: none !important;
 }
