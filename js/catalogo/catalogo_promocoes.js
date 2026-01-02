@@ -26,12 +26,8 @@ function renderPromocoes() {
   const container = document.getElementById("lista-promocoes");
   if (!container) return;
 
-  if (!CATALOGO_STATE.promocoes.length) {
-    container.innerHTML = `<p style="opacity:.6">Nenhuma promoção cadastrada.</p>`;
-    return;
-  }
-
-  container.innerHTML = `
+  // Cabeçalho SEMPRE visível
+  let html = `
     <div class="itens-header">
       <div></div>
       <div>Promoção</div>
@@ -39,7 +35,24 @@ function renderPromocoes() {
       <div class="col-status">Status</div>
       <div></div>
     </div>
+  `;
 
+  // Estado vazio
+  if (!CATALOGO_STATE.promocoes || !CATALOGO_STATE.promocoes.length) {
+    html += `
+      <div class="itens-lista">
+        <p style="opacity:.6; padding:15px;">
+          Nenhuma promoção cadastrada.
+        </p>
+      </div>
+    `;
+
+    container.innerHTML = html;
+    return;
+  }
+
+  // Lista de promoções
+  html += `
     <div class="itens-lista">
       ${CATALOGO_STATE.promocoes.map(p => {
         const capa =
@@ -56,9 +69,10 @@ function renderPromocoes() {
             </div>
 
             <div class="item-info">
-              <div class="item-nome">${p.nome}</div>
+              <div class="item-nome">${p.nome || "Promoção sem nome"}</div>
               <div class="item-quantidade">
-                ${p.origem?.tipo || "-"} · até ${formatarData(p.periodo?.fim)}
+                ${p.origem?.tipo || "-"}
+                · até ${p.periodo?.fim ? formatarData(p.periodo.fim) : "-"}
               </div>
             </div>
 
@@ -66,19 +80,23 @@ function renderPromocoes() {
               R$ ${(p.valorFinal ?? 0).toFixed(2)}
             </div>
 
-            <div class="item-status ${p.status}">
-              ${p.status}
+            <div class="item-status ${p.status || "inativo"}">
+              ${p.status || "inativo"}
             </div>
 
-            <button class="item-acoes"
-              onclick="abrirMenuPromocao(event,'${p.id}')">⋮</button>
+            <button
+              class="item-acoes"
+              onclick="abrirMenuPromocao(event,'${p.id}')">
+              ⋮
+            </button>
           </div>
         `;
       }).join("")}
     </div>
   `;
-}
 
+  container.innerHTML = html;
+}
 // ============================
 // MENU FLUTUANTE
 // ============================
@@ -328,3 +346,8 @@ function bindEventosPromocoes() {
   document.getElementById("btn-nova-promocao")
     ?.addEventListener("click", abrirModalNovaPromocao);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  criarMenuPromocao();
+  bindEventosPromocoes();
+});
