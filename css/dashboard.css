@@ -321,6 +321,7 @@ label {
     justify-content: center;
     align-items: center;
     backdrop-filter: blur(3px);
+     z-index: 9999;
 }
 
 .modal.active {
@@ -1174,7 +1175,7 @@ label {
     flex-shrink: 0;
     position: sticky;
     top: 0;
-    z-index: 2;
+    z-index: 3;
     background: #1b1b1b;
 }
 
