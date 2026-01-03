@@ -100,21 +100,22 @@ function abrirMenuPromocao(e, id) {
 function abrirModalNovaPromocao() {
   PROMOCAO_EDITANDO_ID = null;
   limparContextoModal();
-  
+
   const modal = document.getElementById("modal-promocao") || 
                 document.getElementById("modal-promocao-container");
-  
+
   if (!modal) {
-    console.error("Modal de promoção não encontrado!");
+    console.error("Modal de promoção não encontrado! Verifique o HTML.");
     return;
   }
 
-  modal.style.display = "flex"; // abre o modal
+  modal.style.display = "flex";
+
   setValorSeguro("promo-nome", "");
   setValorSeguro("promo-valor", "");
   setValorSeguro("promo-inicio", "");
   setValorSeguro("promo-fim", "");
-  
+
   CATALOGO_STATE.promocaoAplicacao = { modo: "manual", tipo: null, selecionados: [] };
 }
 
@@ -234,6 +235,7 @@ function fecharModalPromocao() {
 
   if (!modal) return; // previne erro se modal não existir
   modal.style.display = "none";
+  }
   
 // ---------------------------
 // BIND EVENTOS – PROMOÇÕES
