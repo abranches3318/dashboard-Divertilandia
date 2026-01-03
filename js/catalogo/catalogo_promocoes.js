@@ -223,13 +223,38 @@ function fecharModalPromocao() {
 }
 
 // ---------------------------
-// BIND EVENTOS
+// BIND EVENTOS – PROMOÇÕES
 // ---------------------------
 function bindEventosPromocoes() {
- document.addEventListener("click", (e) => {
-  if (e.target.closest("#btn-nova-promocao")) {
-    abrirModalNovaPromocao();
+  // 1️⃣ Clique no botão "Nova Promoção" (delegação, funciona mesmo se o botão for dinâmico)
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#btn-nova-promocao")) {
+      abrirModalNovaPromocao();
+    }
+  });
+
+  // 2️⃣ Clique no botão "Salvar Promoção"
+  const btnSalvar = document.getElementById("btn-salvar-promocao");
+  if (btnSalvar) {
+    btnSalvar.addEventListener("click", salvarPromocao);
+  } else {
+    console.warn("btn-salvar-promocao não encontrado!");
   }
-});
-  document.getElementById("btn-salvar-promocao")?.addEventListener("click", salvarPromocao);
+
+  // 3️⃣ Clique fora do menu flutuante fecha o menu (global)
+  document.addEventListener("click", (e) => {
+    const menu = document.getElementById("menu-promocao-flutuante");
+    if (menu && !e.target.closest("#menu-promocao-flutuante")) {
+      menu.style.display = "none";
+      MENU_PROMOCAO_ATUAL = null;
+    }
+  });
+
+  // 4️⃣ Evitar que clique no próprio menu feche ele
+  const menu = document.getElementById("menu-promocao-flutuante");
+  if (menu) {
+    menu.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+  }
 }
