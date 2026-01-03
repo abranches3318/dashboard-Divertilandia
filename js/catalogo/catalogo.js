@@ -368,21 +368,16 @@ function mostrarSucesso(titulo = "Sucesso", mensagem = "Operação concluída.")
   });
 }
 
-function limparContextoModal() {
-  // limpa blocos específicos de pacote
-  document.getElementById("pacote-itens-bloco")?.remove();
-  document.getElementById("pacote-itens-preview")?.remove();
+function limparContextoModal(contexto = "item") {
+  if (contexto !== "promocao") {
+    document.getElementById("pacote-itens-bloco")?.remove();
+    document.getElementById("pacote-itens-preview")?.remove();
+    document.getElementById("pacote-dropdown-lista")?.classList.remove("aberto");
 
-  // fecha dropdown se existir
-  document.getElementById("pacote-dropdown-lista")?.classList.remove("aberto");
+    const qtd = document.getElementById("item-quantidade")?.parentElement;
+    if (qtd) qtd.style.display = "";
 
-  // restaura quantidade (default item)
-  const qtd = document.getElementById("item-quantidade")?.parentElement;
-  if (qtd) qtd.style.display = "";
-
-  // 🔴 NOVO: limpa imagens temporárias e preview
-  if (typeof limparPreviewImagens === "function") {
-    limparPreviewImagens();
+    limparPreviewImagens?.();
   }
 }
 
