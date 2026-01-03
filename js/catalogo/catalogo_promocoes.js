@@ -1,5 +1,5 @@
 // ============================
-// catalogo_promocoes.js — PROMOÇÕES (REFATORADO)
+// catalogo_promocoes.js — PROMOÇÕES (FINAL)
 // ============================
 
 let PROMOCAO_EDITANDO_ID = null;
@@ -18,11 +18,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // ============================
-// RENDER LISTA
+// LISTAGEM
 // ============================
 function renderPromocoes() {
   const container = document.getElementById("lista-promocoes");
   if (!container) return;
+
+  const promocoes = CATALOGO_STATE.promocoes || [];
 
   let html = `
     <div class="itens-header">
@@ -31,35 +33,41 @@ function renderPromocoes() {
       <div class="col-valor">Valor</div>
       <div class="col-status">Status</div>
       <div></div>
-    </div>`;
-
-  const promocoes = CATALOGO_STATE.promocoes || [];
+    </div>
+    <div class="itens-lista">
+  `;
 
   if (!promocoes.length) {
-    html += `<div class="itens-lista"><p style="opacity:.6;padding:15px;">Nenhuma promoção cadastrada.</p></div>`;
+    html += `<p style="opacity:.6;padding:15px;">Nenhuma promoção cadastrada.</p>`;
   } else {
-    html += `<div class="itens-lista">
-      ${promocoes.map(p => `
-        <div class="item-row">
-          <div class="item-thumb">
-            <img src="${p.fotos?.[0]?.url || "../img/imageplaceholder.jpg"}">
-          </div>
-          <div class="item-info">
-            <div class="item-nome">${p.nome}</div>
-            <div class="item-quantidade">
-              ${p.alvos?.length || 0} alvo(s) · ${formatarData(p.periodo?.inicio)} → ${formatarData(p.periodo?.fim)}
-            </div>
-          </div>
-          <div class="item-valor">
-            ${p.valorFinal !== null ? `R$ ${Number(p.valorFinal).toFixed(2)}` : "Variável"}
-          </div>
-          <div class="item-status ${p.status}">${p.status}</div>
-          <button class="item-acoes" onclick="abrirMenuPromocao(event,'${p.id}')">⋮</button>
+    html += promocoes.map(p => `
+      <div class="item-row">
+        <div class="item-thumb">
+          <img src="${p.fotos?.[0]?.url || "../img/imageplaceholder.jpg"}">
         </div>
-      `).join("")}
-    </div>`;
+
+        <div class="item-info">
+          <div class="item-nome">${p.nome}</div>
+          <div class="item-quantidade">
+            ${p.alvos?.length || 0} alvo(s) ·
+            ${formatarData(p.periodo?.inicio)} → ${formatarData(p.periodo?.fim)}
+          </div>
+        </div>
+
+        <div class="item-valor">
+          ${p.valorFinal != null ? `R$ ${Number(p.valorFinal).toFixed(2)}` : "Variável"}
+        </div>
+
+        <div class="item-status ${p.status}">
+          ${p.status}
+        </div>
+
+        <button class="item-acoes" onclick="abrirMenuPromocao(event,'${p.id}')">⋮</button>
+      </div>
+    `).join("");
   }
 
+  html += `</div>`;
   container.innerHTML = html;
 }
 
@@ -99,14 +107,12 @@ function abrirMenuPromocao(e, id) {
 }
 
 // ============================
-// MODAL PROMOÇÃO — CORE
+// MODAL PROMOÇÃO
 // ============================
-
 function resetarEstadoPromocao() {
   PROMOCAO_EDITANDO_ID = null;
+
   CATALOGO_STATE.promocaoAplicacao = {
-    modo: "manual",
-    tipo: null,
     selecionados: []
   };
 
@@ -115,74 +121,51 @@ function resetarEstadoPromocao() {
   setValorSeguro("promo-inicio", "");
   setValorSeguro("promo-fim", "");
 
-  document.getElementById("promo-aplicacao-opcoes")?.replaceChildren();
-  document.getElementById("promo-aplicacao-preview")?.replaceChildren();
+  document.getElementById("promo-aplicacao-preview").innerHTML = "";
+  document.getElementById("promo-dropdown-label").textContent =
+    "Selecionar itens e pacotes";
+
+  document.getElementById("promo-dropdown-lista")?.classList.remove("aberto");
 }
 
 function mostrarModalPromocao() {
+  document.querySelectorAll(".modal.active").forEach(m =>
+    m.classList.remove("active")
+  );
+
   const modal = document.getElementById("modal-promocao");
-  if (!modal) {
-    console.error("Modal promoção não encontrado");
-    return;
-  }
-
-  // Fecha outros modais corretamente
-  document.querySelectorAll(".modal.active").forEach(m => {
-    m.classList.remove("active");
-  });
-
-  // Ativa este modal
   modal.classList.add("active");
-}
 
-function fecharModalPromocao() {
-  const modal = document.getElementById("modal-promocao");
-  if (!modal) return;
-
-  modal.classList.remove("active");
-  resetarEstadoPromocao();
+  // Renderização tardia e segura
+  renderDropdownPromocao();
 }
 
 function abrirModalNovaPromocao() {
   resetarEstadoPromocao();
   mostrarModalPromocao();
-  renderAplicacaoPromocao();
 }
 
-function editarPromocao() {
-  const promo = CATALOGO_STATE.promocoes.find(p => p.id === MENU_PROMOCAO_ATUAL);
-  if (!promo) return;
-
-  PROMOCAO_EDITANDO_ID = promo.id;
-
-  setValorSeguro("promo-nome", promo.nome);
-  setValorSeguro("promo-valor", promo.valorFinal ?? "");
-  setValorSeguro("promo-inicio", promo.periodo?.inicio ?? "");
-  setValorSeguro("promo-fim", promo.periodo?.fim ?? "");
-
-  CATALOGO_STATE.promocaoAplicacao = {
-    modo: "manual",
-    tipo: null,
-    selecionados: Array.isArray(promo.alvos) ? [...promo.alvos] : []
-  };
-
-  mostrarModalPromocao();
-  renderAplicacaoPromocao();
-  atualizarPreviewPromocao();
+function fecharModalPromocao() {
+  document.getElementById("modal-promocao")?.classList.remove("active");
+  resetarEstadoPromocao();
 }
 
-
+// ============================
+// DROPDOWN
+// ============================
 function toggleDropdownPromocao() {
-  document
-    .getElementById("promo-dropdown-lista")
-    .classList.toggle("aberto");
+  document.getElementById("promo-dropdown-lista")
+    ?.classList.toggle("aberto");
 }
 
 function renderDropdownPromocao() {
   const container = document.getElementById("promo-dropdown-itens");
   if (!container) return;
 
-  const alvos = [...CATALOGO_STATE.itens, ...CATALOGO_STATE.pacotes];
+  const alvos = [
+    ...(CATALOGO_STATE.itens || []),
+    ...(CATALOGO_STATE.pacotes || [])
+  ];
 
   container.innerHTML = alvos.map(a => `
     <label class="pacote-item">
@@ -199,45 +182,20 @@ function renderDropdownPromocao() {
 }
 
 function toggleSelecionarTodosPromocao(checkbox) {
-  const checks = document
-    .querySelectorAll("#promo-dropdown-itens input[type='checkbox']");
-
-  checks.forEach(c => {
-    c.checked = checkbox.checked;
-    c.dispatchEvent(new Event("change"));
-  });
-}
-// ============================
-// APLICAÇÃO DA PROMOÇÃO
-// ============================
-
-function renderAplicacaoPromocao() {
-  const container = document.getElementById("promo-aplicacao-opcoes");
-  if (!container) return;
-
-  const itens = [...CATALOGO_STATE.itens, ...CATALOGO_STATE.pacotes];
-
-  container.innerHTML = `
-    <strong>Aplicar em:</strong>
-    ${itens.map(i => `
-      <label style="display:block;">
-        <input type="checkbox"
-          onchange="toggleAlvoPromocao('${i.id}','${i.tipo || 'item'}','${i.nome}',${i.valor || 0})">
-        ${i.nome}
-      </label>
-    `).join("")}
-  `;
+  document
+    .querySelectorAll("#promo-dropdown-itens input[type='checkbox']")
+    .forEach(c => {
+      c.checked = checkbox.checked;
+      c.dispatchEvent(new Event("change"));
+    });
 }
 
 function toggleAlvoPromocao(id, tipo, nome, valorOriginal) {
   const sel = CATALOGO_STATE.promocaoAplicacao.selecionados;
   const idx = sel.findIndex(a => a.id === id);
 
-  if (idx >= 0) {
-    sel.splice(idx, 1);
-  } else {
-    sel.push({ id, tipo, nome, valorOriginal });
-  }
+  if (idx >= 0) sel.splice(idx, 1);
+  else sel.push({ id, tipo, nome, valorOriginal });
 
   atualizarPreviewPromocao();
 }
@@ -245,33 +203,32 @@ function toggleAlvoPromocao(id, tipo, nome, valorOriginal) {
 // ============================
 // PREVIEW
 // ============================
-
 function atualizarPreviewPromocao() {
   const preview = document.getElementById("promo-aplicacao-preview");
-  if (!preview) return;
+  const qtd = CATALOGO_STATE.promocaoAplicacao.selecionados.length;
 
-  if (!CATALOGO_STATE.promocaoAplicacao.selecionados.length) {
-    preview.innerHTML = "<em>Nenhum alvo selecionado</em>";
+  if (!qtd) {
+    preview.innerHTML = "<em>Nenhum item ou pacote selecionado</em>";
     return;
   }
 
-  preview.innerHTML = `
-    <strong>${CATALOGO_STATE.promocaoAplicacao.selecionados.length}</strong> alvo(s) selecionado(s)
-  `;
+  document.getElementById("promo-dropdown-label").textContent =
+    `${qtd} selecionado(s)`;
+
+  preview.innerHTML = `<strong>${qtd}</strong> alvo(s) selecionado(s)`;
 }
 
 // ============================
 // SALVAR / EXCLUIR
 // ============================
-
 async function salvarPromocao() {
   try {
     const promocao = {
-      nome: document.getElementById("promo-nome").value.trim(),
-      valorFinal: Number(document.getElementById("promo-valor").value) || null,
+      nome: promo("promo-nome"),
+      valorFinal: Number(promo("promo-valor")) || null,
       periodo: {
-        inicio: document.getElementById("promo-inicio").value,
-        fim: document.getElementById("promo-fim").value
+        inicio: promo("promo-inicio"),
+        fim: promo("promo-fim")
       },
       status: "ativa",
       alvos: CATALOGO_STATE.promocaoAplicacao.selecionados
@@ -279,7 +236,7 @@ async function salvarPromocao() {
 
     if (!promocao.nome) throw new Error("Informe o nome da promoção");
     if (!promocao.periodo.inicio || !promocao.periodo.fim)
-      throw new Error("Informe período válido");
+      throw new Error("Informe o período da promoção");
 
     await salvarRegistro({
       colecao: COLECAO_PROMOCOES,
@@ -292,8 +249,8 @@ async function salvarPromocao() {
       }
     });
 
-  } catch (err) {
-    Swal.fire("Erro", err.message, "error");
+  } catch (e) {
+    Swal.fire("Erro", e.message, "error");
   }
 }
 
@@ -308,7 +265,9 @@ async function excluirPromocao() {
 
   if (!isConfirmed) return;
 
-  await db.collection(COLECAO_PROMOCOES).doc(MENU_PROMOCAO_ATUAL).delete();
+  await db.collection(COLECAO_PROMOCOES)
+    .doc(MENU_PROMOCAO_ATUAL).delete();
+
   await carregarPromocoes();
   renderPromocoes();
   Swal.fire("Sucesso", "Promoção excluída", "success");
@@ -317,15 +276,18 @@ async function excluirPromocao() {
 // ============================
 // LOAD
 // ============================
-
 async function carregarPromocoes() {
   const snap = await db.collection(COLECAO_PROMOCOES).get();
-  CATALOGO_STATE.promocoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  CATALOGO_STATE.promocoes =
+    snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
 // ============================
 // HELPERS
 // ============================
+function promo(id) {
+  return document.getElementById(id)?.value.trim();
+}
 
 function formatarData(str) {
   if (!str) return "-";
