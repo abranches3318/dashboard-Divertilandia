@@ -122,22 +122,24 @@ function resetarEstadoPromocao() {
 function mostrarModalPromocao() {
   const modal = document.getElementById("modal-promocao");
   if (!modal) {
-    console.error("Modal de promoção não encontrado no DOM");
+    console.error("Modal promoção não encontrado");
     return;
   }
 
-  fecharModalItem?.();
+  // Fecha outros modais corretamente
+  document.querySelectorAll(".modal.active").forEach(m => {
+    m.classList.remove("active");
+  });
 
-  modal.style.display = "flex";
-  modal.style.opacity = "0";
-  requestAnimationFrame(() => modal.style.opacity = "1");
+  // Ativa este modal
+  modal.classList.add("active");
 }
 
 function fecharModalPromocao() {
   const modal = document.getElementById("modal-promocao");
   if (!modal) return;
 
-  modal.style.display = "none";
+  modal.classList.remove("active");
   resetarEstadoPromocao();
 }
 
