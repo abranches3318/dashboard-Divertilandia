@@ -226,6 +226,10 @@ function fecharModalPromocao() {
 // BIND EVENTOS
 // ---------------------------
 function bindEventosPromocoes() {
-  document.getElementById("btn-nova-promocao")?.addEventListener("click", abrirModalNovaPromocao);
+ document.addEventListener("click", (e) => {
+  if (e.target.closest("#btn-nova-promocao")) {
+    abrirModalNovaPromocao();
+  }
+});
   document.getElementById("btn-salvar-promocao")?.addEventListener("click", salvarPromocao);
 }
