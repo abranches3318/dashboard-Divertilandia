@@ -101,7 +101,7 @@ function abrirModalNovaPromocao() {
   PROMOCAO_EDITANDO_ID = null;
   limparContextoModal();
   fecharModalItem();
-  fecharModalPacote();
+ 
   
   const modal = document.getElementById("modal-promocao") 
              || document.getElementById("modal-promocao-container");
