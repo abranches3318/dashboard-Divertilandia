@@ -100,16 +100,26 @@ function abrirMenuPromocao(e, id) {
 function abrirModalNovaPromocao() {
   PROMOCAO_EDITANDO_ID = null;
   limparContextoModal();
-
-  const modal = document.getElementById("modal-promocao") || 
-                document.getElementById("modal-promocao-container");
+  fecharModalItem();
+  fecharModalPacote();
+  
+  const modal = document.getElementById("modal-promocao") 
+             || document.getElementById("modal-promocao-container");
 
   if (!modal) {
-    console.error("Modal de promoção não encontrado! Verifique o HTML.");
+    console.error("Modal de promoção não encontrado! Certifique-se que o HTML já está no DOM.");
     return;
   }
 
+  // Força renderização
   modal.style.display = "flex";
+  modal.style.opacity = 0;
+  modal.style.transition = "opacity 0.15s ease-in-out";
+
+  // pequeno delay para forçar browser pintar
+  requestAnimationFrame(() => {
+    modal.style.opacity = 1;
+  });
 
   setValorSeguro("promo-nome", "");
   setValorSeguro("promo-valor", "");
