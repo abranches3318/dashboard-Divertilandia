@@ -51,7 +51,9 @@ function renderPromocoes() {
         </div>
         <div class="item-info">
           <div class="item-nome">${p.nome}</div>
-          <div class="item-quantidade">${p.alvos?.length || 0} alvo(s) · até ${formatarData(p.periodo.fim)}</div>
+          <div class="item-quantidade">
+            ${p.alvos?.length || 0} alvo(s) · de ${formatarData(p.periodo.inicio)} até ${formatarData(p.periodo.fim)}
+          </div>
         </div>
         <div class="item-valor">${p.valorFinal !== null ? `R$ ${Number(p.valorFinal).toFixed(2)}` : "Variável"}</div>
         <div class="item-status ${p.status}">${p.status}</div>
@@ -98,15 +100,12 @@ function abrirMenuPromocao(e, id) {
 function abrirModalNovaPromocao() {
   PROMOCAO_EDITANDO_ID = null;
   limparContextoModal();
-  prepararModalPacote();
-  document.getElementById("modal-item-titulo").textContent = "Nova Promoção";
-  setValorSeguro("item-nome", "");
-  setValorSeguro("item-preco", "");
-  setValorSeguro("item-descricao", "");
-  setValorSeguro("item-status", "ativo");
-  document.getElementById("item-quantidade")?.parentElement?.style.setProperty("display", "none");
-  montarBlocosPromocao();
-  document.getElementById("modal-item").classList.add("active");
+  document.getElementById("modal-promocao-container").style.display = "block";
+  setValorSeguro("promo-nome", "");
+  setValorSeguro("promo-valor", "");
+  setValorSeguro("promo-inicio", "");
+  setValorSeguro("promo-fim", "");
+  CATALOGO_STATE.promocaoAplicacao = { modo: "manual", tipo: null, selecionados: [] };
 }
 
 function editarPromocao() {
@@ -124,30 +123,11 @@ function editarPromocao() {
   };
 
   limparContextoModal();
-  prepararModalPacote();
-  document.getElementById("modal-item-titulo").textContent = "Editar Promoção";
-  setValorSeguro("item-nome", promo.nome);
-  setValorSeguro("item-preco", promo.valorFinal ?? "");
-  setValorSeguro("item-descricao", promo.descricao);
-  setValorSeguro("item-status", promo.status);
-  montarBlocosPromocao(promo);
-  document.getElementById("modal-item").classList.add("active");
-}
-
-// ---------------------------
-// BLOCOS DINÂMICOS
-// ---------------------------
-function montarBlocosPromocao(dados = {}) {
-  removerBlocosPromocao();
-  const ref = document.getElementById("grupo-descricao");
-  if (!ref) return;
-  ref.after(criarBlocoPeriodo(dados));
-  ref.after(criarBlocoOrigem(dados));
-}
-
-function removerBlocosPromocao() {
-  document.getElementById("promo-origem-bloco")?.remove();
-  document.getElementById("promo-periodo-bloco")?.remove();
+  document.getElementById("modal-promocao-container").style.display = "block";
+  setValorSeguro("promo-nome", promo.nome);
+  setValorSeguro("promo-valor", promo.valorFinal ?? "");
+  setValorSeguro("promo-inicio", promo.periodo.inicio ?? "");
+  setValorSeguro("promo-fim", promo.periodo.fim ?? "");
 }
 
 // ---------------------------
@@ -175,26 +155,22 @@ async function excluirPromocao() {
 // ---------------------------
 async function salvarPromocao() {
   try {
-    // -------------------------
-    // VALIDAR REGRAS
-    // -------------------------
-    const promocao = montarObjetoPromocao();
-    const periodoValido = validarPeriodoPromocao(promocao.periodo);
-    if (!periodoValido.valido) throw new Error(periodoValido.mensagem);
+    const promocao = {
+      nome: document.getElementById("promo-nome").value.trim(),
+      valorFinal: Number(document.getElementById("promo-valor").value) || null,
+      periodo: {
+        inicio: document.getElementById("promo-inicio").value,
+        fim: document.getElementById("promo-fim").value
+      },
+      status: "ativo",
+      aplicacao: CATALOGO_STATE.promocaoAplicacao,
+      alvos: CATALOGO_STATE.promocaoAplicacao.selecionados
+    };
 
-    const conflito = validarConflitosTemporais({ promocaoNova: promocao, promocoesExistentes: CATALOGO_STATE.promocoes });
-    if (!conflito.valido) throw new Error(conflito.mensagem);
+    // Validações básicas
+    if (!promocao.nome) throw new Error("Informe o nome da promoção.");
+    if (!promocao.periodo.inicio || !promocao.periodo.fim) throw new Error("Informe período válido.");
 
-    validarIntegridadePromocao(promocao);
-
-    const aplicacao = CATALOGO_STATE.promocaoAplicacao;
-    if (aplicacao?.modo === "manual" && (!Array.isArray(aplicacao.selecionados) || aplicacao.selecionados.length === 0)) {
-      throw new Error("Selecione ao menos um item ou pacote para aplicar a promoção.");
-    }
-
-    // -------------------------
-    // SALVAR NO FIREBASE
-    // -------------------------
     await salvarRegistro({
       colecao: COLECAO_PROMOCOES,
       id: PROMOCAO_EDITANDO_ID,
@@ -207,7 +183,7 @@ async function salvarPromocao() {
         await carregarPromocoes();
         renderPromocoes();
         Swal.fire("Sucesso", "Promoção salva com sucesso.", "success");
-        fecharModalItem();
+        fecharModalPromocao();
       }
     });
 
@@ -242,8 +218,8 @@ function limparContextoModal() {
   CATALOGO_STATE.imagensTempPacote = [];
 }
 
-function prepararModalPacote() {
-  // placeholder para futura implementação de blocos de itens/pacotes
+function fecharModalPromocao() {
+  document.getElementById("modal-promocao-container").style.display = "none";
 }
 
 // ---------------------------
