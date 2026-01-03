@@ -84,7 +84,7 @@
     </section>
 
     <!-- ================= PROMOÇÕES ================= -->
-<section id="sec-promocoes" class="catalogo-section active">
+<section id="sec-promocoes" class="catalogo-section">
   <div class="panel">
 
     <div class="catalogo-topo">
@@ -165,29 +165,52 @@
   </div>
 </div>
 
-  <!-- Modal de Promoção (oculto) -->
-<div id="modal-promocao-container" style="display:none;">
-  <div>
-    <label>Nome da Promoção:</label>
-    <input type="text" id="promo-nome" />
+<!-- Modal de Promoção -->
+<div id="modal-promocao" class="modal">
+  <div class="modal-content modal-md">
+    <header class="modal-header">
+      <h2 id="modal-promocao-titulo">Nova Promoção</h2>
+    </header>
 
-    <label>Valor:</label>
-    <input type="number" id="promo-valor" />
+    <div class="modal-body">
+      <!-- Campos básicos da promoção -->
+      <div class="form-group">
+        <label>Nome da Promoção *</label>
+        <input type="text" id="promo-nome" placeholder="Ex: Black Friday">
+      </div>
 
-    <label>Data Início:</label>
-    <input type="date" id="promo-inicio" />
+      <div class="form-group">
+        <label>Valor (R$) *</label>
+        <input type="number" id="promo-valor" step="0.01">
+      </div>
 
-    <label>Data Fim:</label>
-    <input type="date" id="promo-fim" />
+      <div class="form-group">
+        <label>Data Início *</label>
+        <input type="date" id="promo-inicio">
+      </div>
 
-    <div id="promo-aplicacao-opcoes" style="margin-top:10px;">
-      <!-- Aqui o JS vai renderizar: modo manual, modo todos, checkboxes, etc -->
+      <div class="form-group">
+        <label>Data Fim *</label>
+        <input type="date" id="promo-fim">
+      </div>
+
+      <!-- Aplicação da promoção (seleção de itens/pacotes) -->
+      <div id="promo-aplicacao-opcoes" style="margin-top:10px;">
+        <!-- JS vai renderizar: modo manual, todos, checkboxes -->
+      </div>
+
+      <!-- Preview e impacto da promoção -->
+      <div id="promo-aplicacao-preview" style="margin-top:10px; font-size:12px; color:#333;">
+        <!-- JS mostra preview do impacto -->
+      </div>
     </div>
 
-    <div id="promo-aplicacao-preview" style="margin-top:10px; font-size:12px; color:#333;">
-      <!-- Aqui o JS vai mostrar preview e impacto da promoção -->
-    </div>
+    <footer class="modal-footer">
+      <button class="btn btn-danger" onclick="fecharModalPromocao()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar-promocao">Salvar</button>
+    </footer>
   </div>
+</div>
 </div>
 
 <!-- Firebase -->
