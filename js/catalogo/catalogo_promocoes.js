@@ -1083,10 +1083,9 @@ function obterPromocoesAtivas(dataEvento) {
     if (p.status !== "ativa") return false;
     if (!p.periodo?.inicio || !p.periodo?.fim) return false;
 
-    return (
-      dataEvento >= p.periodo.inicio &&
-      dataEvento <= p.periodo.fim
-    );
+   const inicio = new Date(p.periodo.inicio);
+const fim = new Date(p.periodo.fim);
+return dataEvento >= inicio && dataEvento <= fim;
   });
 }
 
@@ -1376,7 +1375,7 @@ function aplicarPromocaoNosAlvos(promocao) {
     if (!item.promocoesAtivas.some(p => p.id === promocao.id)) {
       item.promocoesAtivas.push({
         id: promocao.id,
-        tipo: promocao.tipoImpacto
+        tipoImpacto: promocao.tipoImpacto
       });
     }
   });
