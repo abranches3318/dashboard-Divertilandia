@@ -171,6 +171,42 @@ function editarPromocao() {
   atualizarPreviewPromocao();
 }
 
+
+function toggleDropdownPromocao() {
+  document
+    .getElementById("promo-dropdown-lista")
+    .classList.toggle("aberto");
+}
+
+function renderDropdownPromocao() {
+  const container = document.getElementById("promo-dropdown-itens");
+  if (!container) return;
+
+  const alvos = [...CATALOGO_STATE.itens, ...CATALOGO_STATE.pacotes];
+
+  container.innerHTML = alvos.map(a => `
+    <label class="pacote-item">
+      <input type="checkbox"
+        onchange="toggleAlvoPromocao(
+          '${a.id}',
+          '${a.tipo || 'item'}',
+          '${a.nome}',
+          ${a.valor || 0}
+        )">
+      ${a.nome}
+    </label>
+  `).join("");
+}
+
+function toggleSelecionarTodosPromocao(checkbox) {
+  const checks = document
+    .querySelectorAll("#promo-dropdown-itens input[type='checkbox']");
+
+  checks.forEach(c => {
+    c.checked = checkbox.checked;
+    c.dispatchEvent(new Event("change"));
+  });
+}
 // ============================
 // APLICAÇÃO DA PROMOÇÃO
 // ============================
