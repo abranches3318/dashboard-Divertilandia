@@ -100,7 +100,7 @@ function abrirMenuPromocao(e, id) {
 function abrirModalNovaPromocao() {
   PROMOCAO_EDITANDO_ID = null;
   limparContextoModal();
-  document.getElementById("modal-promocao-container").style.display = "block";
+  document.getElementById("modal-promocao").style.display = "flex";
   setValorSeguro("promo-nome", "");
   setValorSeguro("promo-valor", "");
   setValorSeguro("promo-inicio", "");
