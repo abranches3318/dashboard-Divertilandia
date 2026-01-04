@@ -131,31 +131,18 @@ function resetarEstadoPromocao() {
     ?.classList.remove("aberto");
 }
 
-function abrirModalNovaPromocao() {
-  MODAL_CONTEXTO = "promocao";
-
-  resetarEstadoPromocao();
-
-  const modal = document.getElementById("modal-promocao");
-  if (!modal) return;
-
- abrirModalPromocaoSeguro();
-
-  // Renderização SOMENTE após modal visível
-  requestAnimationFrame(() => {
-    renderDropdownPromocao();
-  });
-}
 
 function fecharModalPromocao() {
   const modal = document.getElementById("modal-promocao");
   if (!modal) return;
 
   modal.classList.remove("active");
-  modal.style.display = "none";
 
-  limparContextoModal("promocao");
+  requestAnimationFrame(() => {
+    modal.style.display = "none";
+  });
 }
+
 // ============================
 // DROPDOWN
 // ============================
@@ -311,21 +298,19 @@ function bindEventosPromocoes() {
 }
 
 function abrirModalPromocaoSeguro() {
-  // fecha qualquer outro modal
   document.querySelectorAll(".modal.active")
     .forEach(m => m.classList.remove("active"));
+
+  resetarEstadoPromocao();
 
   const modal = document.getElementById("modal-promocao");
   if (!modal) return;
 
-  // força reset visual
   modal.style.display = "none";
 
   requestAnimationFrame(() => {
     modal.style.display = "flex";
     modal.classList.add("active");
-
-    // renderizações dependentes do DOM visível
     renderDropdownPromocao();
   });
 }
