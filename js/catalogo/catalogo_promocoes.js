@@ -148,13 +148,9 @@ abrirModalSeguro("modal-promocao");
 }
 
 function fecharModalPromocao() {
-  document.getElementById("modal-promocao")
-    ?.classList.remove("active");
-
   fecharModalSeguro("modal-promocao");
-limparContextoModal("promocao");
+  limparContextoModal("promocao");
 }
-
 // ============================
 // DROPDOWN
 // ============================
