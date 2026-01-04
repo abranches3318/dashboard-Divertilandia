@@ -4,6 +4,7 @@
 
 let PROMOCAO_EDITANDO_ID = null;
 let MENU_PROMOCAO_ATUAL = null;
+let PROMOCAO_PODE_ABRIR = false;
 
 const COLECAO_PROMOCOES = "promocoes";
 
@@ -16,6 +17,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   await carregarPromocoes();
   renderPromocoes();
 });
+
+if (window.__PROMOCOES_INICIALIZADO__) {
+  console.warn("catalogo_promocoes.js carregado duas vezes");
+} else {
+  window.__PROMOCOES_INICIALIZADO__ = true;
+}
 
 // ============================
 // LISTAGEM
@@ -290,27 +297,29 @@ function formatarData(str) {
 }
 
 function bindEventosPromocoes() {
-  document.getElementById("btn-nova-promocao")
-    ?.addEventListener("click", abrirModalPromocaoSeguro);
+  const btn = document.getElementById("btn-nova-promocao");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    PROMOCAO_PODE_ABRIR = true;
+    abrirModalPromocaoSeguro();
+  });
 
   document.getElementById("btn-salvar-promocao")
     ?.addEventListener("click", salvarPromocao);
 }
 
 function abrirModalPromocaoSeguro() {
-  document.querySelectorAll(".modal.active")
-    .forEach(m => m.classList.remove("active"));
+  if (!PROMOCAO_PODE_ABRIR) return;
+
+  PROMOCAO_PODE_ABRIR = false; // trava novamente
 
   resetarEstadoPromocao();
 
   const modal = document.getElementById("modal-promocao");
   if (!modal) return;
 
-  modal.style.display = "none";
+  modal.classList.add("active");
 
-  requestAnimationFrame(() => {
-    modal.style.display = "flex";
-    modal.classList.add("active");
-    renderDropdownPromocao();
-  });
+  renderDropdownPromocao();
 }
