@@ -1,5 +1,5 @@
 // ============================
-// catalogo_promocoes.js — PROMOÇÕES (FINAL)
+// catalogo_promocoes.js — PROMOÇÕES (CORRIGIDO E ESTÁVEL)
 // ============================
 
 let PROMOCAO_EDITANDO_ID = null;
@@ -7,9 +7,9 @@ let MENU_PROMOCAO_ATUAL = null;
 
 const COLECAO_PROMOCOES = "promocoes";
 
-// ---------------------------
-// INIT
-// ---------------------------
+// ============================
+// INIT (SEM ABRIR MODAL)
+// ============================
 document.addEventListener("DOMContentLoaded", async () => {
   criarMenuPromocao();
   bindEventosPromocoes();
@@ -121,34 +121,27 @@ function resetarEstadoPromocao() {
   setValorSeguro("promo-inicio", "");
   setValorSeguro("promo-fim", "");
 
-  document.getElementById("promo-aplicacao-preview").innerHTML = "";
-  document.getElementById("promo-dropdown-label").textContent =
-    "Selecionar itens e pacotes";
+  const preview = document.getElementById("promo-aplicacao-preview");
+  if (preview) preview.innerHTML = "";
 
-  document.getElementById("promo-dropdown-lista")?.classList.remove("aberto");
+  const label = document.getElementById("promo-dropdown-label");
+  if (label) label.textContent = "Selecionar itens e pacotes";
+
+  document.getElementById("promo-dropdown-lista")
+    ?.classList.remove("aberto");
 }
-
-
-
-  const modal = document.getElementById("modal-promocao");
-  modal.classList.add("active");
-
-  // Renderização tardia e segura
-  renderDropdownPromocao();
 
 function abrirModalNovaPromocao() {
   MODAL_CONTEXTO = "promocao";
 
-  // fecha outros modais
-  document.querySelectorAll(".modal.active")
-    .forEach(m => m.classList.remove("active"));
-
   resetarEstadoPromocao();
 
   const modal = document.getElementById("modal-promocao");
+  if (!modal) return;
+
   modal.classList.add("active");
 
-  // renderização ocorre após DOM ativo
+  // Renderização SOMENTE após modal visível
   requestAnimationFrame(() => {
     renderDropdownPromocao();
   });
@@ -216,6 +209,8 @@ function toggleAlvoPromocao(id, tipo, nome, valorOriginal) {
 // ============================
 function atualizarPreviewPromocao() {
   const preview = document.getElementById("promo-aplicacao-preview");
+  if (!preview) return;
+
   const qtd = CATALOGO_STATE.promocaoAplicacao.selecionados.length;
 
   if (!qtd) {
