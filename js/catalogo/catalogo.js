@@ -368,19 +368,17 @@ function mostrarSucesso(titulo = "Sucesso", mensagem = "Operação concluída.")
   });
 }
 
-function limparContextoModal(contexto = "item") {
-  if (contexto !== "promocao") {
+function limparContextoModal(contexto = MODAL_CONTEXTO) {
+  if (contexto === "item" || contexto === "pacote") {
     document.getElementById("pacote-itens-bloco")?.remove();
     document.getElementById("pacote-itens-preview")?.remove();
-    document.getElementById("pacote-dropdown-lista")?.classList.remove("aberto");
+  }
 
-    const qtd = document.getElementById("item-quantidade")?.parentElement;
-    if (qtd) qtd.style.display = "";
-
-    limparPreviewImagens?.();
+  if (contexto === "promocao") {
+    document.getElementById("promo-aplicacao-preview").innerHTML = "";
+    document.getElementById("promo-dropdown-lista")?.classList.remove("aberto");
   }
 }
-
 
 
 
