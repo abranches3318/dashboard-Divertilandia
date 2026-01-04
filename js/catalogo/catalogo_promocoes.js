@@ -139,7 +139,7 @@ function abrirModalNovaPromocao() {
   const modal = document.getElementById("modal-promocao");
   if (!modal) return;
 
-abrirModalSeguro("modal-promocao");
+ abrirModalPromocaoSeguro();
 
   // Renderização SOMENTE após modal visível
   requestAnimationFrame(() => {
@@ -148,7 +148,12 @@ abrirModalSeguro("modal-promocao");
 }
 
 function fecharModalPromocao() {
-  fecharModalSeguro("modal-promocao");
+  const modal = document.getElementById("modal-promocao");
+  if (!modal) return;
+
+  modal.classList.remove("active");
+  modal.style.display = "none";
+
   limparContextoModal("promocao");
 }
 // ============================
@@ -299,8 +304,28 @@ function formatarData(str) {
 
 function bindEventosPromocoes() {
   document.getElementById("btn-nova-promocao")
-    ?.addEventListener("click", abrirModalNovaPromocao);
+    ?.addEventListener("click", abrirModalPromocaoSeguro);
 
   document.getElementById("btn-salvar-promocao")
     ?.addEventListener("click", salvarPromocao);
+}
+
+function abrirModalPromocaoSeguro() {
+  // fecha qualquer outro modal
+  document.querySelectorAll(".modal.active")
+    .forEach(m => m.classList.remove("active"));
+
+  const modal = document.getElementById("modal-promocao");
+  if (!modal) return;
+
+  // força reset visual
+  modal.style.display = "none";
+
+  requestAnimationFrame(() => {
+    modal.style.display = "flex";
+    modal.classList.add("active");
+
+    // renderizações dependentes do DOM visível
+    renderDropdownPromocao();
+  });
 }
