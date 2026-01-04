@@ -14,6 +14,7 @@ const CATALOGO_STATE = {
 
 // ---------- CONTEXTO GLOBAL ----------
 let MODAL_CONTEXTO = "item";
+let MODAL_ABERTO_ID = null;
 
 // ============================
 // HELPERS UTILITÁRIOS
@@ -500,5 +501,33 @@ function limparModoPacote() {
   ).forEach(el => {
     el.classList.remove("nome-principal", "preco", "status");
   });
+}
+
+// ============================
+// MODAL CONTROLLER — GLOBAL
+// ============================
+
+
+function abrirModalSeguro(id) {
+  // Fecha qualquer modal aberto
+  document.querySelectorAll(".modal.active")
+    .forEach(m => m.classList.remove("active"));
+
+  const modal = document.getElementById(id);
+  if (!modal) return;
+
+  modal.classList.add("active");
+  MODAL_ABERTO_ID = id;
+}
+
+function fecharModalSeguro(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+
+  modal.classList.remove("active");
+
+  if (MODAL_ABERTO_ID === id) {
+    MODAL_ABERTO_ID = null;
+  }
 }
 
