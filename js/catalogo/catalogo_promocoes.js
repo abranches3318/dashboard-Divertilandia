@@ -20,7 +20,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   criarMenuPromocao();
   bindEventosPromocoes();
-  await carregarPromocoes();
   renderPromocoes();
 });
 
@@ -299,13 +298,12 @@ function bindEventosPromocoes() {
   if (btn.__binded) return; // 🔒 evita bind duplicado
   btn.__binded = true;
 
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+ btn.addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
 
-    fecharTodosModaisExceto("modal-promocao");
-    abrirModalPromocao();
-  });
+  abrirModalPromocao();
+});
 
   document
     .getElementById("btn-salvar-promocao")
@@ -317,14 +315,4 @@ function abrirModalPromocao() {
   resetarEstadoPromocao();
   abrirModalSeguro("modal-promocao");
   renderDropdownPromocao();
-}
-
-function fecharTodosModaisExceto(idPermitido) {
-  document
-    .querySelectorAll(".modal.active")
-    .forEach(m => {
-      if (m.id !== idPermitido) {
-        m.classList.remove("active");
-      }
-    });
 }
