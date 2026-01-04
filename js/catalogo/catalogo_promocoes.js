@@ -135,7 +135,6 @@ function resetarEstadoPromocao() {
 
   // Renderização tardia e segura
   renderDropdownPromocao();
-}
 
 function abrirModalNovaPromocao() {
   MODAL_CONTEXTO = "promocao";
