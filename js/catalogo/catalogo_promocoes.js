@@ -12,6 +12,12 @@ const COLECAO_PROMOCOES = "promocoes";
 // INIT (SEM ABRIR MODAL)
 // ============================
 document.addEventListener("DOMContentLoaded", async () => {
+  // 🔒 Blindagem obrigatória do modal de promoção
+  const modalPromocao = document.getElementById("modal-promocao");
+  if (modalPromocao) {
+    modalPromocao.classList.remove("active");
+  }
+
   criarMenuPromocao();
   bindEventosPromocoes();
   await carregarPromocoes();
@@ -310,12 +316,12 @@ function bindEventosPromocoes() {
 }
 
 function abrirModalPromocao() {
-  resetarEstadoPromocao();
-
   const modal = document.getElementById("modal-promocao");
   if (!modal) return;
 
-  modal.classList.add("active");
+  if (modal.classList.contains("active")) return;
 
+  resetarEstadoPromocao();
+  modal.classList.add("active");
   renderDropdownPromocao();
 }
