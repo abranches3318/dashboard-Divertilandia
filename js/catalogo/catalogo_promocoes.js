@@ -139,7 +139,7 @@ function abrirModalNovaPromocao() {
   const modal = document.getElementById("modal-promocao");
   if (!modal) return;
 
-  modal.classList.add("active");
+abrirModalSeguro("modal-promocao");
 
   // Renderização SOMENTE após modal visível
   requestAnimationFrame(() => {
