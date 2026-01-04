@@ -338,6 +338,9 @@ label {
     box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
 }
 
+#modal-promocao {
+  z-index: 2000; /* acima de item/pacote */
+}
 /* ============================ ANIMAÇÕES ============================ */
 @keyframes fadeIn {
     from {
