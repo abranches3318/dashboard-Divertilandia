@@ -137,7 +137,7 @@ function abrirMenuItem(event, itemId) {
 // ============================
 
 function abrirModalNovoItem() {
-  limparContextoModal(item);
+  limparContextoModal("item");
   limparPreviewImagens();
   limparModoPacote();
   ITEM_EDITANDO_ID = null;
@@ -152,7 +152,7 @@ function abrirModalNovoItem() {
 }
 
 function editarItem() {
-  limparContextoModal(item);
+  limparContextoModal("item");
   limparPreviewImagens();
    limparModoPacote();
   MODAL_CONTEXTO = "item";
@@ -186,7 +186,7 @@ garantirImagemPrincipal();
 
 function fecharModalItem() {
   document.getElementById("modal-item").classList.remove("active");
-  limparContextoModal(item);
+  limparContextoModal("item");
   ITEM_EDITANDO_ID = null;
   PACOTE_EDITANDO_ID = null;
 }
