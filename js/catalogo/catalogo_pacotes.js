@@ -434,6 +434,9 @@ function bindDropdownPacote() {
 
   if (!header || !lista) return;
 
+  // Remove listener antigo
+  document.removeEventListener("click", fecharDropdownPacote);
+
   header.onclick = e => {
     e.stopPropagation();
     lista.classList.toggle("aberto");
