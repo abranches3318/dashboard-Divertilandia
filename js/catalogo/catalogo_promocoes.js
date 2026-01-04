@@ -141,13 +141,26 @@ function mostrarModalPromocao() {
 }
 
 function abrirModalNovaPromocao() {
+  MODAL_CONTEXTO = "promocao";
+
+  // Fecha QUALQUER outro modal aberto
+  document.querySelectorAll(".modal.active")
+    .forEach(m => m.classList.remove("active"));
+
   resetarEstadoPromocao();
-  mostrarModalPromocao();
+
+  const modal = document.getElementById("modal-promocao");
+
+  // FORÇA o browser a renderizar imediatamente
+  modal.style.display = "flex";
+  modal.classList.add("active");
 }
 
 function fecharModalPromocao() {
-  document.getElementById("modal-promocao")?.classList.remove("active");
-  resetarEstadoPromocao();
+  document.getElementById("modal-promocao")
+    ?.classList.remove("active");
+
+  limparContextoModal("promocao");
 }
 
 // ============================
