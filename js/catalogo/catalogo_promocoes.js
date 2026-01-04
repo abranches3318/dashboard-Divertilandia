@@ -151,7 +151,8 @@ function fecharModalPromocao() {
   document.getElementById("modal-promocao")
     ?.classList.remove("active");
 
-  limparContextoModal("promocao");
+  fecharModalSeguro("modal-promocao");
+limparContextoModal("promocao");
 }
 
 // ============================
