@@ -135,7 +135,7 @@ function abrirModalNovoPacote() {
   PACOTE_EDITANDO_ID = null;
   MODAL_CONTEXTO = "pacote";
   prepararModalPacote();
-  abrirModalSeguro("modal-pacote");
+ 
 
   
 
@@ -150,7 +150,7 @@ function abrirModalNovoPacote() {
 
   montarListaItensPacote([]);
 
-  document.getElementById("modal-item").classList.add("active");
+  abrirModalSeguro("modal-pacote");
 }
 
 // ============================
