@@ -4,7 +4,7 @@
 
 let PROMOCAO_EDITANDO_ID = null;
 let MENU_PROMOCAO_ATUAL = null;
-let PROMOCAO_PODE_ABRIR = false;
+
 
 const COLECAO_PROMOCOES = "promocoes";
 
@@ -144,10 +144,7 @@ function fecharModalPromocao() {
   if (!modal) return;
 
   modal.classList.remove("active");
-
-  requestAnimationFrame(() => {
-    modal.style.display = "none";
-  });
+  modal.style.display = "none";
 }
 
 // ============================
@@ -300,21 +297,24 @@ function bindEventosPromocoes() {
   const btn = document.getElementById("btn-nova-promocao");
   if (!btn) return;
 
-  btn.addEventListener("click", () => {
-    PROMOCAO_PODE_ABRIR = true;
-    abrirModalPromocaoSeguro();
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    abrirModalPromocao();
   });
+
+
 
   document.getElementById("btn-salvar-promocao")
     ?.addEventListener("click", salvarPromocao);
 }
 
-function abrirModalPromocaoSeguro() {
-  if (!PROMOCAO_PODE_ABRIR) return;
-
-  PROMOCAO_PODE_ABRIR = false; // trava novamente
-
+function abrirModalPromocao() {
   resetarEstadoPromocao();
+
+  document.querySelectorAll(".modal.active")
+    .forEach(m => m.classList.remove("active"));
 
   const modal = document.getElementById("modal-promocao");
   if (!modal) return;
