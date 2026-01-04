@@ -1427,4 +1427,31 @@ label {
   z-index: 1000;
 }
 
+/* ============================
+   MODAL PROMOÇÃO (ISOLADO)
+============================ */
+
+.modal-promocao {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
+  z-index: 30000;
+}
+
+.modal-promocao.active {
+  display: flex;
+}
+
+.modal-promocao .modal-content {
+  background: #1a1a1a;
+  padding: 25px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+}
+
 
