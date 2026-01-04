@@ -144,7 +144,6 @@ function fecharModalPromocao() {
   if (!modal) return;
 
   modal.classList.remove("active");
-  modal.style.display = "none";
 }
 
 // ============================
@@ -312,9 +311,6 @@ function bindEventosPromocoes() {
 
 function abrirModalPromocao() {
   resetarEstadoPromocao();
-
-  document.querySelectorAll(".modal.active")
-    .forEach(m => m.classList.remove("active"));
 
   const modal = document.getElementById("modal-promocao");
   if (!modal) return;
