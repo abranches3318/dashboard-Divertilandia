@@ -191,7 +191,7 @@ garantirImagemPrincipal();
 
 
   document.getElementById("menu-pacote-flutuante").style.display = "none";
-  document.getElementById("modal-item").classList.add("active");
+ abrirModalSeguro("modal-item");
 
   renderMiniaturasItensPacote(pacote.itens || []);
 }
