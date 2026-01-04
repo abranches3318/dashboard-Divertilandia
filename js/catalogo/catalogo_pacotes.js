@@ -150,7 +150,7 @@ function abrirModalNovoPacote() {
 
   montarListaItensPacote([]);
 
-  abrirModalSeguro("modal-pacote");
+  abrirModalSeguro("modal-item");
 }
 
 // ============================
