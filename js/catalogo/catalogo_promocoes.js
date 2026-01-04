@@ -128,10 +128,7 @@ function resetarEstadoPromocao() {
   document.getElementById("promo-dropdown-lista")?.classList.remove("aberto");
 }
 
-function mostrarModalPromocao() {
-  document.querySelectorAll(".modal.active").forEach(m =>
-    m.classList.remove("active")
-  );
+
 
   const modal = document.getElementById("modal-promocao");
   modal.classList.add("active");
@@ -143,17 +140,19 @@ function mostrarModalPromocao() {
 function abrirModalNovaPromocao() {
   MODAL_CONTEXTO = "promocao";
 
-  // Fecha QUALQUER outro modal aberto
+  // fecha outros modais
   document.querySelectorAll(".modal.active")
     .forEach(m => m.classList.remove("active"));
 
   resetarEstadoPromocao();
 
   const modal = document.getElementById("modal-promocao");
-
-  // FORÇA o browser a renderizar imediatamente
-  modal.style.display = "flex";
   modal.classList.add("active");
+
+  // renderização ocorre após DOM ativo
+  requestAnimationFrame(() => {
+    renderDropdownPromocao();
+  });
 }
 
 function fecharModalPromocao() {
