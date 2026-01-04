@@ -151,10 +151,7 @@ function resetarEstadoPromocao() {
 
 
 function fecharModalPromocao() {
-  const modal = document.getElementById("modal-promocao");
-  if (!modal) return;
-
-  modal.classList.remove("active");
+  fecharModalSeguro("modal-promocao");
 }
 
 // ============================
@@ -282,14 +279,6 @@ async function excluirPromocao() {
   Swal.fire("Sucesso", "Promoção excluída", "success");
 }
 
-// ============================
-// LOAD
-// ============================
-async function carregarPromocoes() {
-  const snap = await db.collection(COLECAO_PROMOCOES).get();
-  CATALOGO_STATE.promocoes =
-    snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
 
 // ============================
 // HELPERS
@@ -324,13 +313,9 @@ function bindEventosPromocoes() {
 }
 
 function abrirModalPromocao() {
-  const modal = document.getElementById("modal-promocao");
-  if (!modal) return;
-
-  if (modal.classList.contains("active")) return;
-
+  MODAL_CONTEXTO = "promocao";
   resetarEstadoPromocao();
-  modal.classList.add("active");
+  abrirModalSeguro("modal-promocao");
   renderDropdownPromocao();
 }
 
