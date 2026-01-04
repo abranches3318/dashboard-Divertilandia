@@ -135,6 +135,7 @@ function abrirModalNovoPacote() {
   PACOTE_EDITANDO_ID = null;
   MODAL_CONTEXTO = "pacote";
   prepararModalPacote();
+  abrirModalSeguro("modal-pacote");
 
   
 
