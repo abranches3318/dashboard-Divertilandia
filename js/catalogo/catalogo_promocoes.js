@@ -101,10 +101,15 @@ function criarMenuPromocao() {
 
   document.body.appendChild(menu);
 
-  document.addEventListener("click", () => {
-    menu.style.display = "none";
-    MENU_PROMOCAO_ATUAL = null;
-  });
+  document.addEventListener("click", (e) => {
+  if (
+    e.target.closest("#menu-promocao-flutuante") ||
+    e.target.closest(".item-acoes")
+  ) return;
+
+  menu.style.display = "none";
+  MENU_PROMOCAO_ATUAL = null;
+});
 }
 
 function abrirMenuPromocao(e, id) {
@@ -302,16 +307,19 @@ function bindEventosPromocoes() {
   const btn = document.getElementById("btn-nova-promocao");
   if (!btn) return;
 
+  if (btn.__binded) return; // 🔒 evita bind duplicado
+  btn.__binded = true;
+
   btn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
 
+    fecharTodosModaisExceto("modal-promocao");
     abrirModalPromocao();
   });
 
-
-
-  document.getElementById("btn-salvar-promocao")
+  document
+    .getElementById("btn-salvar-promocao")
     ?.addEventListener("click", salvarPromocao);
 }
 
@@ -324,4 +332,14 @@ function abrirModalPromocao() {
   resetarEstadoPromocao();
   modal.classList.add("active");
   renderDropdownPromocao();
+}
+
+function fecharTodosModaisExceto(idPermitido) {
+  document
+    .querySelectorAll(".modal.active")
+    .forEach(m => {
+      if (m.id !== idPermitido) {
+        m.classList.remove("active");
+      }
+    });
 }
