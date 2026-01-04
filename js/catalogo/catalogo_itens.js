@@ -143,12 +143,13 @@ function abrirModalNovoItem() {
   ITEM_EDITANDO_ID = null;
   MODAL_CONTEXTO = "item";
   prepararModalItem();
+  
 
   document.getElementById("item-quantidade").parentElement.style.display = "";
   document.getElementById("modal-item-titulo").textContent = "Novo Item";
 
   limparModalItem();
-  document.getElementById("modal-item").classList.add("active");
+  abrirModalSeguro("modal-item");
 }
 
 function editarItem() {
