@@ -1,193 +1,102 @@
-// ============================
-// catalogo_promocoes.js
-// STORE + CRUD (ISOLADO)
-// ============================
+/* ================= PROMOÇÕES (ISOLADO) ================= */
 
-(() => {
-  const COLECAO = "promocoes";
+(function () {
+  // Store em memória (leve, sem observers globais)
+  let promocoes = [];
 
-  let PROMOCOES = [];
-  let PROMO_EDITANDO_ID = null;
-
-  // ============================
-  // INIT
-  // ============================
+  /* ---------- INIT ---------- */
   document.addEventListener("DOMContentLoaded", () => {
-    bindEventos();
+    bindEventosPromocoes();
     carregarPromocoes();
   });
 
-  // ============================
-  // STORE (LEVE)
-  // ============================
-  function getTodas() {
-    return PROMOCOES.slice();
-  }
+  /* ---------- BIND ---------- */
+  function bindEventosPromocoes() {
+    const btnNova = document.getElementById("btn-nova-promocao");
+    const btnSalvar = document.getElementById("btn-salvar-promocao");
 
-  function getAtivas() {
-    const agora = Date.now();
-
-    return PROMOCOES.filter(p => {
-      if (p.statusManual !== "ativa") return false;
-
-      const ini = new Date(p.inicio).getTime();
-      const fim = new Date(p.fim).getTime();
-
-      return agora >= ini && agora <= fim;
+    btnNova?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      abrirModalPromocao();
     });
+
+    btnSalvar?.addEventListener("click", salvarPromocao);
   }
 
-  window.PromocoesStore = {
-    getTodas,
-    getAtivas
-  };
+  /* ---------- MODAL ---------- */
+  function abrirModalPromocao() {
+    limparFormulario();
+    abrirModalSeguro("modal-promocao");
+  }
 
-  // ============================
-  // LOAD
-  // ============================
-  async function carregarPromocoes() {
-    const snap = await db.collection(COLECAO)
-      .orderBy("createdAt", "desc")
-      .get();
+  function limparFormulario() {
+    document.getElementById("promo-nome").value = "";
+    document.getElementById("promo-valor").value = "";
+    document.getElementById("promo-inicio").value = "";
+    document.getElementById("promo-fim").value = "";
+  }
 
-    PROMOCOES = snap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
+  /* ---------- CRUD ---------- */
+  async function salvarPromocao() {
+    const nome = document.getElementById("promo-nome").value.trim();
+    const valor = parseFloat(document.getElementById("promo-valor").value);
+    const inicio = document.getElementById("promo-inicio").value;
+    const fim = document.getElementById("promo-fim").value;
 
+    if (!nome || !inicio || !fim) {
+      return Swal.fire("Atenção", "Preencha os campos obrigatórios", "warning");
+    }
+
+    const promocao = {
+      id: crypto.randomUUID(),
+      nome,
+      valor: isNaN(valor) ? null : valor,
+      inicio,
+      fim,
+      ativo: true,
+      criadoEm: new Date().toISOString()
+    };
+
+    promocoes.push(promocao);
+
+    fecharModalSeguro("modal-promocao");
     renderPromocoes();
+
+    Swal.fire("Sucesso", "Promoção criada", "success");
   }
 
-  // ============================
-  // RENDER
-  // ============================
+  /* ---------- RENDER ---------- */
   function renderPromocoes() {
     const container = document.getElementById("lista-promocoes");
     if (!container) return;
 
-    if (!PROMOCOES.length) {
-      container.innerHTML =
-        `<p style="opacity:.6;padding:15px;">Nenhuma promoção cadastrada.</p>`;
+    if (promocoes.length === 0) {
+      container.innerHTML = `<p class="muted">Nenhuma promoção cadastrada</p>`;
       return;
     }
 
-    container.innerHTML = PROMOCOES.map(p => `
-      <div class="promo-row">
-        <div class="promo-info">
-          <strong>${p.nome}</strong>
-          <small>${formatarPeriodo(p.inicio, p.fim)}</small>
+    container.innerHTML = promocoes
+      .map(
+        (p) => `
+        <div class="promo-card ${p.ativo ? "ativa" : "inativa"}">
+          <div>
+            <strong>${p.nome}</strong>
+            <div class="promo-periodo">${p.inicio} → ${p.fim}</div>
+          </div>
+          <div class="promo-valor">
+            ${p.valor !== null ? `R$ ${p.valor.toFixed(2)}` : "—"}
+          </div>
         </div>
-
-        <div class="promo-status ${statusCalculado(p)}">
-          ${statusCalculado(p)}
-        </div>
-
-        <button class="promo-acoes"
-          onclick="editarPromocao('${p.id}')">✏️</button>
-      </div>
-    `).join("");
+      `
+      )
+      .join("");
   }
 
-  function statusCalculado(p) {
-    const agora = Date.now();
-    const ini = new Date(p.inicio).getTime();
-    const fim = new Date(p.fim).getTime();
-
-    if (p.statusManual !== "ativa") return "inativa";
-    if (agora < ini) return "agendada";
-    if (agora > fim) return "encerrada";
-    return "ativa";
-  }
-
-  function formatarPeriodo(i, f) {
-    return `${new Date(i).toLocaleDateString("pt-BR")}
-      → ${new Date(f).toLocaleDateString("pt-BR")}`;
-  }
-
-  // ============================
-  // MODAL
-  // ============================
-  function abrirModal() {
-    PROMO_EDITANDO_ID = null;
-    limparModal();
-    abrirModalSeguro("modal-promocao");
-  }
-
-  function limparModal() {
-    set("promo-nome", "");
-    set("promo-valor", "");
-    set("promo-inicio", "");
-    set("promo-fim", "");
-  }
-
-  function set(id, v) {
-    const el = document.getElementById(id);
-    if (el) el.value = v;
-  }
-
-  // ============================
-  // SAVE
-  // ============================
-  async function salvar() {
-    try {
-      const nome = val("promo-nome");
-      const inicio = val("promo-inicio");
-      const fim = val("promo-fim");
-
-      if (!nome || !inicio || !fim) {
-        throw new Error("Preencha todos os campos obrigatórios.");
-      }
-
-      const dados = {
-        nome,
-        inicio,
-        fim,
-        statusManual: "ativa",
-
-        desconto: {
-          percentual: null,
-          valorFixo: Number(val("promo-valor")) || null
-        },
-
-        beneficios: {
-          horasExtras: 0,
-          brindes: []
-        },
-
-        alvos: [],
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      if (PROMO_EDITANDO_ID) {
-        await db.collection(COLECAO)
-          .doc(PROMO_EDITANDO_ID)
-          .update(dados);
-      } else {
-        await db.collection(COLECAO).add(dados);
-      }
-
-      fecharModalSeguro("modal-promocao");
-      await carregarPromocoes();
-      Swal.fire("Sucesso", "Promoção salva.", "success");
-
-    } catch (e) {
-      Swal.fire("Erro", e.message, "error");
-    }
-  }
-
-  function val(id) {
-    return document.getElementById(id)?.value.trim();
-  }
-
-  // ============================
-  // EVENTS
-  // ============================
-  function bindEventos() {
-    document.getElementById("btn-nova-promocao")
-      ?.addEventListener("click", abrirModal);
-
-    document.getElementById("btn-salvar-promocao")
-      ?.addEventListener("click", salvar);
+  /* ---------- LOAD (placeholder) ---------- */
+  function carregarPromocoes() {
+    // futuro: firestore
+    renderPromocoes();
   }
 
 })();
