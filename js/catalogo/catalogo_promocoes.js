@@ -25,30 +25,19 @@
 
   /* ---------- MODAL (ISOLADO) ---------- */
 function abrirModalPromocao() {
-  console.log("PASSO 1 - fechar outros modais");
+  // fecha qualquer outro modal ativo
+  document.querySelectorAll('.modal.active')
+    .forEach(m => m.classList.remove('active'));
 
-  // Fecha qualquer modal ativo antes
-  document.querySelectorAll(".modal.active").forEach(modal => {
-    modal.classList.remove("active");
-    modal.style.pointerEvents = "none";
-    modal.style.opacity = "0";
-  });
-
-  console.log("PASSO 2 - limpar formulário");
   limparFormulario();
 
-  console.log("PASSO 3 - abrir modal promocao");
-  const modal = document.getElementById("modal-promocao");
-
-  modal.style.pointerEvents = "auto";
-  modal.style.opacity = "1";
-  modal.classList.add("active");
-
-  console.log("PASSO 4 - modal aberto");
+  const modal = document.getElementById('modal-promocao');
+  modal.classList.add('active');
 }
 
  function fecharModalPromocaoIsolado() {
-  document.getElementById("modal-promocao").classList.remove("active");
+  document.getElementById('modal-promocao')
+    .classList.remove('active');
 }
 
   function limparFormulario() {
