@@ -1427,24 +1427,6 @@ label {
   z-index: 1000;
 }
 
-/* ============================
-   MODAL PROMOÇÃO (ISOLADO)
-============================ */
-
-.modal-promocao {
-  position: fixed;
-  inset: 0;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(3px);
-  z-index: 30000;
-}
-
-.modal-promocao.active {
-  display: flex;
-}
 
 .modal-promocao .modal-content {
   background: #1a1a1a;
@@ -1496,16 +1478,7 @@ label {
   font-size: 14px;
 }
 
-/* CORREÇÃO CRÍTICA – MODAL PROMOÇÃO */
-
-#modal-promocao {
-  z-index: 3000;
+#modal-promocao.modal.active {
+  z-index: 10000;
 }
 
-#modal-promocao:not(.ativo) {
-  pointer-events: none;
-}
-
-#modal-promocao.ativo {
-  pointer-events: auto;
-}
