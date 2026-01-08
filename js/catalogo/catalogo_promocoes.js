@@ -25,11 +25,27 @@
   }
 
   /* ---------- MODAL ---------- */
-  function abrirModalPromocao() {
-    limparFormulario();
-    abrirModalSeguro("modal-promocao");
-  }
+function abrirModalPromocao() {
+  limparFormulario();
+  abrirModalPromocaoIsolado();
+}
 
+function abrirModalPromocaoIsolado() {
+  const modal = document.getElementById("modal-promocao");
+  if (!modal) return;
+
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function fecharModalPromocaoIsolado() {
+  const modal = document.getElementById("modal-promocao");
+  if (!modal) return;
+
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+  
   function limparFormulario() {
     document.getElementById("promo-nome").value = "";
     document.getElementById("promo-valor").value = "";
@@ -60,7 +76,7 @@
 
     promocoes.push(promocao);
 
-    fecharModalSeguro("modal-promocao");
+    fecharModalPromocaoIsolado();;
     renderPromocoes();
 
     Swal.fire("Sucesso", "Promoção criada", "success");
