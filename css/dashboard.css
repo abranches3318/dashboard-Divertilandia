@@ -324,7 +324,7 @@ label {
     backdrop-filter: blur(3px);
 
     opacity: 0;
-    pointer-events: auto;
+    pointer-events: none;
     z-index: -1;
 
     transition: opacity .2s ease;
