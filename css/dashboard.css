@@ -1421,11 +1421,7 @@ label {
   background: rgba(255,255,255,.25);
 }
 
-/* ---------- GARANTIAS CONTRA MODAIS ---------- */
-.modal,
-.swal2-container {
-  z-index: 1000;
-}
+
 
 
 #modal-promocao .modal-content {
@@ -1480,41 +1476,4 @@ label {
 
 
 
-
-/* ================= MODAL PROMOÇÃO (ISOLADO) ================= */
-
-.modal-promocao {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(3px);
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  opacity: 0;
-  pointer-events: none;
-  z-index: -1;
-
-  transition: opacity 0.2s ease;
-}
-
-.modal-promocao.active {
-  opacity: 1;
-  pointer-events: auto;
-  z-index: 10000;
-}
-
-.modal-promocao-content {
-  background: #1a1a1a;
-  padding: 25px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 450px;
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
-}
 
