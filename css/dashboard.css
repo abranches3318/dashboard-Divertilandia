@@ -1428,7 +1428,7 @@ label {
 }
 
 
-.modal-promocao .modal-content {
+#modal-promocao .modal-content {
   background: #1a1a1a;
   padding: 25px;
   border-radius: 12px;
