@@ -1518,7 +1518,3 @@ label {
   box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
 }
 
-.modal-content.modal-md {
-  width: 90%;
-  max-width: 420px;
-}
