@@ -1,50 +1,104 @@
 /* ================= PROMOÇÕES (ISOLADO) ================= */
 
 (function () {
-  // Store em memória (leve, sem observers globais)
   let promocoes = [];
 
-  /* ---------- INIT ---------- */
+  let itensSelecionados = new Set();
+  let pacotesSelecionados = new Set();
+
   document.addEventListener("DOMContentLoaded", () => {
     bindEventosPromocoes();
-    carregarPromocoes();
+    renderPromocoes();
   });
 
   /* ---------- BIND ---------- */
   function bindEventosPromocoes() {
-    const btnNova = document.getElementById("btn-nova-promocao");
-    const btnSalvar = document.getElementById("btn-salvar-promocao");
+    document.getElementById("btn-nova-promocao")
+      ?.addEventListener("click", abrirModalPromocao);
 
-    btnNova?.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      abrirModalPromocao();
-    });
+    document.getElementById("btn-salvar-promocao")
+      ?.addEventListener("click", salvarPromocao);
 
-    btnSalvar?.addEventListener("click", salvarPromocao);
+    document.getElementById("promo-fechar")
+      ?.addEventListener("click", fecharModalPromocao);
   }
 
-  /* ---------- MODAL ---------- */
-function abrirModalPromocao() {
-  limparFormulario();
-  abrirModalSeguro("modal-promocao");
-}
+  /* ---------- MODAL (ISOLADO) ---------- */
+  function abrirModalPromocao() {
+    limparFormulario();
+    carregarDropdowns();
+    const modal = document.getElementById("modal-promocao");
+    modal.classList.add("active");
+  }
 
+  function fecharModalPromocao() {
+    const modal = document.getElementById("modal-promocao");
+    modal.classList.remove("active");
+  }
 
-
-function fecharModalPromocaoIsolado() {
-  fecharModalSeguro("modal-promocao");
-}
-  
   function limparFormulario() {
     document.getElementById("promo-nome").value = "";
     document.getElementById("promo-valor").value = "";
     document.getElementById("promo-inicio").value = "";
     document.getElementById("promo-fim").value = "";
+
+    itensSelecionados.clear();
+    pacotesSelecionados.clear();
   }
 
-  /* ---------- CRUD ---------- */
-  async function salvarPromocao() {
+  /* ---------- DROPDOWNS ---------- */
+  function carregarDropdowns() {
+    renderLista(
+      "lista-itens-promocao",
+      window.catalogoItens || [],
+      itensSelecionados
+    );
+
+    renderLista(
+      "lista-pacotes-promocao",
+      window.catalogoPacotes || [],
+      pacotesSelecionados
+    );
+  }
+
+  function renderLista(containerId, lista, store) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = `
+      <label>
+        <input type="checkbox" class="check-all"> Selecionar todos
+      </label>
+      <div class="lista-checks">
+        ${lista.map(item => `
+          <label>
+            <input type="checkbox" value="${item.id}">
+            ${item.nome}
+          </label>
+        `).join("")}
+      </div>
+    `;
+
+    const checkAll = container.querySelector(".check-all");
+    const checks = container.querySelectorAll("input[type=checkbox]:not(.check-all)");
+
+    checkAll.addEventListener("change", () => {
+      checks.forEach(c => {
+        c.checked = checkAll.checked;
+        checkAll.checked ? store.add(c.value) : store.delete(c.value);
+      });
+    });
+
+    checks.forEach(c => {
+      c.addEventListener("change", () => {
+        c.checked ? store.add(c.value) : store.delete(c.value);
+        if (!c.checked) checkAll.checked = false;
+      });
+    });
+  }
+
+  /* ---------- SALVAR ---------- */
+  function salvarPromocao() {
     const nome = document.getElementById("promo-nome").value.trim();
     const valor = parseFloat(document.getElementById("promo-valor").value);
     const inicio = document.getElementById("promo-inicio").value;
@@ -54,19 +108,18 @@ function fecharModalPromocaoIsolado() {
       return Swal.fire("Atenção", "Preencha os campos obrigatórios", "warning");
     }
 
-    const promocao = {
+    promocoes.push({
       id: crypto.randomUUID(),
       nome,
       valor: isNaN(valor) ? null : valor,
       inicio,
       fim,
-      ativo: true,
-      criadoEm: new Date().toISOString()
-    };
+      itens: [...itensSelecionados],
+      pacotes: [...pacotesSelecionados],
+      ativo: true
+    });
 
-    promocoes.push(promocao);
-
-    fecharModalPromocaoIsolado();;
+    fecharModalPromocao();
     renderPromocoes();
 
     Swal.fire("Sucesso", "Promoção criada", "success");
@@ -77,32 +130,22 @@ function fecharModalPromocaoIsolado() {
     const container = document.getElementById("lista-promocoes");
     if (!container) return;
 
-    if (promocoes.length === 0) {
+    if (!promocoes.length) {
       container.innerHTML = `<p class="muted">Nenhuma promoção cadastrada</p>`;
       return;
     }
 
-    container.innerHTML = promocoes
-      .map(
-        (p) => `
-        <div class="promo-card ${p.ativo ? "ativa" : "inativa"}">
-          <div>
-            <strong>${p.nome}</strong>
-            <div class="promo-periodo">${p.inicio} → ${p.fim}</div>
-          </div>
-          <div class="promo-valor">
-            ${p.valor !== null ? `R$ ${p.valor.toFixed(2)}` : "—"}
-          </div>
+    container.innerHTML = promocoes.map(p => `
+      <div class="promo-card ${p.ativo ? "ativa" : "inativa"}">
+        <div>
+          <strong>${p.nome}</strong>
+          <div class="promo-periodo">${p.inicio} → ${p.fim}</div>
         </div>
-      `
-      )
-      .join("");
-  }
-
-  /* ---------- LOAD (placeholder) ---------- */
-  function carregarPromocoes() {
-    // futuro: firestore
-    renderPromocoes();
+        <div class="promo-valor">
+          ${p.valor !== null ? `R$ ${p.valor.toFixed(2)}` : "—"}
+        </div>
+      </div>
+    `).join("");
   }
 
 })();
