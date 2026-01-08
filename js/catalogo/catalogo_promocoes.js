@@ -31,10 +31,9 @@
     modal.classList.add("active");
   }
 
-  function fecharModalPromocao() {
-    const modal = document.getElementById("modal-promocao");
-    modal.classList.remove("active");
-  }
+ function fecharModalPromocaoIsolado() {
+  document.getElementById("modal-promocao").classList.remove("active");
+}
 
   function limparFormulario() {
     document.getElementById("promo-nome").value = "";
