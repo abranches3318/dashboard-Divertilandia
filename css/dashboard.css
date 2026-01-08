@@ -1473,7 +1473,9 @@ label {
   color: #888;
   font-size: 14px;
 }
-
+#modal-promocao.modal.active {
+  z-index: 9999;
+}
 
 
 
