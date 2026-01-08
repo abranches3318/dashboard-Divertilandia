@@ -25,11 +25,26 @@
 
   /* ---------- MODAL (ISOLADO) ---------- */
 function abrirModalPromocao() {
-  console.log("PASSO 1");
+  console.log("PASSO 1 - fechar outros modais");
+
+  // Fecha qualquer modal ativo antes
+  document.querySelectorAll(".modal.active").forEach(modal => {
+    modal.classList.remove("active");
+    modal.style.pointerEvents = "none";
+    modal.style.opacity = "0";
+  });
+
+  console.log("PASSO 2 - limpar formulário");
   limparFormulario();
-  console.log("PASSO 2");
-  document.getElementById("modal-promocao").classList.add("active");
-  console.log("PASSO 3");
+
+  console.log("PASSO 3 - abrir modal promocao");
+  const modal = document.getElementById("modal-promocao");
+
+  modal.style.pointerEvents = "auto";
+  modal.style.opacity = "1";
+  modal.classList.add("active");
+
+  console.log("PASSO 4 - modal aberto");
 }
 
  function fecharModalPromocaoIsolado() {
