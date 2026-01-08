@@ -1495,3 +1495,17 @@ label {
   color: #888;
   font-size: 14px;
 }
+
+/* CORREÇÃO CRÍTICA – MODAL PROMOÇÃO */
+
+#modal-promocao {
+  z-index: 3000;
+}
+
+#modal-promocao:not(.ativo) {
+  pointer-events: none;
+}
+
+#modal-promocao.ativo {
+  pointer-events: auto;
+}
