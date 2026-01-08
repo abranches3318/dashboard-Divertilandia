@@ -1455,48 +1455,43 @@ label {
 }
 
 
-/* ============================
-   PROMOÇÕES
-============================ */
+/* ================= PROMOÇÕES ================= */
 
-.promo-row {
+#lista-promocoes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.promo-card {
+  background: #1f1f1f;
+  border-radius: 8px;
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-left: 4px solid #444;
 }
 
-.promo-info small {
-  display: block;
-  opacity: .6;
+.promo-card.ativa {
+  border-color: #2ecc71;
+}
+
+.promo-card.inativa {
+  opacity: 0.6;
+}
+
+.promo-periodo {
   font-size: 12px;
+  color: #aaa;
 }
 
-.promo-status {
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  text-transform: uppercase;
+.promo-valor {
+  font-weight: bold;
+  color: #f1c40f;
 }
 
-.promo-status.ativa {
-  background: #1f8f3a;
+.muted {
+  color: #888;
+  font-size: 14px;
 }
-
-.promo-status.agendada {
-  background: #8a6d1d;
-}
-
-.promo-status.encerrada,
-.promo-status.inativa {
-  background: #555;
-}
-
-.promo-acoes {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-}
-
