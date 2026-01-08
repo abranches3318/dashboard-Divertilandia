@@ -24,12 +24,13 @@
   }
 
   /* ---------- MODAL (ISOLADO) ---------- */
-  function abrirModalPromocao() {
-    limparFormulario();
-    carregarDropdowns();
-    const modal = document.getElementById("modal-promocao");
-    modal.classList.add("active");
-  }
+function abrirModalPromocao() {
+  console.log("PASSO 1");
+  limparFormulario();
+  console.log("PASSO 2");
+  document.getElementById("modal-promocao").classList.add("active");
+  console.log("PASSO 3");
+}
 
  function fecharModalPromocaoIsolado() {
   document.getElementById("modal-promocao").classList.remove("active");
