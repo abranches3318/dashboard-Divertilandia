@@ -1455,3 +1455,48 @@ label {
 }
 
 
+/* ============================
+   PROMOÇÕES
+============================ */
+
+.promo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.promo-info small {
+  display: block;
+  opacity: .6;
+  font-size: 12px;
+}
+
+.promo-status {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.promo-status.ativa {
+  background: #1f8f3a;
+}
+
+.promo-status.agendada {
+  background: #8a6d1d;
+}
+
+.promo-status.encerrada,
+.promo-status.inativa {
+  background: #555;
+}
+
+.promo-acoes {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
