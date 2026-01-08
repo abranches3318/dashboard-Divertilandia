@@ -27,23 +27,13 @@
   /* ---------- MODAL ---------- */
 function abrirModalPromocao() {
   limparFormulario();
-  abrirModalPromocaoIsolado();
+  abrirModalSeguro("modal-promocao");
 }
 
-function abrirModalPromocaoIsolado() {
-  const modal = document.getElementById("modal-promocao");
-  if (!modal) return;
 
-  modal.classList.add("active");
-  document.body.style.overflow = "hidden";
-}
 
 function fecharModalPromocaoIsolado() {
-  const modal = document.getElementById("modal-promocao");
-  if (!modal) return;
-
-  modal.classList.remove("active");
-  document.body.style.overflow = "";
+  fecharModalSeguro("modal-promocao");
 }
   
   function limparFormulario() {
