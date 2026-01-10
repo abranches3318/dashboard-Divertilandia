@@ -35,9 +35,16 @@
   // -----------------------------------------------------
 
   regrasNegocio.pacoteToItens = function (pacoteDoc) {
-    if (!pacoteDoc || !Array.isArray(pacoteDoc.itens)) return [];
-    return normalizarArray(pacoteDoc.itens);
-  };
+  if (!pacoteDoc || !Array.isArray(pacoteDoc.itens)) return [];
+
+  return pacoteDoc.itens
+    .map(i => {
+      if (typeof i === "string") return i;
+      if (i && typeof i === "object" && i.itemId) return String(i.itemId).trim();
+      return null;
+    })
+    .filter(Boolean);
+};
 
   // -----------------------------------------------------
   // Checagem principal
