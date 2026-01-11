@@ -1,13 +1,14 @@
-/* ================= PROMOÇÕES (ISOLADO, DETERMINÍSTICO) ================= */
+/* ================= PROMOÇÕES — ISOLADO E DETERMINÍSTICO ================= */
 
 (function () {
 
   /* ================= ESTADO ================= */
 
-  let promocoes = [];
+  let PROMOCOES = [];
 
   let itensSelecionados = new Set();
   let pacotesSelecionados = new Set();
+  let itemGratisSelecionado = null;
 
   let tipoPromocao = null;
   let tipoDesconto = null;
@@ -23,18 +24,19 @@
 
   function bindEventosFixos() {
 
-    document.getElementById("btn-nova-promocao")
-      ?.addEventListener("click", abrirModalPromocao);
+    const btnNova = document.getElementById("btn-nova-promocao");
+    if (btnNova) btnNova.addEventListener("click", abrirModalPromocao);
 
-    document.getElementById("btn-salvar-promocao")
-      ?.addEventListener("click", salvarPromocao);
+    const btnSalvar = document.getElementById("btn-salvar-promocao");
+    if (btnSalvar) btnSalvar.addEventListener("click", salvarPromocao);
 
-    document.getElementById("promo-tipo")
-      ?.addEventListener("change", onTipoPromocaoChange);
+    const tipo = document.getElementById("promo-tipo");
+    if (tipo) tipo.addEventListener("change", onTipoPromocaoChange);
 
-    document.querySelectorAll("input[name='promo-desconto-tipo']")
-      .forEach(r =>
-        r.addEventListener("change", onTipoDescontoChange)
+    document
+      .querySelectorAll("input[name='promo-desconto-tipo']")
+      .forEach(radio =>
+        radio.addEventListener("change", onTipoDescontoChange)
       );
   }
 
@@ -42,20 +44,21 @@
 
   function abrirModalPromocao() {
 
-    document.querySelectorAll(".modal.active")
+    document
+      .querySelectorAll(".modal.active")
       .forEach(m => m.classList.remove("active"));
 
     resetarFormulario();
     carregarDropdowns();
+    prepararImagemPromocao();
 
-    document.getElementById("modal-promocao")
-      .classList.add("active");
+    const modal = document.getElementById("modal-promocao");
+    if (modal) modal.classList.add("active");
   }
 
   window.fecharModalPromocaoIsolado = function () {
-    document.getElementById("modal-promocao")
-      .classList.remove("active");
-
+    const modal = document.getElementById("modal-promocao");
+    if (modal) modal.classList.remove("active");
     resetarFormulario();
   };
 
@@ -75,12 +78,16 @@
 
     itensSelecionados.clear();
     pacotesSelecionados.clear();
+    itemGratisSelecionado = null;
 
     tipoPromocao = null;
     tipoDesconto = null;
 
     esconderTodosBlocos();
     resetarRadios();
+
+    const preview = document.getElementById("promo-imagem-preview");
+    if (preview) preview.innerHTML = "";
   }
 
   /* ================= CONTROLE DE TIPO ================= */
@@ -92,16 +99,16 @@
     desbloquearSelecionarTodos();
 
     if (tipoPromocao === "item_gratis") {
-      document.getElementById("bloco-item-gratis").style.display = "block";
+      mostrar("bloco-item-gratis");
       bloquearSelecionarTodos();
     }
 
     if (tipoPromocao === "desconto") {
-      document.getElementById("bloco-desconto").style.display = "block";
+      mostrar("bloco-desconto");
     }
 
     if (tipoPromocao === "horas_extras") {
-      document.getElementById("bloco-horas-extras").style.display = "block";
+      mostrar("bloco-horas-extras");
     }
   }
 
@@ -109,63 +116,76 @@
     tipoDesconto = e.target.value;
 
     const campo = document.getElementById("campo-desconto-valor");
-    campo.style.display = "block";
+    if (campo) campo.style.display = "block";
 
     const input = document.getElementById("promo-desconto-valor");
-    input.placeholder = tipoDesconto === "percentual"
-      ? "Ex: 10 (%)"
-      : "Ex: 50 (R$)";
+    if (input) {
+      input.placeholder =
+        tipoDesconto === "percentual"
+          ? "Ex: 10 (%)"
+          : "Ex: 50 (R$)";
+    }
   }
 
   function esconderTodosBlocos() {
-    document.querySelectorAll(".promo-bloco")
+    document
+      .querySelectorAll(".promo-bloco")
       .forEach(b => b.style.display = "none");
 
-    document.getElementById("campo-desconto-valor").style.display = "none";
+    const campo = document.getElementById("campo-desconto-valor");
+    if (campo) campo.style.display = "none";
   }
 
   function resetarRadios() {
-    document.querySelectorAll("input[type='radio']")
+    document
+      .querySelectorAll("input[type='radio']")
       .forEach(r => r.checked = false);
+  }
+
+  function mostrar(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "block";
   }
 
   /* ================= DROPDOWNS ================= */
 
   function carregarDropdowns() {
 
-    renderDropdown(
+    renderDropdownMulti(
       "dropdown-itens-promocao",
-      window.catalogoItens || [],
+      CATALOGO_STATE.itens,
       itensSelecionados,
-      "item"
+      true
     );
 
-    renderDropdown(
+    renderDropdownMulti(
       "dropdown-pacotes-promocao",
-      window.catalogoPacotes || [],
+      CATALOGO_STATE.pacotes,
       pacotesSelecionados,
-      "pacote"
+      true
     );
 
-    renderDropdown(
+    renderDropdownItemGratis(
       "dropdown-item-gratis",
-      window.catalogoItens || [],
-      null,
-      "item_gratis"
+      CATALOGO_STATE.itens
     );
   }
 
-  function renderDropdown(containerId, lista, store, tipo) {
+  /* ===== DROPDOWN MULTI (ITENS / PACOTES) ===== */
+
+  function renderDropdownMulti(containerId, lista, store, permitirSelecionarTodos) {
 
     const container = document.getElementById(containerId);
     if (!container) return;
 
     container.innerHTML = `
-      <label class="check-all-line">
-        <input type="checkbox" class="check-all">
-        Selecionar todos
-      </label>
-      <div class="lista-checks">
+      <div class="dropdown-toggle">Selecionar</div>
+      <div class="dropdown-menu">
+        ${permitirSelecionarTodos ? `
+          <label class="check-all-line">
+            <input type="checkbox" class="check-all"> Selecionar todos
+          </label>
+        ` : ""}
         ${lista.map(i => `
           <label>
             <input type="checkbox" value="${i.id}">
@@ -175,51 +195,120 @@
       </div>
     `;
 
-    const checkAll = container.querySelector(".check-all");
-    const checks = container.querySelectorAll("input[type=checkbox]:not(.check-all)");
+    bindDropdown(container, store, permitirSelecionarTodos);
+  }
 
-    checkAll.addEventListener("change", () => {
+  /* ===== DROPDOWN ITEM GRÁTIS (SINGLE) ===== */
 
-      if (tipoPromocao === "item_gratis" && tipo === "pacote") {
-        Swal.fire("Atenção", "Item grátis permite apenas um pacote", "warning");
-        checkAll.checked = false;
-        return;
-      }
+  function renderDropdownItemGratis(containerId, lista) {
 
-      checks.forEach(c => {
-        c.checked = checkAll.checked;
-        store?.[checkAll.checked ? "add" : "delete"](c.value);
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="dropdown-toggle">Selecionar item grátis</div>
+      <div class="dropdown-menu">
+        ${lista.map(i => `
+          <label>
+            <input type="radio" name="item-gratis" value="${i.id}">
+            ${i.nome}
+          </label>
+        `).join("")}
+      </div>
+    `;
+
+    const toggle = container.querySelector(".dropdown-toggle");
+    const menu = container.querySelector(".dropdown-menu");
+
+    toggle.addEventListener("click", () => {
+      menu.classList.toggle("open");
+    });
+
+    menu.querySelectorAll("input[type='radio']").forEach(r => {
+      r.addEventListener("change", () => {
+        itemGratisSelecionado = r.value;
+        toggle.textContent =
+          lista.find(i => i.id === r.value)?.nome || "Selecionado";
+        menu.classList.remove("open");
       });
     });
+  }
+
+  /* ===== DROPDOWN CORE ===== */
+
+  function bindDropdown(container, store, permitirSelecionarTodos) {
+
+    const toggle = container.querySelector(".dropdown-toggle");
+    const menu = container.querySelector(".dropdown-menu");
+
+    toggle.addEventListener("click", () => {
+      menu.classList.toggle("open");
+    });
+
+    const checkAll = container.querySelector(".check-all");
+    const checks = container.querySelectorAll("input[type='checkbox']:not(.check-all)");
+
+    if (checkAll) {
+      checkAll.addEventListener("change", () => {
+        checks.forEach(c => {
+          c.checked = checkAll.checked;
+          checkAll.checked
+            ? store.add(c.value)
+            : store.delete(c.value);
+        });
+      });
+    }
 
     checks.forEach(c => {
       c.addEventListener("change", () => {
+        c.checked
+          ? store.add(c.value)
+          : store.delete(c.value);
 
-        if (tipoPromocao === "item_gratis" && tipo === "pacote") {
-          if (pacotesSelecionados.size >= 1 && c.checked) {
-            c.checked = false;
-            Swal.fire("Atenção", "Somente um pacote permitido", "warning");
-            return;
-          }
-        }
-
-        if (store) {
-          c.checked ? store.add(c.value) : store.delete(c.value);
-        }
-
-        if (!c.checked) checkAll.checked = false;
+        if (checkAll && !c.checked) checkAll.checked = false;
       });
     });
   }
 
   function bloquearSelecionarTodos() {
-    document.querySelectorAll(".check-all")
+    document
+      .querySelectorAll(".check-all")
       .forEach(c => c.disabled = true);
   }
 
   function desbloquearSelecionarTodos() {
-    document.querySelectorAll(".check-all")
+    document
+      .querySelectorAll(".check-all")
       .forEach(c => c.disabled = false);
+  }
+
+  /* ================= IMAGEM PROMOÇÃO ================= */
+
+  function prepararImagemPromocao() {
+
+    const input = document.getElementById("promo-imagem");
+    if (!input) return;
+
+    input.onchange = (e) => {
+
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const preview = document.getElementById("promo-imagem-preview");
+      if (!preview) return;
+
+      preview.innerHTML = "";
+
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      preview.appendChild(img);
+
+      const estado = { scale: 1, offsetX: 0, offsetY: 0 };
+
+      aplicarTransformImagem(img, estado);
+      habilitarDragImagem(img, estado);
+      habilitarZoomImagem(img, estado);
+    };
   }
 
   /* ================= SALVAR ================= */
@@ -229,28 +318,31 @@
     const nome = val("promo-nome");
     const inicio = val("promo-inicio");
     const fim = val("promo-fim");
-
     const hoje = new Date().toISOString().split("T")[0];
 
-    if (!nome || !inicio || !fim || !tipoPromocao)
-      return Swal.fire("Erro", "Preencha os campos obrigatórios", "error");
+    if (!nome || !inicio || !fim || !tipoPromocao) {
+      Swal.fire("Erro", "Campos obrigatórios não preenchidos", "error");
+      return;
+    }
 
-    if (inicio < hoje)
-      return Swal.fire("Erro", "Data inicial não pode ser passada", "error");
+    if (inicio < hoje) {
+      Swal.fire("Erro", "Data inicial inválida", "error");
+      return;
+    }
 
-    if (fim < hoje || fim < inicio)
-      return Swal.fire("Erro", "Data final inválida", "error");
+    if (fim < inicio) {
+      Swal.fire("Erro", "Data final inválida", "error");
+      return;
+    }
 
-    if (inicio > hoje)
-      Swal.fire("Info", "Promoção será agendada", "info");
-
-    promocoes.push({
+    PROMOCOES.push({
       id: crypto.randomUUID(),
       nome,
       tipo: tipoPromocao,
       tipoDesconto,
       descontoValor: val("promo-desconto-valor"),
       horasExtras: val("promo-horas-extras"),
+      itemGratis: itemGratisSelecionado,
       itens: [...itensSelecionados],
       pacotes: [...pacotesSelecionados],
       inicio,
@@ -273,76 +365,21 @@
   /* ================= LISTAGEM ================= */
 
   function renderPromocoes() {
+
     const c = document.getElementById("lista-promocoes");
     if (!c) return;
 
-    c.innerHTML = promocoes.length
-      ? promocoes.map(p => `
-        <div class="promo-card ativa">
-          <strong>${p.nome}</strong>
-          <div class="promo-periodo">${p.inicio} → ${p.fim}</div>
-        </div>
-      `).join("")
-      : `<p class="muted">Nenhuma promoção cadastrada</p>`;
+    if (!PROMOCOES.length) {
+      c.innerHTML = `<p class="muted">Nenhuma promoção cadastrada</p>`;
+      return;
+    }
+
+    c.innerHTML = PROMOCOES.map(p => `
+      <div class="promo-card ativa">
+        <strong>${p.nome}</strong>
+        <div>${p.inicio} → ${p.fim}</div>
+      </div>
+    `).join("");
   }
 
 })();
-
-// ============================
-// PROMOÇÃO — CONTROLE DE TIPO
-// ============================
-
-function ocultarTodosBlocosPromocao() {
-  document.querySelectorAll("#modal-promocao .promo-bloco")
-    .forEach(bloco => {
-      bloco.style.display = "none";
-    });
-}
-
-function limparCamposPromocaoPorTipo() {
-  // item grátis
-  document.getElementById("dropdown-item-gratis")?.innerHTML = "";
-
-  // desconto
-  document
-    .querySelectorAll("input[name='promo-desconto-tipo']")
-    .forEach(r => r.checked = false);
-
-  const campoValor = document.getElementById("campo-desconto-valor");
-  if (campoValor) campoValor.style.display = "none";
-
-  document.getElementById("promo-desconto-valor")?.value = "";
-
-  // horas extras
-  document.getElementById("promo-horas-extras")?.value = "";
-}
-
-function tratarTipoPromocao(tipo) {
-  ocultarTodosBlocosPromocao();
-  limparCamposPromocaoPorTipo();
-
-  if (!tipo) return;
-
-  if (tipo === "item_gratis") {
-    document.getElementById("bloco-item-gratis").style.display = "block";
-  }
-
-  if (tipo === "desconto") {
-    document.getElementById("bloco-desconto").style.display = "block";
-  }
-
-  if (tipo === "horas_extras") {
-    document.getElementById("bloco-horas-extras").style.display = "block";
-  }
-
-
-document
-  .querySelectorAll("input[name='promo-desconto-tipo']")
-  .forEach(radio => {
-    radio.addEventListener("change", () => {
-      const campoValor = document.getElementById("campo-desconto-valor");
-      if (!campoValor) return;
-
-      campoValor.style.display = "block";
-    });
-  });
