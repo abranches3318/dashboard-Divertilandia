@@ -179,53 +179,57 @@
 
   function renderDropdownMulti(containerId, lista, store, permitirSelecionarTodos) {
 
-  const container = document.getElementById(containerId);
-  if (!container) return;
+  const dropdown = document.getElementById(containerId);
+  if (!dropdown) return;
 
-  container.innerHTML = `
-    <div class="dropdown">
-      <div class="dropdown-toggle">Selecionar</div>
-      <div class="dropdown-menu">
-        ${permitirSelecionarTodos ? `
-          <label class="check-all-line">
-            <input type="checkbox" class="check-all"> Selecionar todos
-          </label>
-        ` : ""}
-        ${lista.map(i => `
-          <label>
-            <input type="checkbox" value="${i.id}">
-            ${i.nome}
-          </label>
-        `).join("")}
-      </div>
+  if (!Array.isArray(lista) || !lista.length) {
+    dropdown.innerHTML = `<div class="dropdown-toggle muted">Nenhum disponível</div>`;
+    return;
+  }
+
+  dropdown.innerHTML = `
+    <div class="dropdown-toggle">Selecionar</div>
+    <div class="dropdown-menu">
+      ${permitirSelecionarTodos ? `
+        <label class="check-all-line">
+          <input type="checkbox" class="check-all"> Selecionar todos
+        </label>
+      ` : ""}
+      ${lista.map(i => `
+        <label>
+          <input type="checkbox" value="${i.id}">
+          ${i.nome}
+        </label>
+      `).join("")}
     </div>
   `;
 
-  bindDropdown(container.querySelector(".dropdown"), store);
+  bindDropdown(dropdown, store);
 }
-
   /* ===== DROPDOWN ITEM GRÁTIS (SINGLE) ===== */
 
-  function renderDropdownItemGratis(containerId, lista) {
+ function renderDropdownItemGratis(containerId, lista) {
 
-  const container = document.getElementById(containerId);
-  if (!container) return;
+  const dropdown = document.getElementById(containerId);
+  if (!dropdown) return;
 
-  container.innerHTML = `
-    <div class="dropdown">
-      <div class="dropdown-toggle">Selecionar item grátis</div>
-      <div class="dropdown-menu">
-        ${lista.map(i => `
-          <label>
-            <input type="radio" name="item-gratis" value="${i.id}">
-            ${i.nome}
-          </label>
-        `).join("")}
-      </div>
+  if (!Array.isArray(lista) || !lista.length) {
+    dropdown.innerHTML = `<div class="dropdown-toggle muted">Nenhum item</div>`;
+    return;
+  }
+
+  dropdown.innerHTML = `
+    <div class="dropdown-toggle">Selecionar item grátis</div>
+    <div class="dropdown-menu">
+      ${lista.map(i => `
+        <label>
+          <input type="radio" name="item-gratis" value="${i.id}">
+          ${i.nome}
+        </label>
+      `).join("")}
     </div>
   `;
 
-  const dropdown = container.querySelector(".dropdown");
   const toggle = dropdown.querySelector(".dropdown-toggle");
   const menu = dropdown.querySelector(".dropdown-menu");
 
@@ -243,7 +247,6 @@
     });
   });
 }
-
   /* ===== DROPDOWN CORE ===== */
 
   function bindDropdown(dropdown, store) {
