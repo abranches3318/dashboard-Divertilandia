@@ -1477,5 +1477,133 @@ label {
   z-index: 9999;
 }
 
+/* =====================================================
+   MODAL PROMOÇÃO — LAYOUT FINAL
+   ===================================================== */
+
+#modal-promocao .modal-content {
+  max-width: 680px;           /* mais confortável */
+  width: 96%;
+  padding: 0;                 /* header/body controlam */
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+/* HEADER */
+#modal-promocao .modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+#modal-promocao .modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* BODY */
+#modal-promocao .modal-body {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: visible; /* 🔴 essencial para dropdown */
+}
+
+/* FOOTER */
+#modal-promocao .modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* =====================================================
+   PROMOÇÕES — DROPDOWNS (ITENS / PACOTES)
+   ===================================================== */
+
+#modal-promocao .box-checks {
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #111;
+  padding: 10px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+/* scrollbar elegante */
+#modal-promocao .box-checks::-webkit-scrollbar {
+  width: 6px;
+}
+
+#modal-promocao .box-checks::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.25);
+  border-radius: 10px;
+}
+
+/* linha "selecionar todos" */
+#modal-promocao .check-all {
+  margin-right: 6px;
+}
+
+#modal-promocao .box-checks > label {
+  font-size: 13px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* lista interna */
+#modal-promocao .lista-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* item individual */
+#modal-promocao .lista-checks label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+#modal-promocao .lista-checks label:hover {
+  background: rgba(255,255,255,.06);
+}
+
+#modal-promocao .lista-checks input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* =====================================================
+   PROMOÇÕES — BLOCOS POR TIPO
+   ===================================================== */
+
+#modal-promocao .promo-bloco {
+  background: rgba(255,255,255,.03);
+  border: 1px dashed rgba(255,255,255,.15);
+  border-radius: 6px;
+  padding: 14px;
+  margin-top: 8px;
+}
+
+#modal-promocao .promo-bloco label {
+  margin-top: 0;
+}
+
+#modal-promocao.modal.active {
+  z-index: 9999;
+}
+
+.swal2-container {
+  z-index: 2147483647 !important;
+}
 
 
