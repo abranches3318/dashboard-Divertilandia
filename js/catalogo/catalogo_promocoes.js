@@ -2,6 +2,10 @@
 
 (function () {
 
+
+
+
+  
   /* ================= ESTADO ================= */
 
   let PROMOCOES = [];
@@ -175,10 +179,11 @@
 
   function renderDropdownMulti(containerId, lista, store, permitirSelecionarTodos) {
 
-    const container = document.getElementById(containerId);
-    if (!container) return;
+  const container = document.getElementById(containerId);
+  if (!container) return;
 
-    container.innerHTML = `
+  container.innerHTML = `
+    <div class="dropdown">
       <div class="dropdown-toggle">Selecionar</div>
       <div class="dropdown-menu">
         ${permitirSelecionarTodos ? `
@@ -193,19 +198,21 @@
           </label>
         `).join("")}
       </div>
-    `;
+    </div>
+  `;
 
-    bindDropdown(container, store, permitirSelecionarTodos);
-  }
+  bindDropdown(container.querySelector(".dropdown"), store);
+}
 
   /* ===== DROPDOWN ITEM GRÁTIS (SINGLE) ===== */
 
   function renderDropdownItemGratis(containerId, lista) {
 
-    const container = document.getElementById(containerId);
-    if (!container) return;
+  const container = document.getElementById(containerId);
+  if (!container) return;
 
-    container.innerHTML = `
+  container.innerHTML = `
+    <div class="dropdown">
       <div class="dropdown-toggle">Selecionar item grátis</div>
       <div class="dropdown-menu">
         ${lista.map(i => `
@@ -215,60 +222,63 @@
           </label>
         `).join("")}
       </div>
-    `;
+    </div>
+  `;
 
-    const toggle = container.querySelector(".dropdown-toggle");
-    const menu = container.querySelector(".dropdown-menu");
+  const dropdown = container.querySelector(".dropdown");
+  const toggle = dropdown.querySelector(".dropdown-toggle");
+  const menu = dropdown.querySelector(".dropdown-menu");
 
-    toggle.addEventListener("click", () => {
-      menu.classList.toggle("open");
+  toggle.addEventListener("click", () => {
+    fecharTodosDropdowns();
+    dropdown.classList.toggle("open");
+  });
+
+  menu.querySelectorAll("input[type='radio']").forEach(radio => {
+    radio.addEventListener("change", () => {
+      itemGratisSelecionado = radio.value;
+      toggle.textContent =
+        lista.find(i => i.id === radio.value)?.nome || "Selecionado";
+      dropdown.classList.remove("open");
     });
-
-    menu.querySelectorAll("input[type='radio']").forEach(r => {
-      r.addEventListener("change", () => {
-        itemGratisSelecionado = r.value;
-        toggle.textContent =
-          lista.find(i => i.id === r.value)?.nome || "Selecionado";
-        menu.classList.remove("open");
-      });
-    });
-  }
+  });
+}
 
   /* ===== DROPDOWN CORE ===== */
 
-  function bindDropdown(container, store, permitirSelecionarTodos) {
+  function bindDropdown(dropdown, store) {
 
-    const toggle = container.querySelector(".dropdown-toggle");
-    const menu = container.querySelector(".dropdown-menu");
+  const toggle = dropdown.querySelector(".dropdown-toggle");
+  const menu = dropdown.querySelector(".dropdown-menu");
+  const checkAll = dropdown.querySelector(".check-all");
+  const checks = dropdown.querySelectorAll("input[type='checkbox']:not(.check-all)");
 
-    toggle.addEventListener("click", () => {
-      menu.classList.toggle("open");
-    });
+  toggle.addEventListener("click", () => {
+    fecharTodosDropdowns();
+    dropdown.classList.toggle("open");
+  });
 
-    const checkAll = container.querySelector(".check-all");
-    const checks = container.querySelectorAll("input[type='checkbox']:not(.check-all)");
-
-    if (checkAll) {
-      checkAll.addEventListener("change", () => {
-        checks.forEach(c => {
-          c.checked = checkAll.checked;
-          checkAll.checked
-            ? store.add(c.value)
-            : store.delete(c.value);
-        });
-      });
-    }
-
-    checks.forEach(c => {
-      c.addEventListener("change", () => {
-        c.checked
+  if (checkAll) {
+    checkAll.addEventListener("change", () => {
+      checks.forEach(c => {
+        c.checked = checkAll.checked;
+        checkAll.checked
           ? store.add(c.value)
           : store.delete(c.value);
-
-        if (checkAll && !c.checked) checkAll.checked = false;
       });
     });
   }
+
+  checks.forEach(c => {
+    c.addEventListener("change", () => {
+      c.checked
+        ? store.add(c.value)
+        : store.delete(c.value);
+
+      if (checkAll && !c.checked) checkAll.checked = false;
+    });
+  });
+}
 
   function bloquearSelecionarTodos() {
     document
@@ -382,4 +392,16 @@
     `).join("");
   }
 
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".dropdown")) {
+    fecharTodosDropdowns();
+  }
+});
+
+function fecharTodosDropdowns() {
+  document
+    .querySelectorAll(".dropdown.open")
+    .forEach(d => d.classList.remove("open"));
+}
+  
 })();
