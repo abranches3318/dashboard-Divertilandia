@@ -175,201 +175,169 @@
       <h2>Nova Promoção</h2>
     </header>
 
-    <!-- ===== BODY ===== -->
-    <div class="modal-body">
+   <!-- ===== BODY ===== -->
+<div class="modal-body promo-grid">
 
-      <!-- ===== NOME ===== -->
+  <!-- ================= COLUNA ESQUERDA ================= -->
+  <div class="promo-col promo-col-left">
+
+    <!-- ===== NOME ===== -->
+    <div class="form-group">
+      <label>Nome da promoção *</label>
+      <input
+        type="text"
+        id="promo-nome"
+        placeholder="Ex: Black Friday"
+      >
+    </div>
+
+    <!-- ===== DATAS ===== -->
+    <div class="form-group">
+      <label>Início *</label>
+      <input type="date" id="promo-inicio">
+    </div>
+
+    <div class="form-group">
+      <label>Fim *</label>
+      <input type="date" id="promo-fim">
+    </div>
+
+    <!-- ===== TIPO DE PROMOÇÃO ===== -->
+    <div class="form-group">
+      <label>Tipo de promoção *</label>
+      <select id="promo-tipo">
+        <option value="">Selecione</option>
+        <option value="item_gratis">Item grátis</option>
+        <option value="desconto">Desconto</option>
+        <option value="horas_extras">Horas extras</option>
+      </select>
+    </div>
+
+    <!-- ===== BLOCO ITEM GRÁTIS ===== -->
+    <div
+      class="promo-bloco"
+      id="bloco-item-gratis"
+      style="display: none;"
+    >
       <div class="form-group">
-        <label>Nome da promoção *</label>
-        <input
-          type="text"
-          id="promo-nome"
-          placeholder="Ex: Black Friday"
-        >
+        <label>Item que sai grátis *</label>
+        <div class="dropdown" id="dropdown-item-gratis"></div>
+      </div>
+    </div>
+
+    <!-- ===== BLOCO DESCONTO ===== -->
+    <div
+      class="promo-bloco"
+      id="bloco-desconto"
+      style="display: none;"
+    >
+
+      <div class="form-group">
+        <label>Tipo de desconto *</label>
+
+        <div class="check-group">
+          <label>
+            <input
+              type="radio"
+              name="promo-desconto-tipo"
+              value="fixo"
+            >
+            Valor fixo (R$)
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="promo-desconto-tipo"
+              value="percentual"
+            >
+            Percentual (%)
+          </label>
+        </div>
       </div>
 
-      <!-- ===== DATAS ===== -->
-      <div class="form-group">
-        <label>Início *</label>
-        <input
-          type="date"
-          id="promo-inicio"
-        >
-      </div>
-
-      <div class="form-group">
-        <label>Fim *</label>
-        <input
-          type="date"
-          id="promo-fim"
-        >
-      </div>
-
-      <!-- ===================================================== -->
-      <!-- TIPO DE PROMOÇÃO (GATILHO DE TODA A UI) -->
-      <!-- ===================================================== -->
-      <div class="form-group">
-        <label>Tipo de promoção *</label>
-        <select id="promo-tipo">
-          <option value="">Selecione</option>
-          <option value="item_gratis">Item grátis</option>
-          <option value="desconto">Desconto</option>
-          <option value="horas_extras">Horas extras</option>
-        </select>
-      </div>
-
-      <!-- ===================================================== -->
-      <!-- BLOCO DINÂMICO: ITEM GRÁTIS -->
-      <!-- ===================================================== -->
       <div
-        class="promo-bloco"
-        id="bloco-item-gratis"
+        class="form-group"
+        id="campo-desconto-valor"
         style="display: none;"
       >
-
-        <div class="form-group">
-          <label>Item que sai grátis *</label>
-
-          <!-- Dropdown de itens -->
-          <div class="dropdown" id="dropdown-item-gratis">
-            <!-- JS renderiza -->
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ===================================================== -->
-      <!-- BLOCO DINÂMICO: DESCONTO -->
-      <!-- ===================================================== -->
-      <div
-        class="promo-bloco"
-        id="bloco-desconto"
-        style="display: none;"
-      >
-
-        <!-- Tipo de desconto -->
-        <div class="form-group">
-          <label>Tipo de desconto *</label>
-
-          <div class="check-group">
-            <label>
-              <input
-                type="radio"
-                name="promo-desconto-tipo"
-                value="fixo"
-              >
-              Valor fixo (R$)
-            </label>
-
-            <label>
-              <input
-                type="radio"
-                name="promo-desconto-tipo"
-                value="percentual"
-              >
-              Percentual (%)
-            </label>
-          </div>
-        </div>
-
-        <!-- Valor do desconto -->
-        <div
-          class="form-group"
-          id="campo-desconto-valor"
-          style="display: none;"
-        >
-          <label>Valor do desconto *</label>
-          <input
-            type="number"
-            id="promo-desconto-valor"
-            step="0.01"
-          >
-        </div>
-
-      </div>
-
-      <!-- ===================================================== -->
-      <!-- BLOCO DINÂMICO: HORAS EXTRAS -->
-      <!-- ===================================================== -->
-      <div
-        class="promo-bloco"
-        id="bloco-horas-extras"
-        style="display: none;"
-      >
-
-        <div class="form-group">
-          <label>Quantidade de horas extras *</label>
-          <input
-            type="number"
-            id="promo-horas-extras"
-            min="1"
-          >
-        </div>
-
-      </div>
-
-      <!-- ===================================================== -->
-      <!-- APLICAÇÃO: ITENS -->
-      <!-- ===================================================== -->
-      <div class="form-group">
-        <label>Itens aplicáveis</label>
-
-        <div class="dropdown" id="dropdown-itens-promocao">
-          <!-- JS renderiza dropdown com checkbox -->
-        </div>
-      </div>
-
-      <!-- ===================================================== -->
-      <!-- APLICAÇÃO: PACOTES -->
-      <!-- ===================================================== -->
-      <div class="form-group">
-        <label>Pacotes aplicáveis</label>
-
-        <div class="dropdown" id="dropdown-pacotes-promocao">
-          <!-- JS renderiza dropdown com checkbox -->
-        </div>
-      </div>
-
-      <!-- ===================================================== -->
-      <!-- DESCRIÇÃO -->
-      <!-- ===================================================== -->
-      <div class="form-group">
-        <label>Descrição</label>
-        <textarea
-          id="promo-descricao"
-          placeholder="Descrição da promoção"
-        ></textarea>
-      </div>
-
-      <!-- ===================================================== -->
-      <!-- STATUS -->
-      <!-- ===================================================== -->
-      <div class="form-group">
-        <label>Status</label>
-        <select id="promo-status">
-          <option value="ativa">Ativa</option>
-          <option value="inativa">Inativa</option>
-        </select>
-      </div>
-
-      <!-- ===================================================== -->
-      <!-- IMAGEM / PREVIEW -->
-      <!-- ===================================================== -->
-      <div class="form-group">
-        <label>Imagem da promoção</label>
-
+        <label>Valor do desconto *</label>
         <input
-          type="file"
-          id="promo-imagem"
-          accept="image/*"
+          type="number"
+          id="promo-desconto-valor"
+          step="0.01"
         >
-
-        <div id="promo-imagem-preview">
-          <!-- JS renderiza preview -->
-        </div>
       </div>
 
     </div>
+
+    <!-- ===== BLOCO HORAS EXTRAS ===== -->
+    <div
+      class="promo-bloco"
+      id="bloco-horas-extras"
+      style="display: none;"
+    >
+      <div class="form-group">
+        <label>Quantidade de horas extras *</label>
+        <input
+          type="number"
+          id="promo-horas-extras"
+          min="1"
+        >
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= COLUNA DIREITA ================= -->
+  <div class="promo-col promo-col-right">
+
+    <!-- ===== APLICAÇÃO: ITENS ===== -->
+    <div class="form-group">
+      <label>Itens aplicáveis</label>
+      <div class="dropdown" id="dropdown-itens-promocao"></div>
+    </div>
+
+    <!-- ===== APLICAÇÃO: PACOTES ===== -->
+    <div class="form-group">
+      <label>Pacotes aplicáveis</label>
+      <div class="dropdown" id="dropdown-pacotes-promocao"></div>
+    </div>
+
+    <!-- ===== DESCRIÇÃO ===== -->
+    <div class="form-group">
+      <label>Descrição</label>
+      <textarea
+        id="promo-descricao"
+        placeholder="Descrição da promoção"
+      ></textarea>
+    </div>
+
+    <!-- ===== STATUS ===== -->
+    <div class="form-group">
+      <label>Status</label>
+      <select id="promo-status">
+        <option value="ativa">Ativa</option>
+        <option value="inativa">Inativa</option>
+      </select>
+    </div>
+
+    <!-- ===== IMAGEM / PREVIEW ===== -->
+    <div class="form-group">
+      <label>Imagem da promoção</label>
+
+      <input
+        type="file"
+        id="promo-imagem"
+        accept="image/*"
+      >
+
+      <div id="promo-imagem-preview"></div>
+    </div>
+
+  </div>
+
+</div>
 
     <!-- ===== FOOTER ===== -->
     <footer class="modal-footer">
