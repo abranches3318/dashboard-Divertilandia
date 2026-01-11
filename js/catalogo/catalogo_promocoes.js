@@ -1,6 +1,8 @@
-/* ================= PROMOÇÕES (ISOLADO E CONTROLADO) ================= */
+/* ================= PROMOÇÕES (ISOLADO, DETERMINÍSTICO) ================= */
 
 (function () {
+
+  /* ================= ESTADO ================= */
 
   let promocoes = [];
 
@@ -8,30 +10,43 @@
   let pacotesSelecionados = new Set();
 
   let tipoPromocao = null;
+  let tipoDesconto = null;
+
+  /* ================= INIT ================= */
 
   document.addEventListener("DOMContentLoaded", () => {
-    bindEventos();
+    bindEventosFixos();
     renderPromocoes();
   });
 
-  /* ================= EVENTOS ================= */
+  /* ================= EVENTOS FIXOS ================= */
 
-  function bindEventos() {
+  function bindEventosFixos() {
+
     document.getElementById("btn-nova-promocao")
       ?.addEventListener("click", abrirModalPromocao);
 
     document.getElementById("btn-salvar-promocao")
       ?.addEventListener("click", salvarPromocao);
+
+    document.getElementById("promo-tipo")
+      ?.addEventListener("change", onTipoPromocaoChange);
+
+    document.querySelectorAll("input[name='promo-desconto-tipo']")
+      .forEach(r =>
+        r.addEventListener("change", onTipoDescontoChange)
+      );
   }
 
   /* ================= MODAL ================= */
 
   function abrirModalPromocao() {
+
     document.querySelectorAll(".modal.active")
       .forEach(m => m.classList.remove("active"));
 
-    limparFormulario();
-    montarEstruturaDinamica();
+    resetarFormulario();
+    carregarDropdowns();
 
     document.getElementById("modal-promocao")
       .classList.add("active");
@@ -41,126 +56,120 @@
     document.getElementById("modal-promocao")
       .classList.remove("active");
 
-    limparFormulario();
+    resetarFormulario();
   };
 
-  function limparFormulario() {
-    ["promo-nome", "promo-valor", "promo-inicio", "promo-fim"]
-      .forEach(id => document.getElementById(id).value = "");
+  function resetarFormulario() {
+
+    [
+      "promo-nome",
+      "promo-inicio",
+      "promo-fim",
+      "promo-desconto-valor",
+      "promo-horas-extras",
+      "promo-descricao"
+    ].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
 
     itensSelecionados.clear();
     pacotesSelecionados.clear();
+
     tipoPromocao = null;
+    tipoDesconto = null;
 
-    document.querySelectorAll(".promo-extra")
-      .forEach(el => el.remove());
+    esconderTodosBlocos();
+    resetarRadios();
   }
 
-  /* ================= ESTRUTURA DINÂMICA ================= */
+  /* ================= CONTROLE DE TIPO ================= */
 
-  function montarEstruturaDinamica() {
-    const body = document.querySelector("#modal-promocao .modal-body");
-
-    /* Tipo de promoção */
-    body.insertAdjacentHTML("beforeend", `
-      <div class="form-group promo-extra">
-        <label>Tipo de promoção *</label>
-        <select id="promo-tipo">
-          <option value="">Selecione</option>
-          <option value="item_gratis">Item grátis</option>
-          <option value="desconto">Desconto</option>
-          <option value="horas_extras">Horas extras</option>
-        </select>
-      </div>
-    `);
-
-    document.getElementById("promo-tipo")
-      .addEventListener("change", onTipoChange);
-
-    carregarDropdowns();
-  }
-
-  function onTipoChange(e) {
+  function onTipoPromocaoChange(e) {
     tipoPromocao = e.target.value;
 
-    document.querySelectorAll(".tipo-extra")
-      .forEach(el => el.remove());
+    esconderTodosBlocos();
+    desbloquearSelecionarTodos();
 
-    if (tipoPromocao === "item_gratis") montarItemGratis();
-    if (tipoPromocao === "desconto") montarDesconto();
-    if (tipoPromocao === "horas_extras") montarHorasExtras();
+    if (tipoPromocao === "item_gratis") {
+      document.getElementById("bloco-item-gratis").style.display = "block";
+      bloquearSelecionarTodos();
+    }
+
+    if (tipoPromocao === "desconto") {
+      document.getElementById("bloco-desconto").style.display = "block";
+    }
+
+    if (tipoPromocao === "horas_extras") {
+      document.getElementById("bloco-horas-extras").style.display = "block";
+    }
   }
 
-  /* ================= TIPOS ================= */
+  function onTipoDescontoChange(e) {
+    tipoDesconto = e.target.value;
 
-  function montarItemGratis() {
-    bloquearSelecionarTodos();
+    const campo = document.getElementById("campo-desconto-valor");
+    campo.style.display = "block";
 
-    document.querySelector("#modal-promocao .modal-body")
-      .insertAdjacentHTML("beforeend", `
-        <div class="form-group tipo-extra">
-          <label>Item gratuito *</label>
-          <select id="item-gratis">
-            ${(window.catalogoItens || []).map(i =>
-              `<option value="${i.id}">${i.nome}</option>`
-            ).join("")}
-          </select>
-        </div>
-      `);
+    const input = document.getElementById("promo-desconto-valor");
+    input.placeholder = tipoDesconto === "percentual"
+      ? "Ex: 10 (%)"
+      : "Ex: 50 (R$)";
   }
 
-  function montarDesconto() {
-    document.querySelector("#modal-promocao .modal-body")
-      .insertAdjacentHTML("beforeend", `
-        <div class="form-group tipo-extra">
-          <label>Tipo de desconto</label>
-          <label><input type="radio" name="tipo-desconto" value="fixo"> Valor fixo</label>
-          <label><input type="radio" name="tipo-desconto" value="percentual"> Porcentagem</label>
-        </div>
-      `);
+  function esconderTodosBlocos() {
+    document.querySelectorAll(".promo-bloco")
+      .forEach(b => b.style.display = "none");
+
+    document.getElementById("campo-desconto-valor").style.display = "none";
   }
 
-  function montarHorasExtras() {
-    document.querySelector("#modal-promocao .modal-body")
-      .insertAdjacentHTML("beforeend", `
-        <div class="form-group tipo-extra">
-          <label>Horas extras *</label>
-          <input type="number" id="promo-horas" min="1">
-        </div>
-      `);
+  function resetarRadios() {
+    document.querySelectorAll("input[type='radio']")
+      .forEach(r => r.checked = false);
   }
 
   /* ================= DROPDOWNS ================= */
 
   function carregarDropdowns() {
-    renderLista(
-      "lista-itens-promocao",
+
+    renderDropdown(
+      "dropdown-itens-promocao",
       window.catalogoItens || [],
       itensSelecionados,
       "item"
     );
 
-    renderLista(
-      "lista-pacotes-promocao",
+    renderDropdown(
+      "dropdown-pacotes-promocao",
       window.catalogoPacotes || [],
       pacotesSelecionados,
       "pacote"
     );
+
+    renderDropdown(
+      "dropdown-item-gratis",
+      window.catalogoItens || [],
+      null,
+      "item_gratis"
+    );
   }
 
-  function renderLista(containerId, lista, store, tipo) {
+  function renderDropdown(containerId, lista, store, tipo) {
+
     const container = document.getElementById(containerId);
     if (!container) return;
 
     container.innerHTML = `
-      <label>
-        <input type="checkbox" class="check-all"> Selecionar todos
+      <label class="check-all-line">
+        <input type="checkbox" class="check-all">
+        Selecionar todos
       </label>
       <div class="lista-checks">
-        ${lista.map(item => `
+        ${lista.map(i => `
           <label>
-            <input type="checkbox" value="${item.id}">
-            ${item.nome}
+            <input type="checkbox" value="${i.id}">
+            ${i.nome}
           </label>
         `).join("")}
       </div>
@@ -170,6 +179,7 @@
     const checks = container.querySelectorAll("input[type=checkbox]:not(.check-all)");
 
     checkAll.addEventListener("change", () => {
+
       if (tipoPromocao === "item_gratis" && tipo === "pacote") {
         Swal.fire("Atenção", "Item grátis permite apenas um pacote", "warning");
         checkAll.checked = false;
@@ -178,12 +188,13 @@
 
       checks.forEach(c => {
         c.checked = checkAll.checked;
-        checkAll.checked ? store.add(c.value) : store.delete(c.value);
+        store?.[checkAll.checked ? "add" : "delete"](c.value);
       });
     });
 
     checks.forEach(c => {
       c.addEventListener("change", () => {
+
         if (tipoPromocao === "item_gratis" && tipo === "pacote") {
           if (pacotesSelecionados.size >= 1 && c.checked) {
             c.checked = false;
@@ -192,7 +203,10 @@
           }
         }
 
-        c.checked ? store.add(c.value) : store.delete(c.value);
+        if (store) {
+          c.checked ? store.add(c.value) : store.delete(c.value);
+        }
+
         if (!c.checked) checkAll.checked = false;
       });
     });
@@ -203,17 +217,26 @@
       .forEach(c => c.disabled = true);
   }
 
+  function desbloquearSelecionarTodos() {
+    document.querySelectorAll(".check-all")
+      .forEach(c => c.disabled = false);
+  }
+
   /* ================= SALVAR ================= */
 
   function salvarPromocao() {
-    const nome = promoVal("promo-nome");
-    const inicio = promoVal("promo-inicio");
-    const fim = promoVal("promo-fim");
+
+    const nome = val("promo-nome");
+    const inicio = val("promo-inicio");
+    const fim = val("promo-fim");
 
     const hoje = new Date().toISOString().split("T")[0];
 
+    if (!nome || !inicio || !fim || !tipoPromocao)
+      return Swal.fire("Erro", "Preencha os campos obrigatórios", "error");
+
     if (inicio < hoje)
-      return Swal.fire("Erro", "Data inicial inválida", "error");
+      return Swal.fire("Erro", "Data inicial não pode ser passada", "error");
 
     if (fim < hoje || fim < inicio)
       return Swal.fire("Erro", "Data final inválida", "error");
@@ -225,11 +248,15 @@
       id: crypto.randomUUID(),
       nome,
       tipo: tipoPromocao,
-      inicio,
-      fim,
+      tipoDesconto,
+      descontoValor: val("promo-desconto-valor"),
+      horasExtras: val("promo-horas-extras"),
       itens: [...itensSelecionados],
       pacotes: [...pacotesSelecionados],
-      ativo: true
+      inicio,
+      fim,
+      status: val("promo-status"),
+      descricao: val("promo-descricao")
     });
 
     fecharModalPromocaoIsolado();
@@ -238,11 +265,12 @@
     Swal.fire("Sucesso", "Promoção criada", "success");
   }
 
-  function promoVal(id) {
-    return document.getElementById(id).value.trim();
+  function val(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : null;
   }
 
-  /* ================= LISTA ================= */
+  /* ================= LISTAGEM ================= */
 
   function renderPromocoes() {
     const c = document.getElementById("lista-promocoes");
