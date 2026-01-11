@@ -287,3 +287,62 @@
   }
 
 })();
+
+// ============================
+// PROMOÇÃO — CONTROLE DE TIPO
+// ============================
+
+function ocultarTodosBlocosPromocao() {
+  document.querySelectorAll("#modal-promocao .promo-bloco")
+    .forEach(bloco => {
+      bloco.style.display = "none";
+    });
+}
+
+function limparCamposPromocaoPorTipo() {
+  // item grátis
+  document.getElementById("dropdown-item-gratis")?.innerHTML = "";
+
+  // desconto
+  document
+    .querySelectorAll("input[name='promo-desconto-tipo']")
+    .forEach(r => r.checked = false);
+
+  const campoValor = document.getElementById("campo-desconto-valor");
+  if (campoValor) campoValor.style.display = "none";
+
+  document.getElementById("promo-desconto-valor")?.value = "";
+
+  // horas extras
+  document.getElementById("promo-horas-extras")?.value = "";
+}
+
+function tratarTipoPromocao(tipo) {
+  ocultarTodosBlocosPromocao();
+  limparCamposPromocaoPorTipo();
+
+  if (!tipo) return;
+
+  if (tipo === "item_gratis") {
+    document.getElementById("bloco-item-gratis").style.display = "block";
+  }
+
+  if (tipo === "desconto") {
+    document.getElementById("bloco-desconto").style.display = "block";
+  }
+
+  if (tipo === "horas_extras") {
+    document.getElementById("bloco-horas-extras").style.display = "block";
+  }
+
+
+document
+  .querySelectorAll("input[name='promo-desconto-tipo']")
+  .forEach(radio => {
+    radio.addEventListener("change", () => {
+      const campoValor = document.getElementById("campo-desconto-valor");
+      if (!campoValor) return;
+
+      campoValor.style.display = "block";
+    });
+  });
