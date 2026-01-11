@@ -1606,4 +1606,91 @@ label {
   z-index: 2147483647 !important;
 }
 
+/* =====================================================
+   MODAL PROMOÇÃO – LAYOUT
+===================================================== */
+
+/* Modal mais largo */
+#modal-promocao .modal-content {
+  width: 900px;
+  max-width: 95vw;
+}
+
+/* Grid principal */
+#modal-promocao .promo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Colunas */
+#modal-promocao .promo-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Garantir largura total dos inputs */
+#modal-promocao input,
+#modal-promocao select,
+#modal-promocao textarea {
+  width: 100%;
+}
+
+/* Textarea mais confortável */
+#modal-promocao textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Dropdown custom (container) */
+#modal-promocao .dropdown {
+  position: relative;
+  width: 100%;
+}
+
+/* Grupo de check / radio */
+#modal-promocao .check-group {
+  display: flex;
+  gap: 16px;
+}
+
+/* Preview da imagem */
+#promo-imagem-preview {
+  margin-top: 10px;
+  min-height: 80px;
+  border: 1px dashed #444;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Imagem preview */
+#promo-imagem-preview img {
+  max-width: 100%;
+  max-height: 140px;
+  border-radius: 6px;
+}
+
+/* Footer alinhado */
+#modal-promocao .modal-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* =====================================================
+   RESPONSIVO
+===================================================== */
+
+@media (max-width: 768px) {
+  #modal-promocao .promo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #modal-promocao .modal-content {
+    width: 100%;
+  }
+}
 
