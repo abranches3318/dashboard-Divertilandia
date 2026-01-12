@@ -249,20 +249,36 @@
 }
   /* ===== DROPDOWN CORE ===== */
 
-  function bindDropdown(dropdown, store) {
+function bindDropdown(dropdown, store) {
 
   const toggle = dropdown.querySelector(".dropdown-toggle");
   const menu = dropdown.querySelector(".dropdown-menu");
   const checkAll = dropdown.querySelector(".check-all");
-  const checks = dropdown.querySelectorAll("input[type='checkbox']:not(.check-all)");
+  const checks = dropdown.querySelectorAll(
+    "input[type='checkbox']:not(.check-all)"
+  );
 
-  toggle.addEventListener("click", () => {
+  // 🔁 abre / fecha no toggle
+  toggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown.classList.contains("open");
+
     fecharTodosDropdowns();
-    dropdown.classList.toggle("open");
+
+    if (!isOpen) {
+      dropdown.classList.add("open");
+    }
+  });
+
+  // 🔒 NÃO FECHA ao clicar dentro do menu
+  menu.addEventListener("click", (e) => {
+    e.stopPropagation();
   });
 
   if (checkAll) {
-    checkAll.addEventListener("change", () => {
+    checkAll.addEventListener("change", (e) => {
+      e.stopPropagation();
+
       checks.forEach(c => {
         c.checked = checkAll.checked;
         checkAll.checked
@@ -273,12 +289,16 @@
   }
 
   checks.forEach(c => {
-    c.addEventListener("change", () => {
+    c.addEventListener("change", (e) => {
+      e.stopPropagation();
+
       c.checked
         ? store.add(c.value)
         : store.delete(c.value);
 
-      if (checkAll && !c.checked) checkAll.checked = false;
+      if (checkAll && !c.checked) {
+        checkAll.checked = false;
+      }
     });
   });
 }
