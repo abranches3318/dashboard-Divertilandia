@@ -1778,7 +1778,28 @@ label {
   margin: 0;
 }
 
-/* ================= DROPDOWN TOGGLE ================= */
+
+/* ================= RESET DE SETAS ANTIGAS ================= */
+
+/* Remove seta de select nativo (caso ainda exista) */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none !important;
+}
+
+/* Remove pseudo-setas antigas */
+.dropdown-toggle::before {
+  content: none !important;
+}
+
+/* Caso algum dropdown antigo usasse background-image */
+.dropdown-toggle {
+  background-image: none !important;
+}
+
+/* ================= DROPDOWN PADRÃO ================= */
 
 .dropdown {
   position: relative;
@@ -1786,11 +1807,11 @@ label {
 
 .dropdown-toggle {
   position: relative;
-  padding-right: 36px; /* espaço para a seta */
+  padding-right: 36px;
   cursor: pointer;
 }
 
-/* Seta padrão */
+/* seta */
 .dropdown-toggle::after {
   content: "▾";
   position: absolute;
@@ -1803,12 +1824,12 @@ label {
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
-/* Hover */
+/* hover */
 .dropdown-toggle:hover::after {
   color: #fff;
 }
 
-/* Dropdown aberto */
+/* aberto */
 .dropdown.open .dropdown-toggle::after {
   transform: translateY(-50%) rotate(180deg);
 }
