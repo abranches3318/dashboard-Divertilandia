@@ -21,9 +21,25 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     bindEventosFixos();
-    renderPromocoes();
+    carregarPromocoes();
   });
 
+
+  async function carregarPromocoes() {
+
+  const snapshot = await firebase
+    .firestore()
+    .collection("promocoes")
+    .orderBy("criadoEm", "desc")
+    .get();
+
+  PROMOCOES = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
+  renderPromocoes();
+}
   /* ================= EVENTOS FIXOS ================= */
 
   function bindEventosFixos() {
@@ -346,49 +362,60 @@ function bindDropdown(dropdown, store) {
 
   /* ================= SALVAR ================= */
 
-  function salvarPromocao() {
+async function salvarPromocao() {
 
-    const nome = val("promo-nome");
-    const inicio = val("promo-inicio");
-    const fim = val("promo-fim");
-    const hoje = new Date().toISOString().split("T")[0];
+  const nome = val("promo-nome");
+  const inicio = val("promo-inicio");
+  const fim = val("promo-fim");
 
-    if (!nome || !inicio || !fim || !tipoPromocao) {
-      Swal.fire("Erro", "Campos obrigatórios não preenchidos", "error");
-      return;
-    }
-
-    if (inicio < hoje) {
-      Swal.fire("Erro", "Data inicial inválida", "error");
-      return;
-    }
-
-    if (fim < inicio) {
-      Swal.fire("Erro", "Data final inválida", "error");
-      return;
-    }
-
-    PROMOCOES.push({
-      id: crypto.randomUUID(),
-      nome,
-      tipo: tipoPromocao,
-      tipoDesconto,
-      descontoValor: val("promo-desconto-valor"),
-      horasExtras: val("promo-horas-extras"),
-      itemGratis: itemGratisSelecionado,
-      itens: [...itensSelecionados],
-      pacotes: [...pacotesSelecionados],
-      inicio,
-      fim,
-      status: val("promo-status"),
-      descricao: val("promo-descricao")
-    });
-
-    fecharModalPromocaoIsolado();
-    renderPromocoes();
-
-    Swal.fire("Sucesso", "Promoção criada", "success");
+  if (!nome || !inicio || !fim || !tipoPromocao) {
+    Swal.fire("Erro", "Campos obrigatórios não preenchidos", "error");
+    return;
   }
+
+  const payload = {
+    nome,
+    status: "ativa",
+
+    tipoImpacto: tipoPromocao,
+
+    impacto: {
+      tipo: tipoDesconto,
+      valor:
+        tipoPromocao === "desconto"
+          ? Number(val("promo-desconto-valor"))
+          : tipoPromocao === "horas_extras"
+            ? Number(val("promo-horas-extras"))
+            : null,
+      itemGratisId:
+        tipoPromocao === "item_gratis"
+          ? itemGratisSelecionado
+          : null
+    },
+
+    aplicacao: {
+      itens: [...itensSelecionados],
+      pacotes: [...pacotesSelecionados]
+    },
+
+    periodo: { inicio, fim },
+
+    descricao: val("promo-descricao"),
+    imagemUrl: null,
+
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  await firebase.firestore()
+    .collection("promocoes")
+    .add(payload);
+
+  fecharModalPromocaoIsolado();
+  carregarPromocoes(); // 🔥 AGORA VEM DO FIRESTORE
+
+  Swal.fire("Sucesso", "Promoção criada", "success");
+}
 
   function val(id) {
     const el = document.getElementById(id);
@@ -397,23 +424,24 @@ function bindDropdown(dropdown, store) {
 
   /* ================= LISTAGEM ================= */
 
-  function renderPromocoes() {
+ function renderPromocoes() {
 
-    const c = document.getElementById("lista-promocoes");
-    if (!c) return;
+  const c = document.getElementById("lista-promocoes");
+  if (!c) return;
 
-    if (!PROMOCOES.length) {
-      c.innerHTML = `<p class="muted">Nenhuma promoção cadastrada</p>`;
-      return;
-    }
-
-    c.innerHTML = PROMOCOES.map(p => `
-      <div class="promo-card ativa">
-        <strong>${p.nome}</strong>
-        <div>${p.inicio} → ${p.fim}</div>
-      </div>
-    `).join("");
+  if (!PROMOCOES.length) {
+    c.innerHTML = `<p class="muted">Nenhuma promoção cadastrada</p>`;
+    return;
   }
+
+  c.innerHTML = PROMOCOES.map(p => `
+    <div class="promo-card ${p.status}">
+      <strong>${p.nome}</strong>
+      <div>${p.periodo.inicio} → ${p.periodo.fim}</div>
+      <small>${p.tipoImpacto.replace("_", " ")}</small>
+    </div>
+  `).join("");
+}
 
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".dropdown")) {
