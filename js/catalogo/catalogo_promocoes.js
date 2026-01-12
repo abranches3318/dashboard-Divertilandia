@@ -113,45 +113,44 @@
 
   /* ================= CONTROLE DE TIPO ================= */
 
-  function onTipoPromocaoChange(e) {
-    tipoPromocao = e.target.value;
+function onTipoPromocaoChange(e) {
+  tipoPromocao = e.target.value;
 
-    esconderTodosBlocos();
-    desbloquearSelecionarTodos();
-
-    if (tipoPromocao === "item_gratis") {
-      mostrar("bloco-item-gratis");
-      bloquearSelecionarTodos();
-    }
-
-    if (tipoPromocao === "desconto") {
-      mostrar("bloco-desconto");
-    }
-
-    if (tipoPromocao === "horas_extras") {
-      mostrar("bloco-horas-extras");
-    }
-    
-    if (tipoPromocao === "item_gratis") {
-
-  mostrar("bloco-item-gratis");
-
-  // 🔒 item grátis só com PACOTES
-  itensSelecionados.clear();
-
-  const dropItens = document.getElementById("dropdown-itens-promocao");
-  if (dropItens) {
-    dropItens.classList.add("disabled");
-    dropItens.innerHTML = `
-      <div class="dropdown-toggle muted">
-        Indisponível para item grátis
-      </div>
-    `;
-  }
-
+  esconderTodosBlocos();
   desbloquearSelecionarTodos();
-}
+  carregarDropdowns();
+
+  if (tipoPromocao === "item_gratis") {
+
+    mostrar("bloco-item-gratis");
+
+    // 🔒 item grátis só com PACOTES
+    itensSelecionados.clear();
+
+    const dropItens = document.getElementById("dropdown-itens-promocao");
+    if (dropItens) {
+      dropItens.classList.add("disabled");
+      dropItens.innerHTML = `
+        <div class="dropdown-toggle muted">
+          Indisponível para item grátis
+        </div>
+      `;
+    }
+
+    bloquearSelecionarTodos();
+    return;
   }
+
+  if (tipoPromocao === "desconto") {
+    mostrar("bloco-desconto");
+    return;
+  }
+
+  if (tipoPromocao === "horas_extras") {
+    mostrar("bloco-horas-extras");
+    return;
+  }
+}
 
   function onTipoDescontoChange(e) {
     tipoDesconto = e.target.value;
@@ -341,10 +340,14 @@ function bindDropdown(dropdown, store) {
 }
 
   function bloquearSelecionarTodos() {
-    document
-      .querySelectorAll(".check-all")
-      .forEach(c => c.disabled = true);
-  }
+  document
+    .querySelectorAll(".check-all")
+    .forEach(c => c.disabled = true);
+
+  document
+    .querySelectorAll(".dropdown")
+    .forEach(d => d.classList.remove("open"));
+}
 
   function desbloquearSelecionarTodos() {
     document
@@ -455,14 +458,16 @@ async function salvarPromocao() {
       return;
     }
 
-      if (!valorFinal || valorFinal <= 0) {
-    Swal.fire(
-      "Erro",
-      "Informe o valor final da promoção",
-      "warning"
-    );
-    return;
-  }
+     const valorFinal = Number(val("promo-valor-final"));
+
+if (!valorFinal || valorFinal <= 0) {
+  Swal.fire(
+    "Erro",
+    "Informe o valor final da promoção",
+    "warning"
+  );
+  return;
+}
   }
 
   /* ================= PAYLOAD FINAL ================= */
