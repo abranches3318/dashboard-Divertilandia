@@ -315,7 +315,9 @@ function bindDropdown(dropdown, store) {
       })
       .filter(Boolean);
 
-    criarTooltip(toggle, nomes);
+    toggle.addEventListener("mouseenter", () => {
+  criarTooltipInline(toggle, nomes);
+});
   }
 
   /* ================= ABRIR / FECHAR ================= */
@@ -603,26 +605,33 @@ function fecharTodosDropdowns() {
 }
 
 
-function criarTooltip(elemento, textos) {
-  if (!textos.length) return;
+  function criarTooltipInline(target, lista) {
+  removerTooltip(target);
+
+  if (!lista || !lista.length) return;
 
   const tooltip = document.createElement("div");
   tooltip.className = "dropdown-tooltip";
-  tooltip.innerHTML = textos.map(t => `<div>• ${t}</div>`).join("");
+  tooltip.innerHTML = lista.map(n => `<div>${n}</div>`).join("");
 
-  document.body.appendChild(tooltip);
+  // 🔒 posicionamento RELATIVO AO TOGGLE
+  tooltip.style.position = "absolute";
+  tooltip.style.top = "100%";
+  tooltip.style.left = "0";
+  tooltip.style.marginTop = "6px";
+  tooltip.style.zIndex = "50";
 
-  elemento.addEventListener("mouseenter", () => {
-    const rect = elemento.getBoundingClientRect();
-    tooltip.style.display = "block";
-    tooltip.style.position = "fixed";
-    tooltip.style.left = rect.left + "px";
-    tooltip.style.top = (rect.bottom + 6) + "px";
+  target.style.position = "relative";
+  target.appendChild(tooltip);
+
+  target.addEventListener("mouseleave", () => {
+    removerTooltip(target);
   });
+}
 
-  elemento.addEventListener("mouseleave", () => {
-    tooltip.style.display = "none";
-  });
+function removerTooltip(target) {
+  const existing = target.querySelector(".dropdown-tooltip");
+  if (existing) existing.remove();
 }
   
   
