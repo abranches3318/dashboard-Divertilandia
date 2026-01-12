@@ -90,6 +90,7 @@
       "promo-fim",
       "promo-desconto-valor",
       "promo-horas-extras",
+      "promo-valor-final",
       "promo-descricao"
     ].forEach(id => {
       const el = document.getElementById(id);
@@ -130,6 +131,26 @@
     if (tipoPromocao === "horas_extras") {
       mostrar("bloco-horas-extras");
     }
+    
+    if (tipoPromocao === "item_gratis") {
+
+  mostrar("bloco-item-gratis");
+
+  // 🔒 item grátis só com PACOTES
+  itensSelecionados.clear();
+
+  const dropItens = document.getElementById("dropdown-itens-promocao");
+  if (dropItens) {
+    dropItens.classList.add("disabled");
+    dropItens.innerHTML = `
+      <div class="dropdown-toggle muted">
+        Indisponível para item grátis
+      </div>
+    `;
+  }
+
+  desbloquearSelecionarTodos();
+}
   }
 
   function onTipoDescontoChange(e) {
@@ -368,10 +389,83 @@ async function salvarPromocao() {
   const inicio = val("promo-inicio");
   const fim = val("promo-fim");
 
+  /* ================= VALIDAÇÕES BÁSICAS ================= */
+
   if (!nome || !inicio || !fim || !tipoPromocao) {
     Swal.fire("Erro", "Campos obrigatórios não preenchidos", "error");
     return;
   }
+
+  if (fim < inicio) {
+    Swal.fire("Erro", "Período da promoção inválido", "error");
+    return;
+  }
+
+  /* ================= REGRAS ESPECÍFICAS ================= */
+
+  // 🔒 ITEM GRÁTIS — SOMENTE PACOTES
+  if (tipoPromocao === "item_gratis") {
+
+    if (!itemGratisSelecionado) {
+      Swal.fire("Erro", "Selecione um item grátis", "warning");
+      return;
+    }
+
+    if (!pacotesSelecionados.size) {
+      Swal.fire(
+        "Erro",
+        "Promoção de item grátis deve estar vinculada a pelo menos um pacote",
+        "warning"
+      );
+      return;
+    }
+
+    // 🔴 REGRA DOS 65% (arquivo catalogo_regras.js)
+    const validacao = validarItemGratisComPacote({
+      itemGratisId: itemGratisSelecionado,
+      pacotesIds: [...pacotesSelecionados]
+    });
+
+    if (!validacao.valido) {
+      Swal.fire("Promoção inválida", validacao.mensagem, "warning");
+      return;
+    }
+  }
+
+  // 🔒 DESCONTO
+  if (tipoPromocao === "desconto") {
+
+    if (!tipoDesconto) {
+      Swal.fire("Erro", "Selecione o tipo de desconto", "warning");
+      return;
+    }
+
+    const valorDesconto = Number(val("promo-desconto-valor"));
+    if (!valorDesconto || valorDesconto <= 0) {
+      Swal.fire("Erro", "Valor de desconto inválido", "warning");
+      return;
+    }
+  }
+
+  // 🔒 HORAS EXTRAS
+  if (tipoPromocao === "horas_extras") {
+    const horas = Number(val("promo-horas-extras"));
+    if (!horas || horas <= 0) {
+      Swal.fire("Erro", "Informe a quantidade de horas extras", "warning");
+      return;
+    }
+
+      if (!valorFinal || valorFinal <= 0) {
+    Swal.fire(
+      "Erro",
+      "Informe o valor final da promoção",
+      "warning"
+    );
+    return;
+  }
+  }
+
+  /* ================= PAYLOAD FINAL ================= */
 
   const payload = {
     nome,
@@ -380,21 +474,29 @@ async function salvarPromocao() {
     tipoImpacto: tipoPromocao,
 
     impacto: {
-      tipo: tipoDesconto,
-      valor:
-        tipoPromocao === "desconto"
-          ? Number(val("promo-desconto-valor"))
-          : tipoPromocao === "horas_extras"
-            ? Number(val("promo-horas-extras"))
-            : null,
-      itemGratisId:
-        tipoPromocao === "item_gratis"
-          ? itemGratisSelecionado
-          : null
-    },
+  tipo: tipoDesconto || null,
+
+  valor:
+    tipoPromocao === "desconto"
+      ? Number(val("promo-desconto-valor"))
+      : tipoPromocao === "horas_extras"
+        ? {
+            horas: Number(val("promo-horas-extras")),
+            valorFinal: Number(val("promo-valor-final"))
+          }
+        : null,
+
+  itemGratisId:
+    tipoPromocao === "item_gratis"
+      ? itemGratisSelecionado
+      : null
+},
 
     aplicacao: {
-      itens: [...itensSelecionados],
+      itens:
+        tipoPromocao === "item_gratis"
+          ? [] // 🔒 GARANTIA FINAL
+          : [...itensSelecionados],
       pacotes: [...pacotesSelecionados]
     },
 
@@ -407,14 +509,17 @@ async function salvarPromocao() {
     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  await firebase.firestore()
+  /* ================= FIRESTORE ================= */
+
+  await firebase
+    .firestore()
     .collection("promocoes")
     .add(payload);
 
   fecharModalPromocaoIsolado();
-  carregarPromocoes(); // 🔥 AGORA VEM DO FIRESTORE
+  await carregarPromocoes();
 
-  Swal.fire("Sucesso", "Promoção criada", "success");
+  Swal.fire("Sucesso", "Promoção criada com sucesso", "success");
 }
 
   function val(id) {
