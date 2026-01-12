@@ -112,7 +112,9 @@
 
     <div class="modal-body">
 
+      <!-- GRID DE CAMPOS -->
       <div class="form-grid">
+
         <div class="form-group">
           <label id="label-nome-item">Nome do item *</label>
           <input type="text" id="item-nome" placeholder="Ex: Pula-pula grande">
@@ -136,35 +138,52 @@
           </select>
         </div>
 
-      <div class="form-group full" id="grupo-descricao">
-  <label>Descrição</label>
-  <textarea id="item-descricao" rows="3"></textarea>
-</div>
+        <div class="form-group full" id="grupo-descricao">
+          <label>Descrição</label>
+          <textarea id="item-descricao" rows="3"></textarea>
+        </div>
 
+      </div> <!-- 🔒 FECHA form-grid -->
+
+      <!-- BLOCO DE IMAGENS (FORA DO GRID) -->
       <div class="imagens-bloco">
         <div class="imagens-header">
-        
           <label class="btn btn-primary">
             Adicionar imagens
-            <input type="file" id="input-imagens" accept="image/*" multiple hidden>
+            <input
+              type="file"
+              id="input-imagens"
+              accept="image/*"
+              multiple
+              hidden
+            >
           </label>
         </div>
 
         <div id="preview-imagens" class="preview-imagens"></div>
       </div>
 
-    </div>
+    </div> <!-- 🔒 FECHA modal-body -->
 
     <footer class="modal-footer">
-      <button id="btn-cancelar-item" class="btn btn-danger" onclick="fecharModalItem()">Cancelar</button>
-      <button id="btn-salvar-item" class="btn btn-primary">Salvar</button>
-     
-     
+      <button
+        id="btn-cancelar-item"
+        class="btn btn-danger"
+        onclick="fecharModalItem()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        id="btn-salvar-item"
+        class="btn btn-primary"
+      >
+        Salvar
+      </button>
     </footer>
 
   </div>
-      </div>
-  </div>
+</div>
   
  <!-- ================= MODAL PROMOÇÃO ================= -->
 <div id="modal-promocao" class="modal">
