@@ -1777,3 +1777,38 @@ label {
   height: 16px;
   margin: 0;
 }
+
+/* ================= DROPDOWN TOGGLE ================= */
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  position: relative;
+  padding-right: 36px; /* espaço para a seta */
+  cursor: pointer;
+}
+
+/* Seta padrão */
+.dropdown-toggle::after {
+  content: "▾";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #aaa;
+  pointer-events: none;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+/* Hover */
+.dropdown-toggle:hover::after {
+  color: #fff;
+}
+
+/* Dropdown aberto */
+.dropdown.open .dropdown-toggle::after {
+  transform: translateY(-50%) rotate(180deg);
+}
