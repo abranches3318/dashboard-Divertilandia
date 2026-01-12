@@ -1805,11 +1805,6 @@ select {
   position: relative;
 }
 
-.dropdown-toggle {
-  position: relative;
-  padding-right: 36px;
-  cursor: pointer;
-}
 
 /* seta */
 .dropdown-toggle::after {
@@ -1831,5 +1826,47 @@ select {
 
 /* aberto */
 .dropdown.open .dropdown-toggle::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* ================= DROPDOWN PADRÃO FINAL ================= */
+
+#modal-promocao .dropdown-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  background: #1b1b1b;
+  border: 1px solid #333;
+  border-radius: 6px;
+
+  padding: 12px 36px 12px 12px; /* espaço REAL para a seta */
+  font-size: 14px;
+  color: #fff;
+
+  cursor: pointer;
+}
+
+/* seta */
+#modal-promocao .dropdown-toggle::after {
+  content: "▾";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #aaa;
+  pointer-events: none;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+/* hover */
+#modal-promocao .dropdown-toggle:hover::after {
+  color: #fff;
+}
+
+/* aberto */
+#modal-promocao .dropdown.open .dropdown-toggle::after {
   transform: translateY(-50%) rotate(180deg);
 }
