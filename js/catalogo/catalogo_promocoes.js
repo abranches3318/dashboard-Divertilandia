@@ -294,11 +294,36 @@ function bindDropdown(dropdown, store) {
     "input[type='checkbox']:not(.check-all)"
   );
 
-  // 🔁 abre / fecha no toggle
+  /* ================= UTIL ================= */
+
+  function atualizarToggle() {
+    const ids = [...store];
+
+    if (!ids.length) {
+      toggle.textContent = "Selecionar";
+      return;
+    }
+
+    toggle.textContent = `Selecionados: ${ids.length}`;
+
+    const nomes = ids
+      .map(id => {
+        return (
+          CATALOGO_STATE.itens?.find(i => i.id === id)?.nome ||
+          CATALOGO_STATE.pacotes?.find(p => p.id === id)?.nome
+        );
+      })
+      .filter(Boolean);
+
+    criarTooltip(toggle, nomes);
+  }
+
+  /* ================= ABRIR / FECHAR ================= */
+
   toggle.addEventListener("click", (e) => {
     e.stopPropagation();
-    const isOpen = dropdown.classList.contains("open");
 
+    const isOpen = dropdown.classList.contains("open");
     fecharTodosDropdowns();
 
     if (!isOpen) {
@@ -306,10 +331,12 @@ function bindDropdown(dropdown, store) {
     }
   });
 
-  // 🔒 NÃO FECHA ao clicar dentro do menu
+  // 🔒 NÃO fecha ao clicar dentro do menu
   menu.addEventListener("click", (e) => {
     e.stopPropagation();
   });
+
+  /* ================= SELECIONAR TODOS ================= */
 
   if (checkAll) {
     checkAll.addEventListener("change", (e) => {
@@ -321,8 +348,12 @@ function bindDropdown(dropdown, store) {
           ? store.add(c.value)
           : store.delete(c.value);
       });
+
+      atualizarToggle();
     });
   }
+
+  /* ================= CHECK INDIVIDUAL ================= */
 
   checks.forEach(c => {
     c.addEventListener("change", (e) => {
@@ -335,8 +366,14 @@ function bindDropdown(dropdown, store) {
       if (checkAll && !c.checked) {
         checkAll.checked = false;
       }
+
+      atualizarToggle();
     });
   });
+
+  /* ================= INIT ================= */
+
+  atualizarToggle();
 }
 
   function bloquearSelecionarTodos() {
@@ -564,5 +601,29 @@ function fecharTodosDropdowns() {
     .querySelectorAll(".dropdown.open")
     .forEach(d => d.classList.remove("open"));
 }
+
+
+function criarTooltip(elemento, textos) {
+  if (!textos.length) return;
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "dropdown-tooltip";
+  tooltip.innerHTML = textos.map(t => `<div>• ${t}</div>`).join("");
+
+  document.body.appendChild(tooltip);
+
+  elemento.addEventListener("mouseenter", () => {
+    const rect = elemento.getBoundingClientRect();
+    tooltip.style.display = "block";
+    tooltip.style.position = "fixed";
+    tooltip.style.left = rect.left + "px";
+    tooltip.style.top = (rect.bottom + 6) + "px";
+  });
+
+  elemento.addEventListener("mouseleave", () => {
+    tooltip.style.display = "none";
+  });
+}
+  
   
 })();
