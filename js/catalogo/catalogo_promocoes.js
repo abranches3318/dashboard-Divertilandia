@@ -198,7 +198,7 @@
       ${lista.map(i => `
         <label>
           <input type="checkbox" value="${i.id}">
-          ${i.nome}
+          <span>${i.nome}</span>
         </label>
       `).join("")}
     </div>
@@ -222,10 +222,10 @@
     <div class="dropdown-toggle">Selecionar item grátis</div>
     <div class="dropdown-menu">
       ${lista.map(i => `
-        <label>
-          <input type="radio" name="item-gratis" value="${i.id}">
-          ${i.nome}
-        </label>
+       <label>
+  <input type="radio" name="item-gratis" value="${i.id}">
+  <span>${i.nome}</span>
+</label>
       `).join("")}
     </div>
   `;
