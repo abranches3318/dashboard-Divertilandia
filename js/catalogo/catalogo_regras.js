@@ -3,118 +3,15 @@
 // ============================
 
 /*
-  Este arquivo NÃO contém lógica de interface.
-  Apenas regras puras de negócio, reutilizáveis.
+ESTE ARQUIVO:
+✔ NÃO mexe em UI
+✔ NÃO acessa DOM
+✔ OPERA somente sobre dados
+✔ REFLETE o modelo REAL salvo no Firestore
 */
 
 /* =====================================================
-   CÁLCULO DE VALOR PROMOCIONAL
-===================================================== */
-
-function calcularValorPromocional(valorBase, promocao) {
-  if (promocao.tipoImpacto === "desconto") {
-    if (promocao.impacto?.tipo === "percentual") {
-      return valorBase - (valorBase * (promocao.impacto.valor / 100));
-    }
-
-    if (promocao.impacto?.tipo === "fixo") {
-      return Math.max(0, valorBase - promocao.impacto.valor);
-    }
-  }
-
-  if (promocao.tipoImpacto === "horas_extras") {
-    if (promocao.impacto?.valorFinal != null) {
-      return promocao.impacto.valorFinal;
-    }
-  }
-
-  return valorBase;
-}
-
-/* =====================================================
-   APLICA PROMOÇÃO EM UM ÚNICO REGISTRO
-===================================================== */
-
-function aplicarPromocaoNoRegistro(registro, promocao, promocoesAtivas) {
-  const jaTemDesconto = promocoesAtivas.some(p =>
-    p.tipoImpacto === "desconto" &&
-    p.aplicacao?.alvos?.some(a => a.id === registro.id)
-  );
-
-  if (jaTemDesconto && promocao.tipoImpacto === "desconto") {
-    return { aplicado: false, motivo: "Desconto já existente" };
-  }
-
-  const valorOriginal = registro.valor;
-  const valorFinal = calcularValorPromocional(valorOriginal, promocao);
-
-  return {
-    aplicado: true,
-    valorOriginal,
-    valorFinal,
-    economia: valorOriginal - valorFinal
-  };
-}
-
-/* =====================================================
-   APLICA PROMOÇÃO EM LOTE
-===================================================== */
-
-function aplicarPromocaoEmLote(registros, promocao, promocoesAtivasPorRegistro) {
-  const impactos = [];
-  let bloqueioPreco = false;
-
-  registros.forEach(registro => {
-    const promocoesAtivas = promocoesAtivasPorRegistro[registro.id] || [];
-    const resultado = aplicarPromocaoNoRegistro(registro, promocao, promocoesAtivas);
-
-    if (!resultado.aplicado) return;
-
-    impactos.push({
-      id: registro.id,
-      nome: registro.nome,
-      valorOriginal: resultado.valorOriginal,
-      valorFinal: resultado.valorFinal,
-      economia: resultado.economia
-    });
-
-    if (impactos.length > 1) bloqueioPreco = true;
-  });
-
-  return { registrosImpactados: impactos, bloqueioPreco };
-}
-
-/* =====================================================
-   PREVIEW FINAL DA PROMOÇÃO
-===================================================== */
-
-function gerarPreviewPromocao(promocao, registros, promocoesAtivasPorRegistro) {
-  const impacto = aplicarPromocaoEmLote(
-    registros,
-    promocao,
-    promocoesAtivasPorRegistro
-  );
-
-  const totalOriginal = impacto.registrosImpactados.reduce(
-    (s, r) => s + r.valorOriginal, 0
-  );
-
-  const totalFinal = impacto.registrosImpactados.reduce(
-    (s, r) => s + r.valorFinal, 0
-  );
-
-  return {
-    quantidade: impacto.registrosImpactados.length,
-    totalOriginal,
-    totalFinal,
-    economiaTotal: totalOriginal - totalFinal,
-    bloqueioPreco: impacto.bloqueioPreco,
-    detalhes: impacto.registrosImpactados
-  };
-}
-
-/* =====================================================
-   DATAS
+   UTILITÁRIOS
 ===================================================== */
 
 function normalizarData(dataStr) {
@@ -123,25 +20,56 @@ function normalizarData(dataStr) {
   return d;
 }
 
+function hojeNormalizado() {
+  const h = new Date();
+  h.setHours(0, 0, 0, 0);
+  return h;
+}
+
+/* =====================================================
+   VALIDAÇÃO DE PERÍODO
+===================================================== */
+
 function validarPeriodoPromocao(periodo) {
   if (!periodo?.inicio || !periodo?.fim) {
-    return { valido: false, mensagem: "Período inválido." };
+    return { valido: false, mensagem: "Informe o período da promoção." };
   }
 
-  const hoje = normalizarData(new Date().toISOString().split("T")[0]);
+  const hoje = hojeNormalizado();
   const inicio = normalizarData(periodo.inicio);
   const fim = normalizarData(periodo.fim);
 
   if (inicio < hoje) {
-    return { valido: false, mensagem: "Data inicial no passado." };
+    return { valido: false, mensagem: "A data inicial não pode estar no passado." };
   }
 
   if (fim < inicio) {
-    return { valido: false, mensagem: "Data final inválida." };
+    return { valido: false, mensagem: "A data final não pode ser menor que a inicial." };
   }
 
   return { valido: true };
 }
+
+/* =====================================================
+   EXTRAÇÃO DE ALVOS (MODELO ATUAL)
+===================================================== */
+
+function extrairAlvos(promocao) {
+  return [
+    ...(promocao.aplicacao?.itens || []).map(id => ({
+      id,
+      tipo: "item"
+    })),
+    ...(promocao.aplicacao?.pacotes || []).map(id => ({
+      id,
+      tipo: "pacote"
+    }))
+  ];
+}
+
+/* =====================================================
+   CONFLITO TEMPORAL
+===================================================== */
 
 function periodosConflitam(p1, p2) {
   return (
@@ -151,24 +79,40 @@ function periodosConflitam(p1, p2) {
 }
 
 /* =====================================================
-   CONFLITO DE DESCONTOS
+   BLOQUEIO DE EMPILHAMENTO DE DESCONTO
 ===================================================== */
 
-function validarConflitosTemporais({ promocaoNova, promocoesExistentes }) {
+function validarConflitosDesconto({
+  promocaoNova,
+  promocoesExistentes
+}) {
+  if (promocaoNova.tipoImpacto !== "desconto") {
+    return { valido: true };
+  }
+
+  const novosAlvos = extrairAlvos(promocaoNova);
+
   for (const promo of promocoesExistentes) {
     if (promo.id === promocaoNova.id) continue;
+    if (promo.status !== "ativa") continue;
     if (promo.tipoImpacto !== "desconto") continue;
 
-    const intersecao = promo.aplicacao?.alvos?.some(a =>
-      promocaoNova.aplicacao?.alvos?.some(n => n.id === a.id)
+    if (!periodosConflitam(promo.periodo, promocaoNova.periodo)) {
+      continue;
+    }
+
+    const alvosExistentes = extrairAlvos(promo);
+
+    const conflito = alvosExistentes.some(a =>
+      novosAlvos.some(n =>
+        n.id === a.id && n.tipo === a.tipo
+      )
     );
 
-    if (!intersecao) continue;
-
-    if (periodosConflitam(promo.periodo, promocaoNova.periodo)) {
+    if (conflito) {
       return {
         valido: false,
-        mensagem: "Já existe um desconto ativo no mesmo período."
+        mensagem: "Já existe um desconto ativo para este item ou pacote no mesmo período."
       };
     }
   }
@@ -177,13 +121,8 @@ function validarConflitosTemporais({ promocaoNova, promocoesExistentes }) {
 }
 
 /* =====================================================
-   REGRA — ITEM GRÁTIS × PACOTE
+   REGRA: ITEM GRÁTIS ≤ 65% DO PACOTE
 ===================================================== */
-
-/*
-  - Item grátis NÃO pode pertencer a um pacote selecionado
-  - Item grátis ≤ 65% do valor do pacote
-*/
 
 function validarItemGratisComPacote({ itemGratisId, pacotesIds }) {
   const item = CATALOGO_STATE.itens.find(i => i.id === itemGratisId);
@@ -195,20 +134,12 @@ function validarItemGratisComPacote({ itemGratisId, pacotesIds }) {
     const pacote = CATALOGO_STATE.pacotes.find(p => p.id === pacoteId);
     if (!pacote) continue;
 
-    // 🔒 Não pode conter o item
-    const contemItem = pacote.itens?.some(i => i.id === item.id);
-    if (contemItem) {
-      return {
-        valido: false,
-        mensagem: `O pacote "${pacote.nome}" já contém o item "${item.nome}".`
-      };
-    }
+    const limite = pacote.valor * 0.65;
 
-    // 🔒 Regra dos 65%
-    if (item.valor > pacote.valor * 0.65) {
+    if (item.valor > limite) {
       return {
         valido: false,
-        mensagem: `O item grátis "${item.nome}" excede 65% do valor do pacote "${pacote.nome}".`
+        mensagem: `O item "${item.nome}" excede 65% do valor do pacote "${pacote.nome}".`
       };
     }
   }
@@ -217,44 +148,38 @@ function validarItemGratisComPacote({ itemGratisId, pacotesIds }) {
 }
 
 /* =====================================================
-   APLICA PROMOÇÕES A UM ITEM (PREVIEW)
+   REGRA: ITEM GRÁTIS NÃO PODE ESTAR CONTIDO NO PACOTE
 ===================================================== */
 
-function aplicarPromocoesAoItem(item, dataEvento) {
-  const promocoesAtivas = CATALOGO_STATE.promocoes.filter(p => {
-    if (p.status !== "ativa") return false;
-    if (!p.periodo?.inicio || !p.periodo?.fim) return false;
+function validarItemGratisNaoContidoNoPacote({
+  itemGratisId,
+  pacotesIds
+}) {
+  for (const pacoteId of pacotesIds) {
+    const pacote = CATALOGO_STATE.pacotes.find(p => p.id === pacoteId);
+    if (!pacote || !Array.isArray(pacote.itens)) continue;
 
-    const inicio = new Date(p.periodo.inicio);
-    const fim = new Date(p.periodo.fim);
+    const contem = pacote.itens.some(
+      i => i.itemId === itemGratisId
+    );
 
-    return dataEvento >= inicio && dataEvento <= fim;
-  });
-
-  let valorBase = item.valor;
-  let valorFinal = valorBase;
-  let descontoAplicado = null;
-  const outrasPromocoes = [];
-
-  promocoesAtivas.forEach(promocao => {
-    const aplica =
-      promocao.aplicacao?.itens?.includes(item.id) ||
-      promocao.aplicacao?.pacotes?.includes(item.pacoteId);
-
-    if (!aplica) return;
-
-    if (promocao.tipoImpacto === "desconto" && !descontoAplicado) {
-      valorFinal = calcularValorPromocional(valorBase, promocao);
-      descontoAplicado = promocao;
-    } else {
-      outrasPromocoes.push(promocao);
+    if (contem) {
+      const item = CATALOGO_STATE.itens.find(i => i.id === itemGratisId);
+      return {
+        valido: false,
+        mensagem: `O pacote "${pacote.nome}" já contém o item "${item?.nome || "selecionado"}".`
+      };
     }
-  });
+  }
 
-  return {
-    valorOriginal: valorBase,
-    valorFinal,
-    descontoAplicado,
-    outrasPromocoes
-  };
+  return { valido: true };
 }
+
+/* =====================================================
+   EXPORTAÇÃO GLOBAL (LEGADO)
+===================================================== */
+
+window.validarPeriodoPromocao = validarPeriodoPromocao;
+window.validarConflitosDesconto = validarConflitosDesconto;
+window.validarItemGratisComPacote = validarItemGratisComPacote;
+window.validarItemGratisNaoContidoNoPacote = validarItemGratisNaoContidoNoPacote;
