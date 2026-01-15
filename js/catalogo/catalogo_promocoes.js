@@ -347,10 +347,12 @@ function bindDropdown(dropdown, store) {
 
   /* ================= UTIL ================= */
 
- function atualizarToggle() {
+function atualizarToggle() {
   const ids = [...store];
 
-  removerTooltip(toggle); // 🔥 mata qualquer tooltip antigo
+  removerTooltip(toggle);
+  toggle.onmouseenter = null;
+  toggle.onmouseleave = null;
 
   if (!ids.length) {
     toggle.textContent = "Selecionar";
@@ -366,12 +368,16 @@ function bindDropdown(dropdown, store) {
     )
     .filter(Boolean);
 
+  criarTooltipInline(toggle, nomes);
+
+  const tooltip = toggle.querySelector(".dropdown-tooltip");
+
   toggle.onmouseenter = () => {
-    criarTooltipInline(toggle, nomes);
+    if (tooltip) tooltip.style.display = "block";
   };
 
   toggle.onmouseleave = () => {
-    removerTooltip(toggle);
+    if (tooltip) tooltip.style.display = "none";
   };
 }
 
@@ -690,7 +696,7 @@ function fecharTodosDropdowns() {
 }
 
 
-  function criarTooltipInline(target, textos) {
+function criarTooltipInline(target, textos) {
   removerTooltip(target);
 
   if (!textos || !textos.length) return;
@@ -714,19 +720,15 @@ function fecharTodosDropdowns() {
 
   tooltip.appendChild(lista);
 
-  target.style.position = "relative";
-
   tooltip.style.position = "absolute";
   tooltip.style.top = "100%";
   tooltip.style.left = "0";
   tooltip.style.marginTop = "6px";
   tooltip.style.zIndex = "30";
+  tooltip.style.display = "none";
 
+  target.style.position = "relative";
   target.appendChild(tooltip);
-
-  target.addEventListener("mouseleave", () => {
-    removerTooltip(target);
-  });
 }
 
 function removerTooltip(target) {
@@ -735,8 +737,9 @@ function removerTooltip(target) {
 }
 
 function limparTooltipSeVazio(target, store) {
-  if (!store || store.size !== 0) return;
-  removerTooltip(target);
+  if (store.size === 0) {
+    removerTooltip(target);
+  }
 }
   
  function pacotesQueContemItem(itemId) {
