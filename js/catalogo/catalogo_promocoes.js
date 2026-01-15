@@ -347,29 +347,33 @@ function bindDropdown(dropdown, store) {
 
   /* ================= UTIL ================= */
 
-  function atualizarToggle() {
-    const ids = [...store];
+ function atualizarToggle() {
+  const ids = [...store];
 
-    if (!ids.length) {
-      toggle.textContent = "Selecionar";
-      return;
-    }
+  removerTooltip(toggle); // 🔥 mata qualquer tooltip antigo
 
-    toggle.textContent = `Selecionados: ${ids.length}`;
-
-    const nomes = ids
-      .map(id => {
-        return (
-          CATALOGO_STATE.itens?.find(i => i.id === id)?.nome ||
-          CATALOGO_STATE.pacotes?.find(p => p.id === id)?.nome
-        );
-      })
-      .filter(Boolean);
-
-    toggle.addEventListener("mouseenter", () => {
-  criarTooltipInline(toggle, nomes);
-});
+  if (!ids.length) {
+    toggle.textContent = "Selecionar";
+    return;
   }
+
+  toggle.textContent = `Selecionados: ${ids.length}`;
+
+  const nomes = ids
+    .map(id =>
+      CATALOGO_STATE.itens?.find(i => i.id === id)?.nome ||
+      CATALOGO_STATE.pacotes?.find(p => p.id === id)?.nome
+    )
+    .filter(Boolean);
+
+  toggle.onmouseenter = () => {
+    criarTooltipInline(toggle, nomes);
+  };
+
+  toggle.onmouseleave = () => {
+    removerTooltip(toggle);
+  };
+}
 
   /* ================= ABRIR / FECHAR ================= */
 
@@ -730,15 +734,11 @@ function removerTooltip(target) {
   if (tooltip) tooltip.remove();
 }
 
-  function limparTooltipSeVazio(target, store) {
-  if (!store || store.size > 0) return;
-
-  const tooltip = target.querySelector(".dropdown-tooltip");
-  if (tooltip) {
-    tooltip.remove();
-  }
+function limparTooltipSeVazio(target, store) {
+  if (!store || store.size !== 0) return;
+  removerTooltip(target);
 }
-
+  
  function pacotesQueContemItem(itemId) {
   return CATALOGO_STATE.pacotes
     .filter(p => Array.isArray(p.itens) && p.itens.includes(itemId))
