@@ -231,17 +231,34 @@ function onTipoPromocaoChange(e) {
           <input type="checkbox" class="check-all"> Selecionar todos
         </label>
       ` : ""}
-      ${lista.map(i => `
-        <label>
-          <input type="checkbox" value="${i.id}">
-          <span>${i.nome}</span>
-        </label>
-      `).join("")}
+      ${lista.map(i => {
+
+        const contemItemGratis =
+          tipoPromocao === "item_gratis" &&
+          itemGratisSelecionado &&
+          Array.isArray(i.itens) &&
+          i.itens.includes(itemGratisSelecionado);
+
+        return `
+          <label class="${contemItemGratis ? "disabled" : ""}">
+            <input
+              type="checkbox"
+              value="${i.id}"
+              ${contemItemGratis ? "disabled" : ""}
+            >
+            <span>
+              ${i.nome}
+              ${contemItemGratis ? " (contém o item grátis)" : ""}
+            </span>
+          </label>
+        `;
+      }).join("")}
     </div>
   `;
 
   bindDropdown(dropdown, store);
 }
+  
   /* ===== DROPDOWN ITEM GRÁTIS (SINGLE) ===== */
 
  function renderDropdownItemGratis(containerId, lista) {
@@ -258,10 +275,10 @@ function onTipoPromocaoChange(e) {
     <div class="dropdown-toggle">Selecionar item grátis</div>
     <div class="dropdown-menu">
       ${lista.map(i => `
-       <label>
-  <input type="radio" name="item-gratis" value="${i.id}">
-  <span>${i.nome}</span>
-</label>
+        <label>
+          <input type="radio" name="item-gratis" value="${i.id}">
+          <span>${i.nome}</span>
+        </label>
       `).join("")}
     </div>
   `;
@@ -269,17 +286,51 @@ function onTipoPromocaoChange(e) {
   const toggle = dropdown.querySelector(".dropdown-toggle");
   const menu = dropdown.querySelector(".dropdown-menu");
 
+  // 🔁 abre / fecha
   toggle.addEventListener("click", () => {
     fecharTodosDropdowns();
     dropdown.classList.toggle("open");
   });
 
+  // 🔄 seleção do item grátis
   menu.querySelectorAll("input[type='radio']").forEach(radio => {
     radio.addEventListener("change", () => {
+
       itemGratisSelecionado = radio.value;
+
       toggle.textContent =
         lista.find(i => i.id === radio.value)?.nome || "Selecionado";
+
       dropdown.classList.remove("open");
+
+      /* =========================================
+         🔒 REGRA: remover pacotes inválidos
+         ========================================= */
+
+      if (tipoPromocao === "item_gratis") {
+
+        let houveRemocao = false;
+
+        CATALOGO_STATE.pacotes.forEach(pacote => {
+          const contemItem =
+            Array.isArray(pacote.itens) &&
+            pacote.itens.includes(itemGratisSelecionado);
+
+          if (contemItem && pacotesSelecionados.has(pacote.id)) {
+            pacotesSelecionados.delete(pacote.id);
+            houveRemocao = true;
+          }
+        });
+
+        if (houveRemocao) {
+          renderDropdownMulti(
+            "dropdown-pacotes-promocao",
+            CATALOGO_STATE.pacotes,
+            pacotesSelecionados,
+            true
+          );
+        }
+      }
     });
   });
 }
@@ -441,8 +492,10 @@ async function salvarPromocao() {
     return;
   }
 
-  if (fim < inicio) {
-    Swal.fire("Erro", "Período da promoção inválido", "error");
+  // 🔒 VALIDA PERÍODO (DATA PASSADA / ORDEM)
+  const validPeriodo = validarPeriodoPromocao({ inicio, fim });
+  if (!validPeriodo.valido) {
+    Swal.fire("Erro", validPeriodo.mensagem, "warning");
     return;
   }
 
@@ -465,14 +518,25 @@ async function salvarPromocao() {
       return;
     }
 
-    // 🔴 REGRA DOS 65% (arquivo catalogo_regras.js)
-    const validacao = validarItemGratisComPacote({
+    // 🔴 REGRA DOS 65%
+    const regra65 = validarItemGratisComPacote({
       itemGratisId: itemGratisSelecionado,
       pacotesIds: [...pacotesSelecionados]
     });
 
-    if (!validacao.valido) {
-      Swal.fire("Promoção inválida", validacao.mensagem, "warning");
+    if (!regra65.valido) {
+      Swal.fire("Promoção inválida", regra65.mensagem, "warning");
+      return;
+    }
+
+    // 🔴 ITEM GRÁTIS NÃO PODE ESTAR CONTIDO NO PACOTE
+    const regraContem = validarItemGratisNaoContidoNoPacote({
+      itemGratisId: itemGratisSelecionado,
+      pacotesIds: [...pacotesSelecionados]
+    });
+
+    if (!regraContem.valido) {
+      Swal.fire("Promoção inválida", regraContem.mensagem, "warning");
       return;
     }
   }
@@ -490,26 +554,40 @@ async function salvarPromocao() {
       Swal.fire("Erro", "Valor de desconto inválido", "warning");
       return;
     }
+
+    // 🔴 BLOQUEIO DE EMPILHAMENTO DE DESCONTO
+    const validDesconto = validarConflitosDesconto({
+      promocaoNova: {
+        tipoImpacto: "desconto",
+        periodo: { inicio, fim },
+        aplicacao: {
+          itens: [...itensSelecionados],
+          pacotes: [...pacotesSelecionados]
+        }
+      },
+      promocoesExistentes: PROMOCOES
+    });
+
+    if (!validDesconto.valido) {
+      Swal.fire("Promoção inválida", validDesconto.mensagem, "warning");
+      return;
+    }
   }
 
   // 🔒 HORAS EXTRAS
   if (tipoPromocao === "horas_extras") {
+
     const horas = Number(val("promo-horas-extras"));
     if (!horas || horas <= 0) {
       Swal.fire("Erro", "Informe a quantidade de horas extras", "warning");
       return;
     }
 
-     const valorFinal = Number(val("promo-valor-final"));
-
-if (!valorFinal || valorFinal <= 0) {
-  Swal.fire(
-    "Erro",
-    "Informe o valor final da promoção",
-    "warning"
-  );
-  return;
-}
+    const valorFinal = Number(val("promo-valor-final"));
+    if (!valorFinal || valorFinal <= 0) {
+      Swal.fire("Erro", "Informe o valor final da promoção", "warning");
+      return;
+    }
   }
 
   /* ================= PAYLOAD FINAL ================= */
@@ -521,28 +599,28 @@ if (!valorFinal || valorFinal <= 0) {
     tipoImpacto: tipoPromocao,
 
     impacto: {
-  tipo: tipoDesconto || null,
+      tipo: tipoDesconto || null,
 
-  valor:
-    tipoPromocao === "desconto"
-      ? Number(val("promo-desconto-valor"))
-      : tipoPromocao === "horas_extras"
-        ? {
-            horas: Number(val("promo-horas-extras")),
-            valorFinal: Number(val("promo-valor-final"))
-          }
-        : null,
+      valor:
+        tipoPromocao === "desconto"
+          ? Number(val("promo-desconto-valor"))
+          : tipoPromocao === "horas_extras"
+            ? {
+                horas: Number(val("promo-horas-extras")),
+                valorFinal: Number(val("promo-valor-final"))
+              }
+            : null,
 
-  itemGratisId:
-    tipoPromocao === "item_gratis"
-      ? itemGratisSelecionado
-      : null
-},
+      itemGratisId:
+        tipoPromocao === "item_gratis"
+          ? itemGratisSelecionado
+          : null
+    },
 
     aplicacao: {
       itens:
         tipoPromocao === "item_gratis"
-          ? [] // 🔒 GARANTIA FINAL
+          ? []
           : [...itensSelecionados],
       pacotes: [...pacotesSelecionados]
     },
@@ -660,6 +738,11 @@ function removerTooltip(target) {
     tooltip.remove();
   }
 }
-  
+
+ function pacotesQueContemItem(itemId) {
+  return CATALOGO_STATE.pacotes
+    .filter(p => Array.isArray(p.itens) && p.itens.includes(itemId))
+    .map(p => p.id);
+} 
   
 })();
