@@ -9,6 +9,7 @@
   /* ================= ESTADO ================= */
 
   let PROMOCOES = [];
+  let imagemPromocaoFile = null;
 
   let itensSelecionados = new Set();
   let pacotesSelecionados = new Set();
@@ -499,30 +500,32 @@ function atualizarToggle() {
 
   function prepararImagemPromocao() {
 
-    const input = document.getElementById("promo-imagem");
-    if (!input) return;
+  const input = document.getElementById("promo-imagem");
+  if (!input) return;
 
-    input.onchange = (e) => {
+  input.onchange = (e) => {
 
-      const file = e.target.files[0];
-      if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-      const preview = document.getElementById("promo-imagem-preview");
-      if (!preview) return;
+    imagemPromocaoFile = file; // 🔴 guarda o arquivo REAL
 
-      preview.innerHTML = "";
+    const preview = document.getElementById("promo-imagem-preview");
+    if (!preview) return;
 
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(file);
-      preview.appendChild(img);
+    preview.innerHTML = "";
 
-      const estado = { scale: 1, offsetX: 0, offsetY: 0 };
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    preview.appendChild(img);
 
-      aplicarTransformImagem(img, estado);
-      habilitarDragImagem(img, estado);
-      habilitarZoomImagem(img, estado);
-    };
-  }
+    const estado = { scale: 1, offsetX: 0, offsetY: 0 };
+
+    aplicarTransformImagem(img, estado);
+    habilitarDragImagem(img, estado);
+    habilitarZoomImagem(img, estado);
+  };
+}
 
   /* ================= SALVAR ================= */
 
@@ -990,7 +993,7 @@ if (titulo) titulo.textContent = "Editar promoção";
     periodo: { inicio, fim },
 
     descricao: val("promo-descricao"),
-    imagemUrl: null,
+  
 
     criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
@@ -998,30 +1001,48 @@ if (titulo) titulo.textContent = "Editar promoção";
 
   /* ================= FIRESTORE ================= */
 
- if (idEdicao) {
-  const { criadoEm, ...payloadUpdate } = payload;
+let promocaoRef;
 
-  await firebase
+/* ================= CRIAÇÃO ================= */
+if (!idEdicao) {
+
+  promocaoRef = await firebase
     .firestore()
     .collection("promocoes")
-    .doc(idEdicao)
-    .update({
-      ...payloadUpdate,
+    .add({
+      ...payload,
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
       atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
 
+  Swal.fire("Sucesso", "Promoção criada com sucesso", "success");
+
+/* ================= EDIÇÃO ================= */
+} else {
+
+  const { criadoEm, ...payloadUpdate } = payload;
+
+  promocaoRef = firebase
+    .firestore()
+    .collection("promocoes")
+    .doc(idEdicao);
+
+  await promocaoRef.update({
+    ...payloadUpdate,
+    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
   Swal.fire("Atualizada", "Promoção atualizada com sucesso", "success");
-}else {
-    payload.criadoEm =
-      firebase.firestore.FieldValue.serverTimestamp();
+}
 
-    await firebase
-      .firestore()
-      .collection("promocoes")
-      .add(payload);
+   if (imagemPromocaoFile && promocaoRef) {
+  const imagemUrl = await uploadImagemPromocao(
+    imagemPromocaoFile,
+    promocaoRef.id
+  );
 
-    Swal.fire("Sucesso", "Promoção criada com sucesso", "success");
-  }
+  await promocaoRef.update({ imagemUrl });
+}
 
   fecharModalPromocaoIsolado();
   await carregarPromocoes();
@@ -1089,5 +1110,15 @@ document.addEventListener("click", fecharMenusPromocao);
   );
 
   await carregarPromocoes();
+}
+
+  async function uploadImagemPromocao(file, promocaoId) {
+  const ref = firebase
+    .storage()
+    .ref(`promocoes/${promocaoId}/capa.jpg`);
+
+  await ref.put(file);
+
+  return await ref.getDownloadURL();
 }
 })();
