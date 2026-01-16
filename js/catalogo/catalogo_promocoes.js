@@ -65,7 +65,10 @@
 
   function abrirModalPromocao() {
 
-  PROMOCAO_EM_EDICAO_ID = null; // 🔒 garante modo CRIAÇÃO
+  PROMOCAO_EM_EDICAO_ID = null;
+
+  const titulo = document.getElementById("titulo-modal-promocao");
+  if (titulo) titulo.textContent = "Nova promoção";
 
   document
     .querySelectorAll(".modal.active")
@@ -75,16 +78,14 @@
   carregarDropdowns();
   prepararImagemPromocao();
 
-  // botão volta ao padrão CRIAR
-  const btnSalvar = document.getElementById("btn-salvar-promocao");
-  btnSalvar.onclick = salvarPromocao;
-
   const modal = document.getElementById("modal-promocao");
   if (modal) modal.classList.add("active");
 }
 
   window.fecharModalPromocaoIsolado = function () {
     PROMOCAO_EM_EDICAO_ID = null;
+    const titulo = document.getElementById("titulo-modal-promocao");
+if (titulo) titulo.textContent = "Nova promoção";
     const modal = document.getElementById("modal-promocao");
     if (modal) modal.classList.remove("active");
     resetarFormulario();
@@ -744,6 +745,8 @@ document.addEventListener("click", fecharTooltipItens);
 
   window.editarPromocao = function (id) {
     PROMOCAO_EM_EDICAO_ID = id;
+    const titulo = document.getElementById("titulo-modal-promocao");
+if (titulo) titulo.textContent = "Editar promoção";
   const promo = PROMOCOES.find(p => p.id === id);
   if (!promo) return;
 
