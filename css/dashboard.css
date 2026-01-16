@@ -2083,7 +2083,7 @@ select {
 }
 
 .menu-flutuante-promocao .menu-item:hover {
-  background: #f2f2f2;
+  background: rgba(255, 255, 255, .08)
 }
 
 .menu-flutuante-promocao .menu-item.danger {
