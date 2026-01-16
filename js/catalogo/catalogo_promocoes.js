@@ -1010,7 +1010,7 @@ document.addEventListener("click", fecharTooltipItens);
   await carregarPromocoes();
 }
 
- function abrirMenuPromocao(event, promocaoId) {
+ window.abrirMenuPromocao = function (event, promocaoId) {
   event.stopPropagation();
 
   fecharMenusPromocao();
@@ -1042,7 +1042,7 @@ document.addEventListener("click", fecharTooltipItens);
   document.body.appendChild(menu);
 }
 
-  function fecharMenusPromocao() {
+ window.fecharMenusPromocao = function () {
   document
     .querySelectorAll(".menu-flutuante-promocao")
     .forEach(m => m.remove());
