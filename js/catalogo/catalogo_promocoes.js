@@ -561,8 +561,6 @@ function renderPromocoes() {
   Array.isArray(promo.fotos)
     ? (promo.fotos.find(f => f.principal) || promo.fotos[0])?.url
     : null;
-        <img
-  src="${capa || "../img/imageplaceholder.jpg"}"
 
         const qtdAplicacao =
           (promo.aplicacao?.itens?.length || 0) +
@@ -575,8 +573,8 @@ function renderPromocoes() {
 
             <div class="item-thumb">
               <div class="item-thumb-wrapper">
-                <img
-                  src="${capa}"
+                 <img
+  src="${capa || "../img/imageplaceholder.jpg"}"
                   style="
                     position:absolute;
                     top:50%;
