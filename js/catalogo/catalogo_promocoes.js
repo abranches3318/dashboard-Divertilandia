@@ -16,6 +16,7 @@
 
   let tipoPromocao = null;
   let tipoDesconto = null;
+  let PROMOCAO_EM_EDICAO_ID = null;
 
   /* ================= INIT ================= */
 
@@ -64,19 +65,26 @@
 
   function abrirModalPromocao() {
 
-    document
-      .querySelectorAll(".modal.active")
-      .forEach(m => m.classList.remove("active"));
+  PROMOCAO_EM_EDICAO_ID = null; // 🔒 garante modo CRIAÇÃO
 
-    resetarFormulario();
-    carregarDropdowns();
-    prepararImagemPromocao();
+  document
+    .querySelectorAll(".modal.active")
+    .forEach(m => m.classList.remove("active"));
 
-    const modal = document.getElementById("modal-promocao");
-    if (modal) modal.classList.add("active");
-  }
+  resetarFormulario();
+  carregarDropdowns();
+  prepararImagemPromocao();
+
+  // botão volta ao padrão CRIAR
+  const btnSalvar = document.getElementById("btn-salvar-promocao");
+  btnSalvar.onclick = salvarPromocao;
+
+  const modal = document.getElementById("modal-promocao");
+  if (modal) modal.classList.add("active");
+}
 
   window.fecharModalPromocaoIsolado = function () {
+    PROMOCAO_EM_EDICAO_ID = null;
     const modal = document.getElementById("modal-promocao");
     if (modal) modal.classList.remove("active");
     resetarFormulario();
@@ -735,6 +743,7 @@ document.addEventListener("click", fecharTooltipItens);
 };
 
   window.editarPromocao = function (id) {
+    PROMOCAO_EM_EDICAO_ID = id;
   const promo = PROMOCOES.find(p => p.id === id);
   if (!promo) return;
 
@@ -814,14 +823,14 @@ document.addEventListener("click", fecharTooltipItens);
 
   // === CONTROLE DE EDIÇÃO ===
   document.getElementById("btn-salvar-promocao").onclick = () =>
-    salvarEdicaoPromocao(id);
+  salvarPromocao();
 
   // Abre modal
   document.getElementById("modal-promocao").classList.add("active");
 };
 
-  async function salvarEdicaoPromocao(id) {
-  await salvarPromocaoCore(id);
+ async function salvarPromocao() {
+  await salvarPromocaoCore(PROMOCAO_EM_EDICAO_ID);
 }
 
  async function salvarPromocaoCore(idEdicao = null) {
@@ -902,16 +911,18 @@ document.addEventListener("click", fecharTooltipItens);
 
     // 🔴 BLOQUEIO DE EMPILHAMENTO DE DESCONTO
     const validDesconto = validarConflitosDesconto({
-      promocaoNova: {
-        tipoImpacto: "desconto",
-        periodo: { inicio, fim },
-        aplicacao: {
-          itens: [...itensSelecionados],
-          pacotes: [...pacotesSelecionados]
-        }
-      },
-      promocoesExistentes: PROMOCOES
-    });
+  promocaoNova: {
+    tipoImpacto: "desconto",
+    periodo: { inicio, fim },
+    aplicacao: {
+      itens: [...itensSelecionados],
+      pacotes: [...pacotesSelecionados]
+    }
+  },
+  promocoesExistentes: PROMOCOES.filter(p =>
+    p.id !== PROMOCAO_EM_EDICAO_ID
+  )
+})
 
     if (!validDesconto.valido) {
       Swal.fire("Promoção inválida", validDesconto.mensagem, "warning");
@@ -1050,7 +1061,7 @@ document.addEventListener("click", fecharTooltipItens);
 
 document.addEventListener("click", fecharMenusPromocao);
 
-  async function alternarStatusPromocao(id) {
+  window.alternarStatusPromocao = async function (id) {
   const promo = PROMOCOES.find(p => p.id === id);
   if (!promo) return;
 
