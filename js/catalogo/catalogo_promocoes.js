@@ -557,7 +557,12 @@ function renderPromocoes() {
 
     <div class="itens-lista">
       ${PROMOCOES.map(promo => {
-        const capa = promo.imagemUrl || "../img/imageplaceholder.jpg";
+        const capa =
+  Array.isArray(promo.fotos)
+    ? (promo.fotos.find(f => f.principal) || promo.fotos[0])?.url
+    : null;
+        <img
+  src="${capa || "../img/imageplaceholder.jpg"}"
 
         const qtdAplicacao =
           (promo.aplicacao?.itens?.length || 0) +
