@@ -65,7 +65,7 @@
   /* ================= MODAL ================= */
 
   function abrirModalPromocao() {
-
+imagemPromocaoFile = null;
   PROMOCAO_EM_EDICAO_ID = null;
 
   const titulo = document.getElementById("titulo-modal-promocao");
@@ -93,7 +93,7 @@ if (titulo) titulo.textContent = "Nova promoção";
   };
 
   function resetarFormulario() {
-
+imagemPromocaoFile = null;
     [
       "promo-nome",
       "promo-inicio",
@@ -560,10 +560,7 @@ function renderPromocoes() {
 
     <div class="itens-lista">
       ${PROMOCOES.map(promo => {
-        const capa =
-  Array.isArray(promo.fotos)
-    ? (promo.fotos.find(f => f.principal) || promo.fotos[0])?.url
-    : null;
+        const capa = promo.imagemUrl || null;
 
         const qtdAplicacao =
           (promo.aplicacao?.itens?.length || 0) +
@@ -823,12 +820,17 @@ if (titulo) titulo.textContent = "Editar promoção";
   carregarDropdowns();
 
   // === IMAGEM ===
-  if (promo.imagemUrl) {
-    const preview = document.getElementById("promo-imagem-preview");
-    if (preview) {
-      preview.innerHTML = `<img src="${promo.imagemUrl}">`;
-    }
+ if (promo.imagemUrl) {
+  const preview = document.getElementById("promo-imagem-preview");
+  if (preview) {
+    preview.innerHTML = "";
+
+    const img = document.createElement("img");
+    img.src = promo.imagemUrl;
+
+    preview.appendChild(img);
   }
+}
 
   // === CONTROLE DE EDIÇÃO ===
   document.getElementById("btn-salvar-promocao").onclick = () =>
