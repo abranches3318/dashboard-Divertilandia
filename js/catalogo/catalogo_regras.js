@@ -32,19 +32,30 @@ function hojeNormalizado() {
 
 function validarPeriodoPromocao(periodo) {
   if (!periodo?.inicio || !periodo?.fim) {
-    return { valido: false, mensagem: "Informe o período da promoção." };
+    return {
+      valido: false,
+      mensagem: "Informe o período da promoção."
+    };
   }
 
-  const hoje = hojeNormalizado();
   const inicio = normalizarData(periodo.inicio);
   const fim = normalizarData(periodo.fim);
 
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0); // 🔒 NORMALIZA AQUI
+
   if (inicio < hoje) {
-    return { valido: false, mensagem: "A data inicial não pode estar no passado." };
+    return {
+      valido: false,
+      mensagem: "A data inicial não pode ser anterior ao dia atual."
+    };
   }
 
   if (fim < inicio) {
-    return { valido: false, mensagem: "A data final não pode ser menor que a inicial." };
+    return {
+      valido: false,
+      mensagem: "A data final não pode ser menor que a inicial."
+    };
   }
 
   return { valido: true };
