@@ -229,7 +229,7 @@ function onTipoPromocaoChange(e) {
 
   /* ===== DROPDOWN MULTI (ITENS / PACOTES) ===== */
 
-  function renderDropdownMulti(containerId, lista, store, permitirSelecionarTodos) {
+function renderDropdownMulti(containerId, lista, store, permitirSelecionarTodos) {
 
   const dropdown = document.getElementById(containerId);
   if (!dropdown) return;
@@ -255,11 +255,14 @@ function onTipoPromocaoChange(e) {
           Array.isArray(i.itens) &&
           i.itens.includes(itemGratisSelecionado);
 
+        const marcado = store.has(i.id);
+
         return `
           <label class="${contemItemGratis ? "disabled" : ""}">
             <input
               type="checkbox"
               value="${i.id}"
+              ${marcado ? "checked" : ""}
               ${contemItemGratis ? "disabled" : ""}
             >
             <span>
@@ -271,6 +274,20 @@ function onTipoPromocaoChange(e) {
       }).join("")}
     </div>
   `;
+
+  /* ================= SINCRONIZA CHECK-ALL ================= */
+
+  const checkAll = dropdown.querySelector(".check-all");
+  if (checkAll) {
+    const totalValidos = lista.filter(i => !(
+      tipoPromocao === "item_gratis" &&
+      itemGratisSelecionado &&
+      Array.isArray(i.itens) &&
+      i.itens.includes(itemGratisSelecionado)
+    )).length;
+
+    checkAll.checked = store.size > 0 && store.size === totalValidos;
+  }
 
   bindDropdown(dropdown, store);
 }
@@ -286,7 +303,8 @@ function renderDropdownItemGratis(containerId, lista) {
     return;
   }
 
-  // 🔎 Descobre quais itens NÃO podem ser grátis
+  /* ================= ITENS BLOQUEADOS ================= */
+
   const itensBloqueados = new Set();
 
   if (tipoPromocao === "item_gratis" && pacotesSelecionados.size) {
@@ -299,11 +317,15 @@ function renderDropdownItemGratis(containerId, lista) {
     });
   }
 
+  /* ================= RENDER ================= */
+
   dropdown.innerHTML = `
     <div class="dropdown-toggle">Selecionar item grátis</div>
     <div class="dropdown-menu">
       ${lista.map(i => {
+
         const bloqueado = itensBloqueados.has(i.id);
+        const selecionado = itemGratisSelecionado === i.id;
 
         return `
           <label class="${bloqueado ? "disabled" : ""}">
@@ -311,6 +333,7 @@ function renderDropdownItemGratis(containerId, lista) {
               type="radio"
               name="item-gratis"
               value="${i.id}"
+              ${selecionado ? "checked" : ""}
               ${bloqueado ? "disabled" : ""}
             >
             <span>
@@ -326,26 +349,38 @@ function renderDropdownItemGratis(containerId, lista) {
   const toggle = dropdown.querySelector(".dropdown-toggle");
   const menu = dropdown.querySelector(".dropdown-menu");
 
-  // 🔁 abre / fecha
-  toggle.addEventListener("click", () => {
+  /* ================= ESTADO INICIAL (EDITAR) ================= */
+
+  if (itemGratisSelecionado) {
+    const item = lista.find(i => i.id === itemGratisSelecionado);
+    if (item) {
+      toggle.textContent = item.nome;
+    }
+  }
+
+  /* ================= ABRIR / FECHAR ================= */
+
+  toggle.onclick = (e) => {
+    e.stopPropagation();
     fecharTodosDropdowns();
     dropdown.classList.toggle("open");
-  });
+  };
 
-  // 🔄 seleção do item grátis
+  menu.onclick = e => e.stopPropagation();
+
+  /* ================= SELEÇÃO ================= */
+
   menu.querySelectorAll("input[type='radio']:not(:disabled)").forEach(radio => {
     radio.addEventListener("change", () => {
 
       itemGratisSelecionado = radio.value;
 
-      toggle.textContent =
-        lista.find(i => i.id === radio.value)?.nome || "Selecionado";
+      const item = lista.find(i => i.id === radio.value);
+      toggle.textContent = item ? item.nome : "Selecionado";
 
       dropdown.classList.remove("open");
 
-      /* =========================================
-         🔒 REGRA: remover pacotes inválidos
-         ========================================= */
+      /* ================= REGRA: REMOVER PACOTES INVÁLIDOS ================= */
 
       if (tipoPromocao === "item_gratis") {
 
@@ -748,95 +783,106 @@ document.addEventListener("click", fecharTooltipItens);
   Swal.fire("Excluída", "Promoção removida com sucesso", "success");
 };
 
-  window.editarPromocao = function (id) {
-    resetarImagemPromocao();
-    PROMOCAO_EM_EDICAO_ID = id;
-    const titulo = document.getElementById("titulo-modal-promocao");
-if (titulo) titulo.textContent = "Editar promoção";
+ window.editarPromocao = function (id) {
+
+  // ================= RESET CONTROLADO =================
+  resetarImagemPromocao();
+  resetarFormulario();
+
+  PROMOCAO_EM_EDICAO_ID = id;
+
   const promo = PROMOCOES.find(p => p.id === id);
   if (!promo) return;
+
+  const titulo = document.getElementById("titulo-modal-promocao");
+  if (titulo) titulo.textContent = "Editar promoção";
 
   // Fecha qualquer modal aberto
   document
     .querySelectorAll(".modal.active")
     .forEach(m => m.classList.remove("active"));
 
-  resetarFormulario();
-
-  // === CAMPOS BÁSICOS ===
+  // ================= CAMPOS BÁSICOS =================
   document.getElementById("promo-nome").value = promo.nome;
   document.getElementById("promo-inicio").value = promo.periodo.inicio;
   document.getElementById("promo-fim").value = promo.periodo.fim;
   document.getElementById("promo-descricao").value = promo.descricao || "";
 
+  // ================= STATUS =================
+  // garante consistência de estado
+  promo.status = promo.status || "ativa";
+
+  // ================= TIPO =================
   tipoPromocao = promo.tipoImpacto;
   document.getElementById("promo-tipo").value = tipoPromocao;
 
   esconderTodosBlocos();
-  carregarDropdowns();
 
-  // === APLICAÇÃO ===
-  (promo.aplicacao?.itens || []).forEach(i => itensSelecionados.add(i));
-  (promo.aplicacao?.pacotes || []).forEach(p => pacotesSelecionados.add(p));
+  // ================= APLICAÇÃO =================
+  itensSelecionados.clear();
+  pacotesSelecionados.clear();
 
-  // === TIPO DE PROMOÇÃO ===
+  (promo.aplicacao?.itens || []).forEach(id => itensSelecionados.add(id));
+  (promo.aplicacao?.pacotes || []).forEach(id => pacotesSelecionados.add(id));
+
+  // ================= IMPACTO =================
+  tipoDesconto = null;
+  itemGratisSelecionado = null;
+
   if (tipoPromocao === "desconto") {
     mostrar("bloco-desconto");
 
-    tipoDesconto = promo.impacto.tipo;
-    document
-      .querySelector(`input[name="promo-desconto-tipo"][value="${tipoDesconto}"]`)
-      .checked = true;
+    tipoDesconto = promo.impacto?.tipo || null;
+
+    if (tipoDesconto) {
+      const radio = document.querySelector(
+        `input[name="promo-desconto-tipo"][value="${tipoDesconto}"]`
+      );
+      if (radio) radio.checked = true;
+    }
 
     document.getElementById("promo-desconto-valor").value =
-      promo.impacto.valor;
+      promo.impacto?.valor ?? "";
   }
 
   if (tipoPromocao === "horas_extras") {
     mostrar("bloco-horas-extras");
 
     document.getElementById("promo-horas-extras").value =
-      promo.impacto.valor.horas;
+      promo.impacto?.valor?.horas ?? "";
 
     document.getElementById("promo-valor-final").value =
-      promo.impacto.valor.valorFinal;
+      promo.impacto?.valor?.valorFinal ?? "";
   }
 
   if (tipoPromocao === "item_gratis") {
     mostrar("bloco-item-gratis");
 
-    itemGratisSelecionado = promo.impacto.itemGratisId;
-
-    const dropItem = document.getElementById("dropdown-item-gratis");
-    if (dropItem) {
-      const toggle = dropItem.querySelector(".dropdown-toggle");
-      const item = CATALOGO_STATE.itens.find(
-        i => i.id === itemGratisSelecionado
-      );
-      if (toggle && item) toggle.textContent = item.nome;
-    }
-
+    itemGratisSelecionado = promo.impacto?.itemGratisId || null;
     bloquearSelecionarTodos();
   }
 
-  // === ATUALIZA DROPDOWNS COM ESTADO ===
+  // ================= DROPDOWNS (APÓS ESTADO) =================
   carregarDropdowns();
 
-  // === IMAGEM ===
- if (promo.imagemUrl) {
-  const preview = document.getElementById("promo-imagem-preview");
-  if (preview) {
-    const img = document.createElement("img");
-    img.src = promo.imagemUrl;
-    preview.appendChild(img);
+  // ================= IMAGEM =================
+  if (promo.imagemUrl) {
+    const preview = document.getElementById("promo-imagem-preview");
+    if (preview) {
+      preview.innerHTML = "";
+
+      const img = document.createElement("img");
+      img.src = promo.imagemUrl;
+      img.style.maxWidth = "100%";
+
+      preview.appendChild(img);
+    }
   }
-}
 
-  // === CONTROLE DE EDIÇÃO ===
-  document.getElementById("btn-salvar-promocao").onclick = () =>
-  salvarPromocao();
+  // ================= CONTROLE =================
+  document.getElementById("btn-salvar-promocao").onclick = salvarPromocao;
 
-  // Abre modal
+  // ================= ABRE MODAL =================
   document.getElementById("modal-promocao").classList.add("active");
 };
 
