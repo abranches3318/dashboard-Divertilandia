@@ -109,6 +109,10 @@
 
     const preview = document.getElementById("promo-imagem-preview");
     if (preview) preview.innerHTML = "";
+
+    document
+  .querySelectorAll(".dropdown-toggle")
+  .forEach(t => removerTooltip(t));
   }
 
   /* ================= CONTROLE DE TIPO ================= */
@@ -260,8 +264,7 @@ function onTipoPromocaoChange(e) {
 }
   
   /* ===== DROPDOWN ITEM GRÁTIS (SINGLE) ===== */
-
- function renderDropdownItemGratis(containerId, lista) {
+function renderDropdownItemGratis(containerId, lista) {
 
   const dropdown = document.getElementById(containerId);
   if (!dropdown) return;
@@ -271,15 +274,40 @@ function onTipoPromocaoChange(e) {
     return;
   }
 
+  // 🔎 Descobre quais itens NÃO podem ser grátis
+  const itensBloqueados = new Set();
+
+  if (tipoPromocao === "item_gratis" && pacotesSelecionados.size) {
+    CATALOGO_STATE.pacotes.forEach(pacote => {
+      if (pacotesSelecionados.has(pacote.id)) {
+        (pacote.itens || []).forEach(itemId => {
+          itensBloqueados.add(itemId);
+        });
+      }
+    });
+  }
+
   dropdown.innerHTML = `
     <div class="dropdown-toggle">Selecionar item grátis</div>
     <div class="dropdown-menu">
-      ${lista.map(i => `
-        <label>
-          <input type="radio" name="item-gratis" value="${i.id}">
-          <span>${i.nome}</span>
-        </label>
-      `).join("")}
+      ${lista.map(i => {
+        const bloqueado = itensBloqueados.has(i.id);
+
+        return `
+          <label class="${bloqueado ? "disabled" : ""}">
+            <input
+              type="radio"
+              name="item-gratis"
+              value="${i.id}"
+              ${bloqueado ? "disabled" : ""}
+            >
+            <span>
+              ${i.nome}
+              ${bloqueado ? " (já faz parte do pacote)" : ""}
+            </span>
+          </label>
+        `;
+      }).join("")}
     </div>
   `;
 
@@ -293,7 +321,7 @@ function onTipoPromocaoChange(e) {
   });
 
   // 🔄 seleção do item grátis
-  menu.querySelectorAll("input[type='radio']").forEach(radio => {
+  menu.querySelectorAll("input[type='radio']:not(:disabled)").forEach(radio => {
     radio.addEventListener("change", () => {
 
       itemGratisSelecionado = radio.value;
@@ -490,12 +518,319 @@ function atualizarToggle() {
   /* ================= SALVAR ================= */
 
 async function salvarPromocao() {
+  await salvarPromocaoCore(null);
+}
+
+  function val(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : null;
+  }
+
+  /* ================= LISTAGEM ================= */
+
+function renderPromocoes() {
+  const c = document.getElementById("lista-promocoes");
+  if (!c) return;
+
+  if (!PROMOCOES.length) {
+    c.innerHTML = `<p class="muted">Nenhuma promoção cadastrada</p>`;
+    return;
+  }
+
+  c.innerHTML = `
+    <div class="promo-header">
+      <div>Foto</div>
+      <div>Nome</div>
+      <div>Início</div>
+      <div>Fim</div>
+      <div>Tipo</div>
+      <div>Itens</div>
+      <div>Status</div>
+      <div>Ações</div>
+    </div>
+
+    ${PROMOCOES.map(p => {
+      const qtdItens =
+        (p.aplicacao?.itens?.length || 0) +
+        (p.aplicacao?.pacotes?.length || 0);
+
+      return `
+        <div class="promo-card ${p.status}">
+          <div class="promo-row">
+
+            <div class="promo-foto">
+              ${
+                p.imagemUrl
+                  ? `<img src="${p.imagemUrl}">`
+                  : `<div class="sem-foto">—</div>`
+              }
+            </div>
+
+            <div class="promo-nome">
+              <strong>${p.nome}</strong>
+            </div>
+
+            <div>${p.periodo.inicio}</div>
+            <div>${p.periodo.fim}</div>
+
+            <div class="tag tipo-${p.tipoImpacto}">
+              ${p.tipoImpacto.replace("_", " ")}
+            </div>
+
+            <div
+              class="promo-itens"
+              data-id="${p.id}"
+            >
+              ${qtdItens}
+            </div>
+
+            <div class="tag status-${p.status}">
+              ${p.status}
+            </div>
+
+            <div class="promo-acoes">
+              <button onclick="editarPromocao('${p.id}')">✏️</button>
+              <button onclick="excluirPromocao('${p.id}')">🗑️</button>
+            </div>
+
+          </div>
+
+          <div class="promo-detalhes">
+            ${p.descricao || "<span class='muted'>Sem descrição</span>"}
+          </div>
+        </div>
+      `;
+    }).join("")}
+  `;
+
+  bindTooltipItensPromocao();
+}
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".dropdown")) {
+    fecharTodosDropdowns();
+  }
+});
+
+function fecharTodosDropdowns() {
+  document
+    .querySelectorAll(".dropdown.open")
+    .forEach(d => d.classList.remove("open"));
+}
+
+
+function criarTooltipInline(target, textos) {
+  removerTooltip(target);
+
+  if (!textos || !textos.length) return;
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "dropdown-tooltip";
+
+  const lista = document.createElement("div");
+  lista.className = "tooltip-lista";
+
+  if (textos.length > 5) {
+    lista.classList.add("duas-colunas");
+  }
+
+  textos.forEach(t => {
+    const item = document.createElement("div");
+    item.className = "tooltip-item";
+    item.textContent = t;
+    lista.appendChild(item);
+  });
+
+  tooltip.appendChild(lista);
+
+  tooltip.style.position = "absolute";
+  tooltip.style.top = "100%";
+  tooltip.style.left = "0";
+  tooltip.style.marginTop = "6px";
+  tooltip.style.zIndex = "30";
+  tooltip.style.display = "none";
+
+  target.style.position = "relative";
+  target.appendChild(tooltip);
+}
+
+function removerTooltip(target) {
+  const tooltip = target.querySelector(".dropdown-tooltip");
+  if (tooltip) tooltip.remove();
+}
+
+function limparTooltipSeVazio(target, store) {
+  if (store.size === 0) {
+    removerTooltip(target);
+  }
+}
+  
+ function pacotesQueContemItem(itemId) {
+  return CATALOGO_STATE.pacotes
+    .filter(p => Array.isArray(p.itens) && p.itens.includes(itemId))
+    .map(p => p.id);
+} 
+
+  function bindTooltipItensPromocao() {
+  document.querySelectorAll(".promo-itens").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      fecharTooltipItens();
+
+      const promoId = el.dataset.id;
+      const promo = PROMOCOES.find(p => p.id === promoId);
+      if (!promo) return;
+
+      const tooltip = document.createElement("div");
+      tooltip.className = "tooltip-itens-promocao";
+
+      const itens = [
+        ...(promo.aplicacao?.itens || []),
+        ...(promo.aplicacao?.pacotes || [])
+      ];
+
+      tooltip.innerHTML = `
+        <strong>Aplicável em:</strong>
+        ${itens.length
+          ? itens.map(id => {
+  const item =
+    CATALOGO_STATE.itens?.find(i => i.id === id) ||
+    CATALOGO_STATE.pacotes?.find(p => p.id === id);
+
+  return `<div>${item ? item.nome : id}</div>`;
+}).join("")
+          : "<div class='muted'>Nenhum</div>"
+        }
+      `;
+
+      el.appendChild(tooltip);
+    });
+  });
+}
+
+function fecharTooltipItens() {
+  document
+    .querySelectorAll(".tooltip-itens-promocao")
+    .forEach(t => t.remove());
+}
+
+document.addEventListener("click", fecharTooltipItens);
+
+  window.excluirPromocao = async function (id) {
+  const res = await Swal.fire({
+    title: "Excluir promoção?",
+    text: "Essa ação não pode ser desfeita",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Excluir"
+  });
+
+  if (!res.isConfirmed) return;
+
+  await firebase.firestore().collection("promocoes").doc(id).delete();
+  await carregarPromocoes();
+
+  Swal.fire("Excluída", "Promoção removida com sucesso", "success");
+};
+
+  window.editarPromocao = function (id) {
+  const promo = PROMOCOES.find(p => p.id === id);
+  if (!promo) return;
+
+  // Fecha qualquer modal aberto
+  document
+    .querySelectorAll(".modal.active")
+    .forEach(m => m.classList.remove("active"));
+
+  resetarFormulario();
+
+  // === CAMPOS BÁSICOS ===
+  document.getElementById("promo-nome").value = promo.nome;
+  document.getElementById("promo-inicio").value = promo.periodo.inicio;
+  document.getElementById("promo-fim").value = promo.periodo.fim;
+  document.getElementById("promo-descricao").value = promo.descricao || "";
+
+  tipoPromocao = promo.tipoImpacto;
+  document.getElementById("promo-tipo").value = tipoPromocao;
+
+  esconderTodosBlocos();
+  carregarDropdowns();
+
+  // === APLICAÇÃO ===
+  (promo.aplicacao?.itens || []).forEach(i => itensSelecionados.add(i));
+  (promo.aplicacao?.pacotes || []).forEach(p => pacotesSelecionados.add(p));
+
+  // === TIPO DE PROMOÇÃO ===
+  if (tipoPromocao === "desconto") {
+    mostrar("bloco-desconto");
+
+    tipoDesconto = promo.impacto.tipo;
+    document
+      .querySelector(`input[name="promo-desconto-tipo"][value="${tipoDesconto}"]`)
+      .checked = true;
+
+    document.getElementById("promo-desconto-valor").value =
+      promo.impacto.valor;
+  }
+
+  if (tipoPromocao === "horas_extras") {
+    mostrar("bloco-horas-extras");
+
+    document.getElementById("promo-horas-extras").value =
+      promo.impacto.valor.horas;
+
+    document.getElementById("promo-valor-final").value =
+      promo.impacto.valor.valorFinal;
+  }
+
+  if (tipoPromocao === "item_gratis") {
+    mostrar("bloco-item-gratis");
+
+    itemGratisSelecionado = promo.impacto.itemGratisId;
+
+    const dropItem = document.getElementById("dropdown-item-gratis");
+    if (dropItem) {
+      const toggle = dropItem.querySelector(".dropdown-toggle");
+      const item = CATALOGO_STATE.itens.find(
+        i => i.id === itemGratisSelecionado
+      );
+      if (toggle && item) toggle.textContent = item.nome;
+    }
+
+    bloquearSelecionarTodos();
+  }
+
+  // === ATUALIZA DROPDOWNS COM ESTADO ===
+  carregarDropdowns();
+
+  // === IMAGEM ===
+  if (promo.imagemUrl) {
+    const preview = document.getElementById("promo-imagem-preview");
+    if (preview) {
+      preview.innerHTML = `<img src="${promo.imagemUrl}">`;
+    }
+  }
+
+  // === CONTROLE DE EDIÇÃO ===
+  document.getElementById("btn-salvar-promocao").onclick = () =>
+    salvarEdicaoPromocao(id);
+
+  // Abre modal
+  document.getElementById("modal-promocao").classList.add("active");
+};
+
+  async function salvarEdicaoPromocao(id) {
+  await salvarPromocaoCore(id);
+}
+
+ async function salvarPromocaoCore(idEdicao = null) {
 
   const nome = val("promo-nome");
   const inicio = val("promo-inicio");
   const fim = val("promo-fim");
 
-  /* ================= VALIDAÇÕES BÁSICAS ================= */
+   /* ================= VALIDAÇÕES BÁSICAS ================= */
 
   if (!nome || !inicio || !fim || !tipoPromocao) {
     Swal.fire("Erro", "Campos obrigatórios não preenchidos", "error");
@@ -646,106 +981,34 @@ async function salvarPromocao() {
 
   /* ================= FIRESTORE ================= */
 
+ if (idEdicao) {
+  const { criadoEm, ...payloadUpdate } = payload;
+
   await firebase
     .firestore()
     .collection("promocoes")
-    .add(payload);
+    .doc(idEdicao)
+    .update({
+      ...payloadUpdate,
+      atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+  Swal.fire("Atualizada", "Promoção atualizada com sucesso", "success");
+}else {
+    payload.criadoEm =
+      firebase.firestore.FieldValue.serverTimestamp();
+
+    await firebase
+      .firestore()
+      .collection("promocoes")
+      .add(payload);
+
+    Swal.fire("Sucesso", "Promoção criada com sucesso", "success");
+  }
 
   fecharModalPromocaoIsolado();
   await carregarPromocoes();
-
-  Swal.fire("Sucesso", "Promoção criada com sucesso", "success");
 }
 
-  function val(id) {
-    const el = document.getElementById(id);
-    return el ? el.value.trim() : null;
-  }
-
-  /* ================= LISTAGEM ================= */
-
- function renderPromocoes() {
-
-  const c = document.getElementById("lista-promocoes");
-  if (!c) return;
-
-  if (!PROMOCOES.length) {
-    c.innerHTML = `<p class="muted">Nenhuma promoção cadastrada</p>`;
-    return;
-  }
-
-  c.innerHTML = PROMOCOES.map(p => `
-    <div class="promo-card ${p.status}">
-      <strong>${p.nome}</strong>
-      <div>${p.periodo.inicio} → ${p.periodo.fim}</div>
-      <small>${p.tipoImpacto.replace("_", " ")}</small>
-    </div>
-  `).join("");
-}
-
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".dropdown")) {
-    fecharTodosDropdowns();
-  }
-});
-
-function fecharTodosDropdowns() {
-  document
-    .querySelectorAll(".dropdown.open")
-    .forEach(d => d.classList.remove("open"));
-}
-
-
-function criarTooltipInline(target, textos) {
-  removerTooltip(target);
-
-  if (!textos || !textos.length) return;
-
-  const tooltip = document.createElement("div");
-  tooltip.className = "dropdown-tooltip";
-
-  const lista = document.createElement("div");
-  lista.className = "tooltip-lista";
-
-  if (textos.length > 5) {
-    lista.classList.add("duas-colunas");
-  }
-
-  textos.forEach(t => {
-    const item = document.createElement("div");
-    item.className = "tooltip-item";
-    item.textContent = t;
-    lista.appendChild(item);
-  });
-
-  tooltip.appendChild(lista);
-
-  tooltip.style.position = "absolute";
-  tooltip.style.top = "100%";
-  tooltip.style.left = "0";
-  tooltip.style.marginTop = "6px";
-  tooltip.style.zIndex = "30";
-  tooltip.style.display = "none";
-
-  target.style.position = "relative";
-  target.appendChild(tooltip);
-}
-
-function removerTooltip(target) {
-  const tooltip = target.querySelector(".dropdown-tooltip");
-  if (tooltip) tooltip.remove();
-}
-
-function limparTooltipSeVazio(target, store) {
-  if (store.size === 0) {
-    removerTooltip(target);
-  }
-}
-  
- function pacotesQueContemItem(itemId) {
-  return CATALOGO_STATE.pacotes
-    .filter(p => Array.isArray(p.itens) && p.itens.includes(itemId))
-    .map(p => p.id);
-} 
   
 })();
