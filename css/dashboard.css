@@ -2066,3 +2066,30 @@ select {
     font-size: 14px;
   }
 }
+
+.menu-flutuante-promocao {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.15);
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.menu-flutuante-promocao .menu-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background .15s;
+}
+
+.menu-flutuante-promocao .menu-item:hover {
+  background: #f2f2f2;
+}
+
+.menu-flutuante-promocao .menu-item.danger {
+  color: #c0392b;
+}
+
+.menu-flutuante-promocao .menu-item.danger:hover {
+  background: #fdecea;
+}
