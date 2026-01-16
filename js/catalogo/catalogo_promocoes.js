@@ -65,6 +65,7 @@
   /* ================= MODAL ================= */
 
   function abrirModalPromocao() {
+    resetarImagemPromocao();
 imagemPromocaoFile = null;
   PROMOCAO_EM_EDICAO_ID = null;
 
@@ -84,6 +85,7 @@ imagemPromocaoFile = null;
 }
 
   window.fecharModalPromocaoIsolado = function () {
+    resetarImagemPromocao();
     PROMOCAO_EM_EDICAO_ID = null;
     const titulo = document.getElementById("titulo-modal-promocao");
 if (titulo) titulo.textContent = "Nova promoção";
@@ -747,6 +749,7 @@ document.addEventListener("click", fecharTooltipItens);
 };
 
   window.editarPromocao = function (id) {
+    resetarImagemPromocao();
     PROMOCAO_EM_EDICAO_ID = id;
     const titulo = document.getElementById("titulo-modal-promocao");
 if (titulo) titulo.textContent = "Editar promoção";
@@ -823,11 +826,8 @@ if (titulo) titulo.textContent = "Editar promoção";
  if (promo.imagemUrl) {
   const preview = document.getElementById("promo-imagem-preview");
   if (preview) {
-    preview.innerHTML = "";
-
     const img = document.createElement("img");
     img.src = promo.imagemUrl;
-
     preview.appendChild(img);
   }
 }
@@ -1122,5 +1122,18 @@ document.addEventListener("click", fecharMenusPromocao);
   await ref.put(file);
 
   return await ref.getDownloadURL();
+}
+
+  function resetarImagemPromocao() {
+  // limpa estado lógico
+  imagemPromocaoFile = null;
+
+  // limpa preview
+  const preview = document.getElementById("promo-imagem-preview");
+  if (preview) preview.innerHTML = "";
+
+  // limpa input file (ESSENCIAL)
+  const input = document.getElementById("promo-imagem");
+  if (input) input.value = "";
 }
 })();
