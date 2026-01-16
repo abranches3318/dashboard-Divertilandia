@@ -529,82 +529,82 @@ async function salvarPromocao() {
   /* ================= LISTAGEM ================= */
 
 function renderPromocoes() {
-  const c = document.getElementById("lista-promocoes");
-  if (!c) return;
+  const el = document.getElementById("lista-promocoes");
+  if (!el) return;
 
   if (!PROMOCOES.length) {
-    c.innerHTML = `<p class="muted">Nenhuma promoção cadastrada</p>`;
+    el.innerHTML = `<p style="opacity:.7">Nenhuma promoção cadastrada.</p>`;
     return;
   }
 
-  c.innerHTML = `
-    <div class="promo-header">
-      <div>Foto</div>
-      <div>Nome</div>
-      <div>Início</div>
-      <div>Fim</div>
-      <div>Tipo</div>
-      <div>Itens</div>
-      <div>Status</div>
-      <div>Ações</div>
+  el.innerHTML = `
+    <div class="itens-header">
+      <div></div>
+      <div>Promoção</div>
+      <div class="col-valor">Período</div>
+      <div class="col-status">Status</div>
+      <div></div>
     </div>
 
-    ${PROMOCOES.map(p => {
-      const qtdItens =
-        (p.aplicacao?.itens?.length || 0) +
-        (p.aplicacao?.pacotes?.length || 0);
+    <div class="itens-lista">
+      ${PROMOCOES.map(promo => {
+        const capa = promo.imagemUrl || "../img/imageplaceholder.jpg";
 
-      return `
-        <div class="promo-card ${p.status}">
-          <div class="promo-row">
+        const qtdAplicacao =
+          (promo.aplicacao?.itens?.length || 0) +
+          (promo.aplicacao?.pacotes?.length || 0);
 
-            <div class="promo-foto">
-              ${
-                p.imagemUrl
-                  ? `<img src="${p.imagemUrl}">`
-                  : `<div class="sem-foto">—</div>`
-              }
+        const periodo = `${promo.periodo.inicio} → ${promo.periodo.fim}`;
+
+        return `
+          <div class="item-row">
+
+            <div class="item-thumb">
+              <div class="item-thumb-wrapper">
+                <img
+                  src="${capa}"
+                  style="
+                    position:absolute;
+                    top:50%;
+                    left:50%;
+                    transform: translate(-50%, -50%);
+                    height:100%;
+                    width:auto;
+                    object-fit: contain;
+                  "
+                >
+              </div>
             </div>
 
-            <div class="promo-nome">
-              <strong>${p.nome}</strong>
+            <div class="item-info">
+              <div class="item-nome">${promo.nome}</div>
+              <div class="item-quantidade">
+                ${promo.tipoImpacto.replace("_", " ")} • ${qtdAplicacao} aplicáveis
+              </div>
             </div>
 
-            <div>${p.periodo.inicio}</div>
-            <div>${p.periodo.fim}</div>
-
-            <div class="tag tipo-${p.tipoImpacto}">
-              ${p.tipoImpacto.replace("_", " ")}
+            <div class="item-valor">
+              ${periodo}
             </div>
 
-            <div
-              class="promo-itens"
-              data-id="${p.id}"
+            <div class="item-status ${promo.status === "ativa" ? "ativo" : "inativo"}">
+              ${promo.status === "ativa" ? "Ativa" : "Inativa"}
+            </div>
+
+            <button
+              class="item-acoes"
+              onclick="abrirMenuPromocao(event,'${promo.id}')"
             >
-              ${qtdItens}
-            </div>
-
-            <div class="tag status-${p.status}">
-              ${p.status}
-            </div>
-
-            <div class="promo-acoes">
-              <button onclick="editarPromocao('${p.id}')">✏️</button>
-              <button onclick="excluirPromocao('${p.id}')">🗑️</button>
-            </div>
+              ⋮
+            </button>
 
           </div>
-
-          <div class="promo-detalhes">
-            ${p.descricao || "<span class='muted'>Sem descrição</span>"}
-          </div>
-        </div>
-      `;
-    }).join("")}
+        `;
+      }).join("")}
+    </div>
   `;
-
-  bindTooltipItensPromocao();
 }
+
 
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".dropdown")) {
