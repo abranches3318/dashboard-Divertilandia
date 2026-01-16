@@ -1010,5 +1010,67 @@ document.addEventListener("click", fecharTooltipItens);
   await carregarPromocoes();
 }
 
-  
+ function abrirMenuPromocao(event, promocaoId) {
+  event.stopPropagation();
+
+  fecharMenusPromocao();
+
+  const btn = event.currentTarget;
+  const rect = btn.getBoundingClientRect();
+
+  const menu = document.createElement("div");
+  menu.className = "menu-flutuante-promocao";
+  menu.dataset.id = promocaoId;
+
+  menu.style.position = "fixed";
+  menu.style.top = `${rect.bottom + 4}px`;
+  menu.style.left = `${rect.left - 120}px`;
+  menu.style.zIndex = "999";
+
+  menu.innerHTML = `
+    <div class="menu-item" onclick="editarPromocao('${promocaoId}')">
+      ✏️ Editar
+    </div>
+    <div class="menu-item" onclick="alternarStatusPromocao('${promocaoId}')">
+      🔁 Ativar / Suspender
+    </div>
+    <div class="menu-item danger" onclick="excluirPromocao('${promocaoId}')">
+      🗑️ Excluir
+    </div>
+  `;
+
+  document.body.appendChild(menu);
+}
+
+  function fecharMenusPromocao() {
+  document
+    .querySelectorAll(".menu-flutuante-promocao")
+    .forEach(m => m.remove());
+}
+
+document.addEventListener("click", fecharMenusPromocao);
+
+  async function alternarStatusPromocao(id) {
+  const promo = PROMOCOES.find(p => p.id === id);
+  if (!promo) return;
+
+  const novoStatus = promo.status === "ativa" ? "suspensa" : "ativa";
+
+  await firebase
+    .firestore()
+    .collection("promocoes")
+    .doc(id)
+    .update({
+      status: novoStatus,
+      atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+  Swal.fire(
+    "Atualizado",
+    `Promoção ${novoStatus === "ativa" ? "ativada" : "suspensa"} com sucesso`,
+    "success"
+  );
+
+  await carregarPromocoes();
+}
 })();
