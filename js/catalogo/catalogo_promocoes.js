@@ -1182,4 +1182,84 @@ document.addEventListener("click", fecharMenusPromocao);
   const input = document.getElementById("promo-imagem");
   if (input) input.value = "";
 }
+
+
+  function montarTooltipPromocao(p) {
+  const partes = [];
+
+  if (p.aplicacao?.itens?.length) {
+    partes.push(`Itens: ${p.aplicacao.itens.length}`);
+  }
+
+  if (p.aplicacao?.pacotes?.length) {
+    partes.push(`Pacotes: ${p.aplicacao.pacotes.length}`);
+  }
+
+  if (p.tipoImpacto === "desconto") {
+    partes.push(
+      p.impacto.tipo === "percentual"
+        ? `Desconto: ${p.impacto.valor}%`
+        : `Desconto: R$ ${p.impacto.valor}`
+    );
+  }
+
+  if (p.tipoImpacto === "horas_extras") {
+    partes.push(
+      `Horas extras: ${p.impacto.valor.horas}h (R$ ${p.impacto.valor.valorFinal})`
+    );
+  }
+
+  if (p.tipoImpacto === "item_gratis") {
+    const item = CATALOGO_STATE.itens.find(
+      i => i.id === p.impacto.itemGratisId
+    );
+    if (item) partes.push(`Item grátis: ${item.nome}`);
+  }
+
+  return partes.join(" • ");
+}
+
+  function formatarResumoImpacto(p) {
+  switch (p.tipoImpacto) {
+    case "desconto":
+      return p.impacto.tipo === "percentual"
+        ? `Desconto ${p.impacto.valor}%`
+        : `Desconto R$ ${p.impacto.valor}`;
+
+    case "horas_extras":
+      return `${p.impacto.valor.horas}h extras`;
+
+    case "item_gratis":
+      return `Item grátis`;
+
+    default:
+      return "—";
+  }
+}
+
+  function bindTooltipPromocao() {
+  document.querySelectorAll(".promo-tooltip").forEach(el => {
+    el.addEventListener("mouseenter", () => {
+      const texto = el.dataset.tooltip;
+      if (!texto) return;
+
+      const tip = document.createElement("div");
+      tip.className = "tooltip";
+      tip.textContent = texto;
+
+      document.body.appendChild(tip);
+
+      const r = el.getBoundingClientRect();
+      tip.style.top = `${r.top - tip.offsetHeight - 8}px`;
+      tip.style.left = `${r.left}px`;
+
+      el._tooltip = tip;
+    });
+
+    el.addEventListener("mouseleave", () => {
+      el._tooltip?.remove();
+      el._tooltip = null;
+    });
+  });
+}
 })();
