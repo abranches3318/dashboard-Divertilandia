@@ -590,28 +590,25 @@ function renderPromocoes() {
     <div class="itens-header">
       <div></div>
       <div>Promoção</div>
-      <div class="col-valor">Período</div>
+      <div>Início</div>
+      <div>Fim</div>
       <div class="col-status">Status</div>
       <div></div>
     </div>
 
     <div class="itens-lista">
       ${PROMOCOES.map(promo => {
-        const capa = promo.imagemUrl || null;
 
-        const qtdAplicacao =
-          (promo.aplicacao?.itens?.length || 0) +
-          (promo.aplicacao?.pacotes?.length || 0);
-
-        const periodo = `${promo.periodo.inicio} → ${promo.periodo.fim}`;
+        const imagem =
+          promo.imagemUrl || "../img/imageplaceholder.jpg";
 
         return `
           <div class="item-row">
 
             <div class="item-thumb">
               <div class="item-thumb-wrapper">
-                 <img
-  src="${capa || "../img/imageplaceholder.jpg"}"
+                <img
+                  src="${imagem}"
                   style="
                     position:absolute;
                     top:50%;
@@ -626,18 +623,28 @@ function renderPromocoes() {
             </div>
 
             <div class="item-info">
-              <div class="item-nome">${promo.nome}</div>
-              <div class="item-quantidade">
-                ${promo.tipoImpacto.replace("_", " ")} • ${qtdAplicacao} aplicáveis
+              <div
+                class="item-nome promo-tooltip"
+                data-tooltip="${montarTooltipPromocao(promo)}"
+              >
+                ${promo.nome}
+              </div>
+
+              <div class="item-quantidade muted">
+                ${formatarResumoImpacto(promo)}
               </div>
             </div>
 
-            <div class="item-valor">
-              ${periodo}
+            <div>
+              ${promo.periodo?.inicio || "—"}
             </div>
 
-            <div class="item-status ${promo.status === "ativa" ? "ativo" : "inativo"}">
-              ${promo.status === "ativa" ? "Ativa" : "Inativa"}
+            <div>
+              ${promo.periodo?.fim || "—"}
+            </div>
+
+            <div class="item-status ${promo.status}">
+              ${promo.status}
             </div>
 
             <button
@@ -652,6 +659,8 @@ function renderPromocoes() {
       }).join("")}
     </div>
   `;
+
+  bindTooltipPromocao();
 }
 
 
