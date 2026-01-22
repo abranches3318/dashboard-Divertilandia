@@ -2176,3 +2176,26 @@ select {
 .promo-tooltip-popup p:last-child {
   margin-bottom: 0;
 }
+
+/* ================= PROMOÇÕES — AJUSTE FINO DE COLUNAS ================= */
+
+/* início */
+#lista-promocoes .itens-header > div:nth-child(3),
+#lista-promocoes .item-row > div:nth-child(3) {
+    justify-self: start;
+    transform: translateX(-8px);
+}
+
+/* fim */
+#lista-promocoes .itens-header > div:nth-child(4),
+#lista-promocoes .item-row > div:nth-child(4) {
+    justify-self: start;
+    transform: translateX(-8px);
+}
+
+/* status */
+#lista-promocoes .itens-header > div:nth-child(5),
+#lista-promocoes .item-row .item-status {
+    justify-self: center;
+    transform: translateX(-6px);
+}
