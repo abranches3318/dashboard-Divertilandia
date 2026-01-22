@@ -623,11 +623,14 @@ function renderPromocoes() {
             </div>
 
             <div class="item-info">
-              <div
-                class="item-nome promo-tooltip"
-                data-tooltip="${montarTooltipPromocao(promo)}"
-              >
-                ${promo.nome}
+              <div class="item-nome promo-nome">
+                <span class="promo-nome-texto">
+                  ${promo.nome}
+                </span>
+
+                <div class="promo-tooltip-popup">
+                  ${montarTooltipPromocao(promo)}
+                </div>
               </div>
 
               <div class="item-quantidade muted">
@@ -660,8 +663,6 @@ function renderPromocoes() {
       }).join("")}
     </div>
   `;
-
-  bindTooltipPromocao();
 }
 
 
@@ -1247,29 +1248,5 @@ document.addEventListener("click", fecharMenusPromocao);
   }
 }
 
-  function bindTooltipPromocao() {
-  document.querySelectorAll(".promo-tooltip").forEach(el => {
-    el.addEventListener("mouseenter", () => {
-      const texto = el.dataset.tooltip;
-      if (!texto) return;
 
-      const tip = document.createElement("div");
-      tip.className = "tooltip";
-      tip.textContent = texto;
-
-      document.body.appendChild(tip);
-
-      const r = el.getBoundingClientRect();
-      tip.style.top = `${r.top - tip.offsetHeight - 8}px`;
-      tip.style.left = `${r.left}px`;
-
-      el._tooltip = tip;
-    });
-
-    el.addEventListener("mouseleave", () => {
-      el._tooltip?.remove();
-      el._tooltip = null;
-    });
-  });
-}
 })();
