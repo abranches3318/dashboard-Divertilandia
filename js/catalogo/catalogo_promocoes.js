@@ -604,6 +604,7 @@ function renderPromocoes() {
         return `
           <div class="item-row promo-row">
 
+            <!-- THUMB -->
             <div class="item-thumb">
               <div class="item-thumb-wrapper">
                 <img
@@ -622,11 +623,10 @@ function renderPromocoes() {
               </div>
             </div>
 
+            <!-- NOME + TOOLTIP -->
             <div class="item-info">
               <div class="item-nome promo-nome">
-                <span class="promo-nome-texto">
-                  ${promo.nome}
-                </span>
+                ${promo.nome}
 
                 <div class="promo-tooltip-popup">
                   ${montarTooltipPromocao(promo)}
@@ -638,6 +638,7 @@ function renderPromocoes() {
               </div>
             </div>
 
+            <!-- PERÍODO -->
             <div>
               ${promo.periodo?.inicio || "—"}
             </div>
@@ -646,10 +647,12 @@ function renderPromocoes() {
               ${promo.periodo?.fim || "—"}
             </div>
 
+            <!-- STATUS -->
             <div class="item-status ${promo.status}">
               ${promo.status}
             </div>
 
+            <!-- AÇÕES -->
             <button
               class="item-acoes"
               onclick="abrirMenuPromocao(event,'${promo.id}')"
