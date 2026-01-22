@@ -2111,48 +2111,57 @@ select {
 }
 
 /* ===============================
-   TOOLTIP PROMOÇÃO (POPUP REAL)
+   TOOLTIP PROMOÇÕES
 ================================ */
 
-/* âncora */
-.item-nome.promo-tooltip {
+/* container do nome */
+.promo-nome {
   position: relative;
+  display: inline-block;
   cursor: help;
 }
 
-/* tooltip em si */
-.item-nome.promo-tooltip::after {
-  content: attr(data-tooltip);
-
+/* popup do tooltip */
+.promo-tooltip-popup {
   position: absolute;
-  top: 110%;
+  top: 100%;
   left: 0;
-  z-index: 9999;
 
   min-width: 260px;
-  max-width: 380px;
+  max-width: 360px;
 
-  background: #1e1e1e;
+  background: #1f1f1f;
   color: #fff;
 
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: 6px;
 
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.4;
 
-  white-space: normal;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
 
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-5px);
-  transition: opacity .15s ease, transform .15s ease;
+  z-index: 9999;
 
-  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  display: none;
 }
 
-/* exibição no hover SOMENTE no nome */
-.item-nome.promo-tooltip:hover::after {
-  opacity: 1;
-  transform: translateY(0);
+/* exibe SOMENTE no hover do nome */
+.promo-nome:hover .promo-tooltip-popup {
+  display: block;
+}
+
+/* segurança visual */
+.promo-tooltip-popup * {
+  color: inherit;
+  font-size: inherit;
+}
+
+/* impede quebra estranha */
+.promo-tooltip-popup p {
+  margin: 0 0 6px 0;
+}
+
+.promo-tooltip-popup p:last-child {
+  margin-bottom: 0;
 }
