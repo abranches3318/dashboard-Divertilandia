@@ -2093,3 +2093,19 @@ select {
 .menu-flutuante-promocao .menu-item.danger:hover {
   background: #fdecea;
 }
+
+/* ================= PROMOÇÕES — GRID PRÓPRIO ================= */
+
+#lista-promocoes .itens-header,
+#lista-promocoes .item-row {
+    display: grid;
+    grid-template-columns:
+        110px     /* imagem */
+        1fr       /* nome */
+        120px     /* início */
+        120px     /* fim */
+        110px     /* status */
+        40px;     /* ações */
+    align-items: center;
+    column-gap: 16px;
+}
