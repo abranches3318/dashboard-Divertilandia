@@ -2187,14 +2187,14 @@ select {
 #lista-promocoes {
 
   /* ---------- TÍTULOS (HEADER) ---------- */
-  --hdr-inicio-x: -20px;
-  --hdr-fim-x: -12px;
+  --hdr-inicio-x: -18px;
+  --hdr-fim-x: -17px;
   --hdr-status-x: -11px;
 
   /* ---------- COLUNAS (LINHAS) ---------- */
   --col-inicio-x: -40px;
-  --col-fim-x: -10px;
-  --col-status-x: -12px;
+  --col-fim-x: -15px;
+  --col-status-x: -14px;
 }
 
 /* ===============================
