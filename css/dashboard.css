@@ -2192,9 +2192,9 @@ select {
   --hdr-status-x: -20px;
 
   /* ---------- COLUNAS (LINHAS) ---------- */
-  --col-inicio-x: -40px;
+  --col-inicio-x: -45px;
   --col-fim-x: -23px;
-  --col-status-x: -22px;
+  --col-status-x: -25px;
 }
 
 /* ===============================
