@@ -2109,3 +2109,50 @@ select {
     align-items: center;
     column-gap: 16px;
 }
+
+/* ===============================
+   TOOLTIP PROMOÇÃO (POPUP REAL)
+================================ */
+
+/* âncora */
+.item-nome.promo-tooltip {
+  position: relative;
+  cursor: help;
+}
+
+/* tooltip em si */
+.item-nome.promo-tooltip::after {
+  content: attr(data-tooltip);
+
+  position: absolute;
+  top: 110%;
+  left: 0;
+  z-index: 9999;
+
+  min-width: 260px;
+  max-width: 380px;
+
+  background: #1e1e1e;
+  color: #fff;
+
+  padding: 10px 12px;
+  border-radius: 8px;
+
+  font-size: 13px;
+  line-height: 1.4;
+
+  white-space: normal;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-5px);
+  transition: opacity .15s ease, transform .15s ease;
+
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+}
+
+/* exibição no hover SOMENTE no nome */
+.item-nome.promo-tooltip:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
