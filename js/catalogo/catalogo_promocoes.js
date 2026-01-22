@@ -576,7 +576,6 @@ async function salvarPromocao() {
   }
 
   /* ================= LISTAGEM ================= */
-
 function renderPromocoes() {
   const el = document.getElementById("lista-promocoes");
   if (!el) return;
@@ -603,12 +602,13 @@ function renderPromocoes() {
           promo.imagemUrl || "../img/imageplaceholder.jpg";
 
         return `
-          <div class="item-row">
+          <div class="item-row promo-row">
 
             <div class="item-thumb">
               <div class="item-thumb-wrapper">
                 <img
                   src="${imagem}"
+                  alt="Imagem da promoção"
                   style="
                     position:absolute;
                     top:50%;
@@ -650,6 +650,7 @@ function renderPromocoes() {
             <button
               class="item-acoes"
               onclick="abrirMenuPromocao(event,'${promo.id}')"
+              aria-label="Ações da promoção"
             >
               ⋮
             </button>
