@@ -200,6 +200,43 @@ function validarItemGratisNaoContidoNoPacote({
 }
 
 /* =====================================================
+   STATUS REAL DA PROMOÇÃO (AUTOMÁTICO + MANUAL)
+===================================================== */
+
+function calcularStatusPromocao(promocao) {
+  const hoje = hojeNormalizado();
+  const inicio = normalizarData(promocao.periodo?.inicio);
+  const fim = normalizarData(promocao.periodo?.fim);
+
+  const statusAtual = (promocao.status || "").toLowerCase();
+
+  // 🔒 Fora do período → INATIVA
+  if (hoje > fim) {
+    return "inativa";
+  }
+
+  // 🔒 Antes de iniciar
+  if (hoje < inicio) {
+    // se foi suspensa manualmente, respeita
+    return statusAtual === "suspensa"
+      ? "suspensa"
+      : "agendada";
+  }
+
+  // 🔒 Dentro do período
+  if (hoje >= inicio && hoje <= fim) {
+    if (statusAtual === "suspensa") {
+      return "suspensa";
+    }
+    return "ativa";
+  }
+
+  return "inativa";
+}
+
+window.calcularStatusPromocao = calcularStatusPromocao;
+
+/* =====================================================
    EXPORTAÇÃO GLOBAL (LEGADO)
 ===================================================== */
 
