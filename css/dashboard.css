@@ -2234,46 +2234,27 @@ select {
 }
 
 /* ===============================
-   BADGE DE STATUS
+   STATUS COMO TEXTO (SEM BADGE)
    =============================== */
-#lista-promocoes .status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  min-width: 90px;
-  height: 28px;
-  padding: 0 14px;
-
-  border-radius: 14px;
-
+#lista-promocoes .status-text {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: .2px;
-
-  white-space: nowrap;
 }
 
-/* ===============================
-   CORES DE STATUS (SISTEMA REAL)
-   =============================== */
-
-#lista-promocoes .status-ativa .status-badge {
-  background: rgba(66, 153, 225, .15);
+/* reaproveita as cores existentes */
+#lista-promocoes .status-ativa .status-text {
   color: #63b3ed;
 }
 
-#lista-promocoes .status-agendada .status-badge {
-  background: rgba(128, 90, 213, .18);
+#lista-promocoes .status-agendada .status-text {
   color: #b794f4;
 }
 
-#lista-promocoes .status-suspensa .status-badge {
-  background: rgba(237, 137, 54, .18);
+#lista-promocoes .status-suspensa .status-text {
   color: #f6ad55;
 }
 
-#lista-promocoes .status-inativa .status-badge {
-  background: rgba(229, 62, 62, .18);
+#lista-promocoes .status-inativa .status-text {
   color: #fc8181;
 }
