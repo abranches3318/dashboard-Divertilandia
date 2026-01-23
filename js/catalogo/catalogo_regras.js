@@ -203,31 +203,48 @@ function validarItemGratisNaoContidoNoPacote({
    STATUS REAL DA PROMOÇÃO (AUTOMÁTICO + MANUAL)
 ===================================================== */
 
-function calcularStatusPromocao(promocao) {
-  const hoje = hojeNormalizado();
-  const inicio = normalizarData(promocao.periodo?.inicio);
-  const fim = normalizarData(promocao.periodo?.fim);
+function calcularStatusPromocao(promo) {
+  if (!promo || !promo.periodo) return "inativa";
 
-  const statusAtual = (promocao.status || "").toLowerCase();
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
 
-  // 🔒 Fora do período → INATIVA
-  if (hoje > fim) {
+  const inicio = promo.periodo.inicio
+    ? new Date(promo.periodo.inicio)
+    : null;
+
+  const fim = promo.periodo.fim
+    ? new Date(promo.periodo.fim)
+    : null;
+
+  if (inicio) inicio.setHours(0, 0, 0, 0);
+  if (fim) fim.setHours(0, 0, 0, 0);
+
+  /* ===============================
+     PRIORIDADE 1 — FIM EXPIRADO
+     =============================== */
+  if (fim && hoje > fim) {
     return "inativa";
   }
 
-  // 🔒 Antes de iniciar
-  if (hoje < inicio) {
-    // se foi suspensa manualmente, respeita
-    return statusAtual === "suspensa"
-      ? "suspensa"
-      : "agendada";
+  /* ===============================
+     PRIORIDADE 2 — SUSPENSA MANUAL
+     =============================== */
+  if (promo.status === "suspensa") {
+    return "suspensa";
   }
 
-  // 🔒 Dentro do período
-  if (hoje >= inicio && hoje <= fim) {
-    if (statusAtual === "suspensa") {
-      return "suspensa";
-    }
+  /* ===============================
+     PRIORIDADE 3 — DATA FUTURA
+     =============================== */
+  if (inicio && hoje < inicio) {
+    return "agendada";
+  }
+
+  /* ===============================
+     PRIORIDADE 4 — ATIVA
+     =============================== */
+  if (!inicio || hoje >= inicio) {
     return "ativa";
   }
 
