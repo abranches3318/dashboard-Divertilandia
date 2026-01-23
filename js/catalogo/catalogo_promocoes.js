@@ -600,9 +600,10 @@ function renderPromocoes() {
 
         const imagem = promo.imagemUrl || "../img/imageplaceholder.jpg";
 
-        // ===============================
-        // NORMALIZAÇÃO DE STATUS
-        // ===============================
+        /* ===============================
+           NORMALIZAÇÃO DE STATUS
+        =============================== */
+
         const statusRaw = (promo.status || "inativa").toLowerCase();
 
         let statusFinal = "inativa";
@@ -658,15 +659,15 @@ function renderPromocoes() {
 
             <!-- INÍCIO -->
             <div>
-              ${promo.periodo?.inicio || "—"}
+              ${formatarDataBR(promo.periodo?.inicio)}
             </div>
 
             <!-- FIM -->
             <div>
-              ${promo.periodo?.fim || "—"}
+              ${formatarDataBR(promo.periodo?.fim)}
             </div>
 
-            <!-- STATUS (ESTÁVEL) -->
+            <!-- STATUS (ESTRUTURA FIXA) -->
             <div class="item-status status-${statusFinal}">
               <span class="status-badge">
                 ${statusLabel}
