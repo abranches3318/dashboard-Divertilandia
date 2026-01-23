@@ -2236,25 +2236,30 @@ select {
 /* ===============================
    STATUS COMO TEXTO (SEM BADGE)
    =============================== */
-#lista-promocoes .status-text {
-  font-size: 13px;
-  font-weight: 600;
+/* ===============================
+   STATUS COMO TEXTO SIMPLES
+   (PADRÃO IGUAL AO PRINT)
+   =============================== */
+
+#lista-promocoes .item-status {
+  font-size: 14px;
+  font-weight: 500;
   letter-spacing: .2px;
 }
 
-/* reaproveita as cores existentes */
-#lista-promocoes .status-ativa .status-text {
-  color: #63b3ed;
+/* cores reais do sistema */
+#lista-promocoes .item-status.status-ativa {
+  color: #4fc3ff;
 }
 
-#lista-promocoes .status-agendada .status-text {
-  color: #b794f4;
+#lista-promocoes .item-status.status-agendada {
+  color: #b388ff;
 }
 
-#lista-promocoes .status-suspensa .status-text {
-  color: #f6ad55;
+#lista-promocoes .item-status.status-suspensa {
+  color: #ffb74d;
 }
 
-#lista-promocoes .status-inativa .status-text {
-  color: #fc8181;
+#lista-promocoes .item-status.status-inativa {
+  color: #ff6b6b;
 }
