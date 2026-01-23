@@ -2177,22 +2177,18 @@ select {
   margin-bottom: 0;
 }
 
-* ================= PROMOÇÕES — AJUSTE FINO DE COLUNAS ================= */
-
 /* ======================================================
-   CONTROLE DE ALINHAMENTO – PROMOÇÕES
-   Header (títulos) e Colunas (linhas) separados
-   SEM transform (zero layout shift)
+   PROMOÇÕES — CONTROLE TOTAL DE COLUNAS + STATUS
    ====================================================== */
 
 #lista-promocoes {
 
-  /* ---------- TÍTULOS (HEADER) ---------- */
+  /* ---------- TÍTULOS ---------- */
   --hdr-inicio-x: -15px;
   --hdr-fim-x: -25px;
   --hdr-status-x: -30px;
 
-  /* ---------- COLUNAS (LINHAS) ---------- */
+  /* ---------- COLUNAS ---------- */
   --col-inicio-x: -50px;
   --col-fim-x: -23px;
   --col-status-x: -35px;
@@ -2201,13 +2197,10 @@ select {
 /* ===============================
    INÍCIO
    =============================== */
-
-/* título */
 #lista-promocoes .itens-header > div:nth-child(3) {
   margin-inline-start: var(--hdr-inicio-x);
 }
 
-/* coluna */
 #lista-promocoes .item-row > div:nth-child(3) {
   margin-inline-start: var(--col-inicio-x);
 }
@@ -2215,31 +2208,72 @@ select {
 /* ===============================
    FIM
    =============================== */
-
-/* título */
 #lista-promocoes .itens-header > div:nth-child(4) {
   margin-inline-start: var(--hdr-fim-x);
 }
 
-/* coluna */
 #lista-promocoes .item-row > div:nth-child(4) {
   margin-inline-start: var(--col-fim-x);
 }
 
 /* ===============================
-   STATUS
+   STATUS — ESTRUTURAL
    =============================== */
-
-/* título */
 #lista-promocoes .itens-header > div:nth-child(5) {
-  justify-self: center;
   text-align: center;
   margin-inline-start: var(--hdr-status-x);
 }
 
-/* coluna */
 #lista-promocoes .item-row .item-status {
-  justify-self: center;
-  text-align: center;
   margin-inline-start: var(--col-status-x);
+
+  min-width: 110px;               /* ESTABILIZA O GRID */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ===============================
+   BADGE DE STATUS
+   =============================== */
+#lista-promocoes .status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 90px;
+  height: 28px;
+  padding: 0 14px;
+
+  border-radius: 14px;
+
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .2px;
+
+  white-space: nowrap;
+}
+
+/* ===============================
+   CORES DE STATUS (SISTEMA REAL)
+   =============================== */
+
+#lista-promocoes .status-ativa .status-badge {
+  background: rgba(66, 153, 225, .15);
+  color: #63b3ed;
+}
+
+#lista-promocoes .status-agendada .status-badge {
+  background: rgba(128, 90, 213, .18);
+  color: #b794f4;
+}
+
+#lista-promocoes .status-suspensa .status-badge {
+  background: rgba(237, 137, 54, .18);
+  color: #f6ad55;
+}
+
+#lista-promocoes .status-inativa .status-badge {
+  background: rgba(229, 62, 62, .18);
+  color: #fc8181;
 }
