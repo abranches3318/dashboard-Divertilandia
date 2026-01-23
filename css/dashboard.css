@@ -2177,11 +2177,12 @@ select {
   margin-bottom: 0;
 }
 
-/* ================= PROMOÇÕES — AJUSTE FINO DE COLUNAS ================= */
+* ================= PROMOÇÕES — AJUSTE FINO DE COLUNAS ================= */
 
 /* ======================================================
    CONTROLE DE ALINHAMENTO – PROMOÇÕES
-   Cabeçalho (títulos) e Colunas (linhas) separados
+   Header (títulos) e Colunas (linhas) separados
+   SEM transform (zero layout shift)
    ====================================================== */
 
 #lista-promocoes {
@@ -2203,12 +2204,12 @@ select {
 
 /* título */
 #lista-promocoes .itens-header > div:nth-child(3) {
-  transform: translateX(var(--hdr-inicio-x));
+  margin-inline-start: var(--hdr-inicio-x);
 }
 
 /* coluna */
 #lista-promocoes .item-row > div:nth-child(3) {
-  transform: translateX(var(--col-inicio-x));
+  margin-inline-start: var(--col-inicio-x);
 }
 
 /* ===============================
@@ -2217,12 +2218,12 @@ select {
 
 /* título */
 #lista-promocoes .itens-header > div:nth-child(4) {
-  transform: translateX(var(--hdr-fim-x));
+  margin-inline-start: var(--hdr-fim-x);
 }
 
 /* coluna */
 #lista-promocoes .item-row > div:nth-child(4) {
-  transform: translateX(var(--col-fim-x));
+  margin-inline-start: var(--col-fim-x);
 }
 
 /* ===============================
@@ -2231,10 +2232,14 @@ select {
 
 /* título */
 #lista-promocoes .itens-header > div:nth-child(5) {
-  transform: translateX(var(--hdr-status-x));
+  justify-self: center;
+  text-align: center;
+  margin-inline-start: var(--hdr-status-x);
 }
 
 /* coluna */
 #lista-promocoes .item-row .item-status {
-  transform: translateX(var(--col-status-x));
+  justify-self: center;
+  text-align: center;
+  margin-inline-start: var(--col-status-x);
 }
