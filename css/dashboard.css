@@ -2186,7 +2186,7 @@ select {
   /* ---------- TÍTULOS ---------- */
   --hdr-inicio-x: 35px;
   --hdr-fim-x: -25px;
-  --hdr-status-x: -50px;
+  --hdr-status-x: -60px;
 
   /* ---------- COLUNAS ---------- */
   --col-inicio-x: -50px;
