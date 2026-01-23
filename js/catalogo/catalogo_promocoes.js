@@ -655,9 +655,9 @@ function renderPromocoes() {
             </div>
 
             <!-- STATUS (TEXTO SIMPLES, SEM BADGE) -->
-<div class="item-status status-${statusFinal}">
+<div class="item-status status-${statusInfo.classe}">
   <span class="status-text">
-    ${statusLabel}
+    ${statusInfo.label}
   </span>
 </div>
 
