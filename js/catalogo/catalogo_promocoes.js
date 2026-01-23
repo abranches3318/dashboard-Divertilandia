@@ -35,10 +35,28 @@
     .orderBy("criadoEm", "desc")
     .get();
 
-  PROMOCOES = snapshot.docs.map(doc => ({
+  PROMOCOES = snapshot.docs.map(doc => {
+  const data = doc.data();
+
+  const statusReal = calcularStatusPromocao(data);
+
+  // 🔄 sincroniza Firestore se mudou
+  if (data.status !== statusReal) {
+    firebase.firestore()
+      .collection("promocoes")
+      .doc(doc.id)
+      .update({
+        status: statusReal,
+        atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+      });
+  }
+
+  return {
     id: doc.id,
-    ...doc.data()
-  }));
+    ...data,
+    status: statusReal
+  };
+});
 
   renderPromocoes();
 }
@@ -832,7 +850,7 @@ document.addEventListener("click", fecharTooltipItens);
 
   // ================= STATUS =================
   // garante consistência de estado
-  promo.status = promo.status || "ativa";
+ promo.status = calcularStatusPromocao(promo);
 
   // ================= TIPO =================
   tipoPromocao = promo.tipoImpacto;
@@ -1029,7 +1047,10 @@ document.addEventListener("click", fecharTooltipItens);
 
   const payload = {
     nome,
-    status: "ativa",
+    status: calcularStatusPromocao({
+  status: idEdicao ? undefined : null,
+  periodo: { inicio, fim }
+}),
 
     tipoImpacto: tipoPromocao,
 
@@ -1162,10 +1183,20 @@ document.addEventListener("click", fecharMenusPromocao);
   const promo = PROMOCOES.find(p => p.id === id);
   if (!promo) return;
 
-  const novoStatus = promo.status === "ativa" ? "suspensa" : "ativa";
+  if (!["ativa", "suspensa"].includes(promo.status)) {
+    Swal.fire(
+      "Ação não permitida",
+      "Este status não pode ser alterado manualmente",
+      "warning"
+    );
+    return;
+  }
 
-  await firebase
-    .firestore()
+  const novoStatus = promo.status === "ativa"
+    ? "suspensa"
+    : "ativa";
+
+  await firebase.firestore()
     .collection("promocoes")
     .doc(id)
     .update({
@@ -1173,14 +1204,8 @@ document.addEventListener("click", fecharMenusPromocao);
       atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-  Swal.fire(
-    "Atualizado",
-    `Promoção ${novoStatus === "ativa" ? "ativada" : "suspensa"} com sucesso`,
-    "success"
-  );
-
   await carregarPromocoes();
-}
+};
 
   async function uploadImagemPromocao(file, promocaoId) {
   const ref = firebase
