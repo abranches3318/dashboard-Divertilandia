@@ -575,7 +575,7 @@ async function salvarPromocao() {
     return el ? el.value.trim() : null;
   }
 
-  /* ================= LISTAGEM ================= */
+/* ================= LISTAGEM ================= */
 function renderPromocoes() {
   const el = document.getElementById("lista-promocoes");
   if (!el) return;
@@ -598,27 +598,14 @@ function renderPromocoes() {
     <div class="itens-lista">
       ${PROMOCOES.map(promo => {
 
-        const imagem = promo.imagemUrl || "../img/imageplaceholder.jpg";
+        const imagem =
+          promo.imagemUrl || "../img/imageplaceholder.jpg";
 
         /* ===============================
-           NORMALIZAÇÃO DE STATUS
+           STATUS — NORMALIZAÇÃO ÚNICA
         =============================== */
 
-        const statusRaw = (promo.status || "inativa").toLowerCase();
-
-        let statusFinal = "inativa";
-        let statusLabel = "Inativa";
-
-        if (statusRaw === "ativa") {
-          statusFinal = "ativa";
-          statusLabel = "Ativa";
-        } else if (statusRaw === "agendada") {
-          statusFinal = "agendada";
-          statusLabel = "Agendada";
-        } else if (statusRaw === "suspensa") {
-          statusFinal = "suspensa";
-          statusLabel = "Suspensa";
-        }
+        const statusInfo = normalizarStatusPromocao(promo.status);
 
         return `
           <div class="item-row promo-row">
@@ -667,10 +654,10 @@ function renderPromocoes() {
               ${formatarDataBR(promo.periodo?.fim)}
             </div>
 
-            <!-- STATUS (ESTRUTURA FIXA) -->
-            <div class="item-status status-${statusFinal}">
-              <span class="status-badge">
-                ${statusLabel}
+            <!-- STATUS (ESTRUTURA FIXA E ESTÁVEL) -->
+            <div class="item-status">
+              <span class="status-badge status-${statusInfo.key}">
+                ${statusInfo.label}
               </span>
             </div>
 
@@ -1272,5 +1259,23 @@ document.addEventListener("click", fecharMenusPromocao);
   }
 }
 
+  function normalizarStatusPromocao(status) {
+  const s = (status || "").toLowerCase();
+
+  switch (s) {
+    case "ativa":
+      return { key: "ativa", label: "Ativa" };
+
+    case "agendada":
+      return { key: "agendada", label: "Agendada" };
+
+    case "suspensa":
+      return { key: "suspensa", label: "Suspensa" };
+
+    case "inativa":
+    default:
+      return { key: "inativa", label: "Inativa" };
+  }
+}
 
 })();
