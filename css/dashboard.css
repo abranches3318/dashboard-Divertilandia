@@ -2184,9 +2184,9 @@ select {
 #lista-promocoes {
 
   /* ---------- TÍTULOS ---------- */
-  --hdr-inicio-x: 30px;
+  --hdr-inicio-x: 35px;
   --hdr-fim-x: -25px;
-  --hdr-status-x: -40px;
+  --hdr-status-x: -45px;
 
   /* ---------- COLUNAS ---------- */
   --col-inicio-x: -50px;
