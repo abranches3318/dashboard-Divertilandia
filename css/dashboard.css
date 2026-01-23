@@ -2191,7 +2191,7 @@ select {
   /* ---------- COLUNAS ---------- */
   --col-inicio-x: -50px;
   --col-fim-x: -23px;
-  --col-status-x: 5px;
+  --col-status-x: 10px;
 }
 
 /* ===============================
