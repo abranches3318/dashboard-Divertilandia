@@ -2184,14 +2184,14 @@ select {
 #lista-promocoes {
 
   /* ---------- TÍTULOS ---------- */
-  --hdr-inicio-x: 15px;
+  --hdr-inicio-x: 30px;
   --hdr-fim-x: -25px;
-  --hdr-status-x: -30px;
+  --hdr-status-x: -40px;
 
   /* ---------- COLUNAS ---------- */
   --col-inicio-x: -50px;
   --col-fim-x: -23px;
-  --col-status-x: -35px;
+  --col-status-x: -20px;
 }
 
 /* ===============================
