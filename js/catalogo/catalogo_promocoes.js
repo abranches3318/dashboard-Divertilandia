@@ -598,8 +598,26 @@ function renderPromocoes() {
     <div class="itens-lista">
       ${PROMOCOES.map(promo => {
 
-        const imagem =
-          promo.imagemUrl || "../img/imageplaceholder.jpg";
+        const imagem = promo.imagemUrl || "../img/imageplaceholder.jpg";
+
+        // ===============================
+        // NORMALIZAÇÃO DE STATUS
+        // ===============================
+        const statusRaw = (promo.status || "inativa").toLowerCase();
+
+        let statusFinal = "inativa";
+        let statusLabel = "Inativa";
+
+        if (statusRaw === "ativa") {
+          statusFinal = "ativa";
+          statusLabel = "Ativa";
+        } else if (statusRaw === "agendada") {
+          statusFinal = "agendada";
+          statusLabel = "Agendada";
+        } else if (statusRaw === "suspensa") {
+          statusFinal = "suspensa";
+          statusLabel = "Suspensa";
+        }
 
         return `
           <div class="item-row promo-row">
@@ -638,18 +656,21 @@ function renderPromocoes() {
               </div>
             </div>
 
-            <!-- PERÍODO -->
+            <!-- INÍCIO -->
             <div>
               ${promo.periodo?.inicio || "—"}
             </div>
 
+            <!-- FIM -->
             <div>
               ${promo.periodo?.fim || "—"}
             </div>
 
-            <!-- STATUS -->
-            <div class="item-status ${promo.status}">
-              ${promo.status}
+            <!-- STATUS (ESTÁVEL) -->
+            <div class="item-status status-${statusFinal}">
+              <span class="status-badge">
+                ${statusLabel}
+              </span>
             </div>
 
             <!-- AÇÕES -->
@@ -667,7 +688,6 @@ function renderPromocoes() {
     </div>
   `;
 }
-
 
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".dropdown")) {
