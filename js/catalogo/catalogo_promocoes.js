@@ -654,12 +654,12 @@ function renderPromocoes() {
               ${formatarDataBR(promo.periodo?.fim)}
             </div>
 
-            <!-- STATUS (ESTRUTURA FIXA E ESTÁVEL) -->
-            <div class="item-status">
-              <span class="status-badge status-${statusInfo.key}">
-                ${statusInfo.label}
-              </span>
-            </div>
+            <!-- STATUS (TEXTO SIMPLES, SEM BADGE) -->
+<div class="item-status status-${statusFinal}">
+  <span class="status-text">
+    ${statusLabel}
+  </span>
+</div>
 
             <!-- AÇÕES -->
             <button
