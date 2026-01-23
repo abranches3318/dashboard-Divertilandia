@@ -207,3 +207,4 @@ window.validarPeriodoPromocao = validarPeriodoPromocao;
 window.validarConflitosDesconto = validarConflitosDesconto;
 window.validarItemGratisComPacote = validarItemGratisComPacote;
 window.validarItemGratisNaoContidoNoPacote = validarItemGratisNaoContidoNoPacote;
+window.formatarDataBR = formatarDataBR;
