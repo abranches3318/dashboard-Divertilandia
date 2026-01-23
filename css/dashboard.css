@@ -2189,12 +2189,12 @@ select {
   /* ---------- TÍTULOS (HEADER) ---------- */
   --hdr-inicio-x: -15px;
   --hdr-fim-x: -25px;
-  --hdr-status-x: -20px;
+  --hdr-status-x: -30px;
 
   /* ---------- COLUNAS (LINHAS) ---------- */
-  --col-inicio-x: -45px;
+  --col-inicio-x: -50px;
   --col-fim-x: -23px;
-  --col-status-x: -25px;
+  --col-status-x: -28px;
 }
 
 /* ===============================
