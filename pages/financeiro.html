@@ -1,7 +1,72 @@
-<h2>Financeiro</h2>
-<div class="grid-3">
-  <div class="card"><small class="small">Receita</small><h3 id="fin-receita">R$0,00</h3></div>
-  <div class="card"><small class="small">Pagamentos pendentes</small><h3 id="fin-pend">0</h3></div>
-  <div class="card"><small class="small">Despesas</small><h3 id="fin-desp">R$0,00</h3></div>
-</div>
-<div class="card" id="fin-chart">(Gráficos em breve)</div>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Financeiro | Divertilandia</title>
+
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="icon" href="img/favicon.ico">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+
+<body>
+
+<button class="btn-hamburger">☰</button>
+
+<aside class="sidebar">
+  <div class="logo">
+    <img src="img/logo.png" class="logo-img">
+  </div>
+
+  <nav>
+    <ul>
+      <li onclick="nav('dashboard')">📊 Dashboard</li>
+      <li onclick="nav('agendamentos')">📅 Agendamentos</li>
+      <li class="active" onclick="nav('financeiro')">💰 Financeiro</li>
+      <li onclick="nav('catalogo')">🎈 Catálogo</li>
+      <li onclick="nav('monitores')">🧑‍🏫 Monitores</li>
+      <li onclick="nav('tarefas')">📝 Tarefas</li>
+      <li onclick="nav('conversas')">💬 Conversas</li>
+      <li onclick="logout()">🚪 Sair</li>
+    </ul>
+  </nav>
+</aside>
+
+<main class="content">
+  <header class="topbar">
+    <h1 id="titulo-pagina">Financeiro</h1>
+  </header>
+
+  <!-- BOTÕES DAS SEÇÕES -->
+  <div class="subnav">
+    <button onclick="abrirSecaoFinanceiro('visao-geral')" class="active">Visão Geral</button>
+    <button onclick="abrirSecaoFinanceiro('entradas')">Entradas</button>
+    <button onclick="abrirSecaoFinanceiro('saidas')">Saídas</button>
+    <button onclick="abrirSecaoFinanceiro('balanco')">Balanço</button>
+    <button onclick="abrirSecaoFinanceiro('comparativos')">Comparativos</button>
+    <button onclick="abrirSecaoFinanceiro('relatorios')">Relatórios</button>
+  </div>
+
+  <!-- CONTEÚDO DINÂMICO -->
+  <section id="financeiro-container" class="pagina ativa">
+    <!-- HTML da seção será carregado aqui -->
+  </section>
+</main>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Navegação -->
+<script src="js/nav.js"></script>
+
+<!-- FINANCEIRO CONTROLLER -->
+<script src="js/financeiro/financeiro.js"></script>
+
+</body>
+</html>
