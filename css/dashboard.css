@@ -2347,3 +2347,106 @@ select {
   font-size: 15px;
   color: #4cafef;
 }
+
+/* ===============================
+   FINANCEIRO — HEADER + FILTROS
+   =============================== */
+
+.financeiro-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.financeiro-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* dropdown período */
+.financeiro-periodo {
+  background: #1e1e1e;
+  color: #fff;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.financeiro-periodo:focus {
+  outline: none;
+  border-color: #4cafef;
+}
+
+/* ===============================
+   FINANCEIRO — BLOCO PRINCIPAL
+   =============================== */
+
+.financeiro-bloco {
+  background: #1b1b1b;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 0 18px rgba(0,0,0,.35);
+  margin-top: 24px;
+}
+
+/* título do bloco */
+.financeiro-bloco h3 {
+  font-size: 15px;
+  font-weight: 500;
+  color: #aaa;
+  margin-bottom: 14px;
+}
+
+/* canvas principal */
+.financeiro-bloco canvas {
+  width: 100% !important;
+  height: 320px !important;
+}
+
+/* ===============================
+   FINANCEIRO — GRÁFICOS SECUNDÁRIOS
+   =============================== */
+
+.financeiro-graficos-secundarios {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.financeiro-grafico-box {
+  background: #1b1b1b;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 0 15px rgba(0,0,0,.3);
+}
+
+.financeiro-grafico-box h4 {
+  font-size: 14px;
+  font-weight: 500;
+  color: #aaa;
+  margin-bottom: 12px;
+}
+
+.financeiro-grafico-box canvas {
+  width: 100% !important;
+  height: 220px !important;
+}
+
+/* ===============================
+   RESPONSIVO
+   =============================== */
+
+@media (max-width: 900px) {
+  .financeiro-graficos-secundarios {
+    grid-template-columns: 1fr;
+  }
+
+  .financeiro-bloco canvas {
+    height: 280px !important;
+  }
+}
