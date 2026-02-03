@@ -47,38 +47,72 @@
   </div>
 
   <!-- SEÇÕES -->
- <section id="visao" class="catalogo-section active">
+<section id="visao" class="catalogo-section active">
 
+  <!-- CABEÇALHO DA VISÃO GERAL -->
+  <div class="financeiro-header">
+    <h2>Visão Geral</h2>
+
+    <select id="filtro-periodo" class="financeiro-select">
+      <option value="mensal">Mensal</option>
+      <option value="trimestral">Trimestral</option>
+      <option value="semestral">Semestral</option>
+      <option value="anual">Anual</option>
+    </select>
+  </div>
+
+  <!-- CARDS (O QUE VOCÊ JÁ FEZ) -->
   <div class="financeiro-cards">
 
     <div class="financeiro-card">
-      <span class="label">Entradas (mês)</span>
+      <span class="label">Entradas</span>
       <strong id="kpi-entradas">R$ 0,00</strong>
     </div>
 
     <div class="financeiro-card">
-      <span class="label">Saídas (mês)</span>
+      <span class="label">Saídas</span>
       <strong id="kpi-saidas">R$ 0,00</strong>
     </div>
 
     <div class="financeiro-card destaque">
-      <span class="label">Lucro (mês)</span>
+      <span class="label">Lucro</span>
       <strong id="kpi-lucro">R$ 0,00</strong>
     </div>
 
     <div class="financeiro-card">
-      <span class="label">Saldo atual</span>
+      <span class="label">Saldo Atual</span>
       <strong id="kpi-saldo">R$ 0,00</strong>
     </div>
 
     <div class="financeiro-card">
-      <span class="label">Eventos no mês</span>
+      <span class="label">Eventos</span>
       <strong id="kpi-eventos">0</strong>
     </div>
 
     <div class="financeiro-card comparativo">
-      <span class="label">Comparação mensal</span>
+      <span class="label">Comparativo</span>
       <strong id="kpi-comparativo">–</strong>
+    </div>
+
+  </div>
+
+  <!-- GRÁFICO PRINCIPAL -->
+  <div class="financeiro-bloco">
+    <h3>Entradas x Saídas x Saldo</h3>
+    <canvas id="graficoFinanceiro"></canvas>
+  </div>
+
+  <!-- GRÁFICOS SECUNDÁRIOS -->
+  <div class="financeiro-graficos-secundarios">
+
+    <div class="financeiro-bloco">
+      <h3>Eventos por Período</h3>
+      <canvas id="graficoEventos"></canvas>
+    </div>
+
+    <div class="financeiro-bloco">
+      <h3>Distribuição de Gastos</h3>
+      <canvas id="graficoGastos"></canvas>
     </div>
 
   </div>
