@@ -2266,64 +2266,56 @@ select {
   color: #ff6b6b;
 }
 
-/* ===============================
-   FINANCEIRO – ABAS
-   =============================== */
+/* =====================================================
+   FINANCEIRO — ESTILO FINAL (SEM REPETIÇÃO)
+   ===================================================== */
 
-.financeiro .financeiro-topbar {
-  margin-top: 20px;
-  margin-left: 24px;
-  display: flex;
-  gap: 12px;
+/* -----------------------------------------------------
+   CONTAINER PRINCIPAL
+   ----------------------------------------------------- */
+.financeiro {
+  padding: 24px 32px;
 }
 
-.financeiro .tab-btn {
-  padding: 8px 16px;
-  border-radius: 8px;
+/* -----------------------------------------------------
+   HEADER + SELETOR DE PERÍODO (DROPDOWN)
+   ----------------------------------------------------- */
+.financeiro-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.financeiro-periodo {
   background: #1e1e1e;
   color: #fff;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
   cursor: pointer;
-  border: none;
+  min-width: 140px;
 }
 
-.financeiro .tab-btn.active {
-  background: #4cafef;
-}
-
-.financeiro .financeiro-section {
-  display: none;
-  padding: 24px;
-}
-
-.financeiro .financeiro-section.active {
-  display: block;
-}
-
-/* ===============================
-   FINANCEIRO — CARDS (PADRÃO SISTEMA)
-   =============================== */
-
+/* -----------------------------------------------------
+   CARDS DE KPI (ENTRADAS / SAÍDAS / LUCRO / ETC)
+   ----------------------------------------------------- */
 .financeiro-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
-  margin-top: 24px;
+  margin-top: 12px;
 }
 
 .financeiro-card {
-  background: #1b1b1b;               /* mesmo dos cards globais */
+  background: #1b1b1b;
   border-radius: 12px;
-  padding: 20px 22px;
+  padding: 18px 20px;
   box-shadow: 0 0 15px rgba(0,0,0,.35);
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-
-.financeiro-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 22px rgba(0,0,0,.45);
+  gap: 6px;
 }
 
 .financeiro-card .label {
@@ -2337,83 +2329,41 @@ select {
   color: #fff;
 }
 
-/* destaque (lucro) */
+/* Destaque visual (lucro) */
 .financeiro-card.destaque strong {
   color: #2ecc71;
 }
 
-/* comparativo */
+/* Comparativo */
 .financeiro-card.comparativo strong {
-  font-size: 15px;
+  font-size: 14px;
   color: #4cafef;
 }
 
-/* ===============================
-   FINANCEIRO — HEADER + FILTROS
-   =============================== */
-
-.financeiro-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.financeiro-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-}
-
-/* dropdown período */
-.financeiro-periodo {
-  background: #1e1e1e;
-  color: #fff;
-  border: 1px solid #2a2a2a;
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.financeiro-periodo:focus {
-  outline: none;
-  border-color: #4cafef;
-}
-
-/* ===============================
-   FINANCEIRO — BLOCO PRINCIPAL
-   =============================== */
-
+/* -----------------------------------------------------
+   BLOCO DE GRÁFICO PRINCIPAL
+   (Entradas x Saídas x Saldo)
+   ----------------------------------------------------- */
 .financeiro-bloco {
   background: #1b1b1b;
   border-radius: 14px;
-  padding: 22px;
+  padding: 20px;
   box-shadow: 0 0 18px rgba(0,0,0,.35);
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
-/* título do bloco */
-.financeiro-bloco h3 {
-  font-size: 15px;
-  font-weight: 500;
-  color: #aaa;
-  margin-bottom: 14px;
-}
-
-/* canvas principal */
 .financeiro-bloco canvas {
   width: 100% !important;
-  height: 320px !important;
+  height: 260px !important;
 }
 
-/* ===============================
-   FINANCEIRO — GRÁFICOS SECUNDÁRIOS
-   =============================== */
-
+/* -----------------------------------------------------
+   GRÁFICOS SECUNDÁRIOS
+   (Eventos por período + Gastos por categoria)
+   ----------------------------------------------------- */
 .financeiro-graficos-secundarios {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 2fr 1fr;
   gap: 20px;
   margin-top: 20px;
 }
@@ -2421,32 +2371,26 @@ select {
 .financeiro-grafico-box {
   background: #1b1b1b;
   border-radius: 14px;
-  padding: 18px 20px;
-  box-shadow: 0 0 15px rgba(0,0,0,.3);
-}
-
-.financeiro-grafico-box h4 {
-  font-size: 14px;
-  font-weight: 500;
-  color: #aaa;
-  margin-bottom: 12px;
+  padding: 18px;
+  box-shadow: 0 0 14px rgba(0,0,0,.3);
 }
 
 .financeiro-grafico-box canvas {
   width: 100% !important;
-  height: 220px !important;
+  height: 200px !important;
 }
 
-/* ===============================
-   RESPONSIVO
-   =============================== */
-
-@media (max-width: 900px) {
+/* -----------------------------------------------------
+   RESPONSIVIDADE
+   ----------------------------------------------------- */
+@media (max-width: 1100px) {
   .financeiro-graficos-secundarios {
     grid-template-columns: 1fr;
   }
+}
 
-  .financeiro-bloco canvas {
-    height: 280px !important;
+@media (max-width: 700px) {
+  .financeiro {
+    padding: 20px;
   }
 }
