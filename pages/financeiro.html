@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <title>Financeiro | Divertilandia</title>
 
- <link rel="stylesheet" href="/dashboard-Divertilandia/css/dashboard.css">
-  <link rel="icon" href="img/favicon.ico">
+  <link rel="stylesheet" href="../css/dashboard.css">
   <meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
 
@@ -34,39 +33,40 @@
 
 <main class="content">
   <header class="topbar">
-    <h1 id="titulo-pagina">Financeiro</h1>
+    <h1>Financeiro</h1>
   </header>
 
-  <!-- BOTÕES DAS SEÇÕES -->
-  <div class="subnav">
-    <button onclick="abrirSecaoFinanceiro('visao-geral')" class="active">Visão Geral</button>
-    <button onclick="abrirSecaoFinanceiro('entradas')">Entradas</button>
-    <button onclick="abrirSecaoFinanceiro('saidas')">Saídas</button>
-    <button onclick="abrirSecaoFinanceiro('balanco')">Balanço</button>
-    <button onclick="abrirSecaoFinanceiro('comparativos')">Comparativos</button>
-    <button onclick="abrirSecaoFinanceiro('relatorios')">Relatórios</button>
+  <!-- TOPO IGUAL AO CATÁLOGO -->
+  <div class="catalogo-topbar">
+    <button class="tab-btn active" onclick="abrirFinanceiro('visao')">Visão Geral</button>
+    <button class="tab-btn" onclick="abrirFinanceiro('entradas')">Entradas</button>
+    <button class="tab-btn" onclick="abrirFinanceiro('saidas')">Saídas</button>
+    <button class="tab-btn" onclick="abrirFinanceiro('balanco')">Balanço</button>
+    <button class="tab-btn" onclick="abrirFinanceiro('comparativos')">Comparativos</button>
+    <button class="tab-btn" onclick="abrirFinanceiro('relatorios')">Relatórios</button>
   </div>
 
-  <!-- CONTEÚDO DINÂMICO -->
-  <section id="financeiro-container" class="pagina ativa">
-    <!-- HTML da seção será carregado aqui -->
-  </section>
+  <!-- SEÇÕES -->
+  <section id="visao" class="catalogo-section active"></section>
+  <section id="entradas" class="catalogo-section"></section>
+  <section id="saidas" class="catalogo-section"></section>
+  <section id="balanco" class="catalogo-section"></section>
+  <section id="comparativos" class="catalogo-section"></section>
+  <section id="relatorios" class="catalogo-section"></section>
+
 </main>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
-
-<!-- SweetAlert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="../firebase-config.js"></script>
 
 <!-- Navegação -->
-<script src="js/nav.js"></script>
+<script src="../js/nav.js"></script>
 
-<!-- FINANCEIRO CONTROLLER -->
-<script src="js/financeiro/financeiro.js"></script>
+<!-- FINANCEIRO -->
+<script src="../js/financeiro/financeiro.js"></script>
 
 </body>
 </html>
