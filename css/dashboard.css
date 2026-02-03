@@ -638,8 +638,9 @@ label {
 .catalogo-topbar {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
-    margin-top: 28px;
+   margin-top: 28px;
+  margin-bottom: 20px;
+  padding-left: 40px;
 }
 
 .tab-btn {
