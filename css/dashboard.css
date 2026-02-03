@@ -2265,3 +2265,36 @@ select {
 #lista-promocoes .item-status.status-inativa {
   color: #ff6b6b;
 }
+
+/* ===============================
+   FINANCEIRO – ABAS
+   =============================== */
+
+.financeiro .financeiro-topbar {
+  margin-top: 20px;
+  margin-left: 24px;
+  display: flex;
+  gap: 12px;
+}
+
+.financeiro .tab-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: #1e1e1e;
+  color: #fff;
+  cursor: pointer;
+  border: none;
+}
+
+.financeiro .tab-btn.active {
+  background: #2196f3;
+}
+
+.financeiro .financeiro-section {
+  display: none;
+  padding: 24px;
+}
+
+.financeiro .financeiro-section.active {
+  display: block;
+}
