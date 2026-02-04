@@ -1,5 +1,138 @@
 // js/financeiro/financeiro.js
 
+let graficoFinanceiro = null;
+let graficoEventos = null;
+let graficoGastos = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderGraficosFake("mensal");
+});
+
+function renderGraficoFinanceiroFake(periodo) {
+  const ctx = document.getElementById("graficoFinanceiro");
+  if (!ctx) return;
+
+  if (graficoFinanceiro) {
+    graficoFinanceiro.destroy();
+  }
+
+  graficoFinanceiro = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"],
+      datasets: [
+        {
+          label: "Entradas",
+          data: [12000, 15000, 18000, 16000, 20000, 22000],
+          borderColor: "#2ecc71",
+          backgroundColor: "rgba(46,204,113,.15)",
+          tension: 0.35
+        },
+        {
+          label: "Saídas",
+          data: [8000, 9000, 11000, 10000, 13000, 14000],
+          borderColor: "#e74c3c",
+          backgroundColor: "rgba(231,76,60,.15)",
+          tension: 0.35
+        },
+        {
+          label: "Saldo",
+          data: [4000, 6000, 7000, 6000, 7000, 8000],
+          borderColor: "#4cafef",
+          backgroundColor: "rgba(76,175,239,.15)",
+          tension: 0.35
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: "#ccc" }
+        }
+      },
+      scales: {
+        x: { ticks: { color: "#aaa" } },
+        y: { ticks: { color: "#aaa" } }
+      }
+    }
+  });
+}
+
+function renderGraficoEventosFake() {
+  const ctx = document.getElementById("graficoEventos");
+  if (!ctx) return;
+
+  if (graficoEventos) {
+    graficoEventos.destroy();
+  }
+
+  graficoEventos = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"],
+      datasets: [
+        {
+          label: "Eventos",
+          data: [8, 12, 10, 15, 18, 20],
+          borderColor: "#b794f4",
+          backgroundColor: "rgba(183,148,244,.2)",
+          tension: 0.35
+        }
+      ]
+    },
+    options: {
+      plugins: {
+        legend: { labels: { color: "#ccc" } }
+      },
+      scales: {
+        x: { ticks: { color: "#aaa" } },
+        y: { ticks: { color: "#aaa" } }
+      }
+    }
+  });
+}
+
+function renderGraficoGastosFake() {
+  const ctx = document.getElementById("graficoGastos");
+  if (!ctx) return;
+
+  if (graficoGastos) {
+    graficoGastos.destroy();
+  }
+
+  graficoGastos = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Monitores", "Manutenção", "Marketing", "Outros"],
+      datasets: [{
+        data: [35, 25, 20, 20],
+        backgroundColor: [
+          "#f6ad55",
+          "#63b3ed",
+          "#fc8181",
+          "#a0aec0"
+        ]
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { color: "#ccc" }
+        }
+      }
+    }
+  });
+}
+
+function renderGraficosFake(periodo) {
+  renderGraficoFinanceiroFake(periodo);
+  renderGraficoEventosFake();
+  renderGraficoGastosFake();
+}
+
 function abrirFinanceiro(secao) {
   // controla botões
   document.querySelectorAll(".tab-btn").forEach(btn => {
