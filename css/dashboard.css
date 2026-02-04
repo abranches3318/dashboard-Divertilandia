@@ -2481,3 +2481,36 @@ select {
   flex-direction: column;
   gap: 24px;
 }
+
+/* BLOCO PADRÃO DE GRÁFICO */
+.financeiro-bloco {
+  background: #161616;
+  border-radius: 14px;
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* GRÁFICO PRINCIPAL */
+.financeiro-bloco canvas#graficoFinanceiro {
+  height: 260px !important;
+}
+
+/* GRÁFICOS SECUNDÁRIOS */
+.financeiro-graficos-secundarios {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* Eventos */
+canvas#graficoEventos {
+  height: 220px !important;
+}
+
+/* Gastos (doughnut) */
+canvas#graficoGastos {
+  height: 220px !important;
+}
