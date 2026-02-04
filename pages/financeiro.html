@@ -36,8 +36,11 @@
     <h1>Financeiro</h1>
   </header>
 
-  <!-- TOPO DE ABAS -->
-  <div class="catalogo-topbar">
+<!-- TOPO DE ABAS + FILTRO -->
+<div class="catalogo-topbar financeiro-toolbar">
+
+  <!-- ABAS -->
+  <div class="financeiro-tabs">
     <button class="tab-btn active" onclick="abrirFinanceiro('visao')">Visão Geral</button>
     <button class="tab-btn" onclick="abrirFinanceiro('entradas')">Entradas</button>
     <button class="tab-btn" onclick="abrirFinanceiro('saidas')">Saídas</button>
@@ -46,13 +49,8 @@
     <button class="tab-btn" onclick="abrirFinanceiro('relatorios')">Relatórios</button>
   </div>
 
-  <!-- SEÇÕES -->
-<section id="visao" class="catalogo-section active">
-
-  <!-- CABEÇALHO DA VISÃO GERAL -->
-  <div class="financeiro-header">
-   
-<div class="financeiro-periodo-wrapper">
+  <!-- DROPDOWN -->
+  <div class="financeiro-periodo-wrapper">
     <select id="filtro-periodo" class="financeiro-select">
       <option value="mensal">Mensal</option>
       <option value="trimestral">Trimestral</option>
@@ -60,7 +58,8 @@
       <option value="anual">Anual</option>
     </select>
   </div>
-  </div>
+
+</div>
 
   <!-- CARDS (O QUE VOCÊ JÁ FEZ) -->
   <div class="financeiro-cards">
