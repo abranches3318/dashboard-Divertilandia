@@ -83,3 +83,14 @@ function setValor(id, valor) {
     currency: "BRL"
   });
 }
+
+const periodoSelect = document.querySelector(".financeiro-periodo");
+const wrapper = document.querySelector(".financeiro-periodo-wrapper");
+
+periodoSelect.addEventListener("focus", () => {
+  wrapper.classList.add("open");
+});
+
+periodoSelect.addEventListener("blur", () => {
+  wrapper.classList.remove("open");
+});
