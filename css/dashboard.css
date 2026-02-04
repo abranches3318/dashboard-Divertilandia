@@ -2463,3 +2463,21 @@ select {
   border-radius: 8px;
   cursor: pointer;
 }
+
+/* ===============================
+   FINANCEIRO — WRAPPER DE GRÁFICOS
+   Agrupa todos os gráficos da visão geral
+   Mantém alinhamento com cards e sidebar
+   =============================== */
+
+.financeiro-graficos-wrapper {
+  margin-top: 28px;
+
+  /* afasta da sidebar e da borda direita */
+  padding-left: 24px;
+  padding-right: 24px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
