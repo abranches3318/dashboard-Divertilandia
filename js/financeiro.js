@@ -1,184 +1,124 @@
 // =====================================================
-// VISÃO GERAL — GRÁFICOS + KPIs (DADOS FAKE)
+// FINANCEIRO — VISÃO GERAL (SOMENTE CONSUMO DE DADOS)
 // =====================================================
 
-// -----------------------------------------------------
-// VARIÁVEIS GLOBAIS DOS GRÁFICOS
-// -----------------------------------------------------
 let graficoFinanceiro = null;
 let graficoEventos = null;
 let graficoGastos = null;
 
-// -----------------------------------------------------
-// INIT ÚNICO
-// -----------------------------------------------------
+// =====================================================
+// INIT GLOBAL
+// =====================================================
 document.addEventListener("DOMContentLoaded", () => {
-  carregarVisaoGeral();
-  renderGraficosFake("mensal");
+  abrirFinanceiro("visao");
   initFiltroPeriodo();
 });
 
 // =====================================================
-// GRÁFICOS FAKE
+// VISÃO GERAL — ESTADO ZERADO
 // =====================================================
+function carregarVisaoGeral() {
+  setValor("kpi-entradas", 0);
+  setValor("kpi-saidas", 0);
+  setValor("kpi-lucro", 0);
+  setValor("kpi-saldo", 0);
 
-// -------------------------------
-// GRÁFICO PRINCIPAL (LINHA)
-// -------------------------------
-function renderGraficoFinanceiroFake(periodo) {
+  const eventosEl = document.getElementById("kpi-eventos");
+  const comparativoEl = document.getElementById("kpi-comparativo");
+
+  if (eventosEl) eventosEl.textContent = "0";
+  if (comparativoEl) comparativoEl.textContent = "-";
+}
+
+// =====================================================
+// GRÁFICOS — VAZIOS (SEM DADOS)
+// =====================================================
+function renderGraficosVazios() {
+  destruirGraficos();
+
+  renderGraficoFinanceiroVazio();
+  renderGraficoEventosVazio();
+  renderGraficoGastosVazio();
+}
+
+function renderGraficoFinanceiroVazio() {
   const ctx = document.getElementById("graficoFinanceiro");
   if (!ctx) return;
-
-  if (graficoFinanceiro) {
-    graficoFinanceiro.destroy();
-  }
 
   graficoFinanceiro = new Chart(ctx, {
     type: "line",
     data: {
-      labels: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"],
-      datasets: [
-        {
-          label: "Entradas",
-          data: [12000, 15000, 18000, 16000, 20000, 22000],
-          borderColor: "#2ecc71",
-          backgroundColor: "rgba(46,204,113,.15)",
-          tension: 0.35,
-          fill: true
-        },
-        {
-          label: "Saídas",
-          data: [8000, 9000, 11000, 10000, 13000, 14000],
-          borderColor: "#e74c3c",
-          backgroundColor: "rgba(231,76,60,.15)",
-          tension: 0.35,
-          fill: true
-        },
-        {
-          label: "Saldo",
-          data: [4000, 6000, 7000, 6000, 7000, 8000],
-          borderColor: "#4cafef",
-          backgroundColor: "rgba(76,175,239,.15)",
-          tension: 0.35,
-          fill: true
-        }
-      ]
+      labels: [],
+      datasets: []
     },
-    options: chartOptions(true)
+    options: chartOptions()
   });
 }
 
-// -------------------------------
-// GRÁFICO EVENTOS (LINHA)
-// -------------------------------
-function renderGraficoEventosFake() {
+function renderGraficoEventosVazio() {
   const ctx = document.getElementById("graficoEventos");
   if (!ctx) return;
-
-  if (graficoEventos) {
-    graficoEventos.destroy();
-  }
 
   graficoEventos = new Chart(ctx, {
     type: "line",
     data: {
-      labels: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"],
-      datasets: [
-        {
-          label: "Eventos",
-          data: [8, 12, 10, 15, 18, 20],
-          borderColor: "#b794f4",
-          backgroundColor: "rgba(183,148,244,.2)",
-          tension: 0.35,
-          fill: true
-        }
-      ]
+      labels: [],
+      datasets: []
     },
-    options: chartOptions(false)
+    options: chartOptions()
   });
 }
 
-// -------------------------------
-// GRÁFICO GASTOS (DOUGHNUT)
-// -------------------------------
-function renderGraficoGastosFake() {
+function renderGraficoGastosVazio() {
   const ctx = document.getElementById("graficoGastos");
   if (!ctx) return;
-
-  if (graficoGastos) {
-    graficoGastos.destroy();
-  }
 
   graficoGastos = new Chart(ctx, {
     type: "doughnut",
     data: {
-      labels: ["Monitores", "Manutenção", "Marketing", "Outros"],
-      datasets: [
-        {
-          data: [35, 25, 20, 20],
-          backgroundColor: [
-            "#f6ad55",
-            "#63b3ed",
-            "#fc8181",
-            "#a0aec0"
-          ]
-        }
-      ]
+      labels: [],
+      datasets: []
     },
     options: {
       responsive: true,
       plugins: {
-        legend: {
-          position: "bottom",
-          labels: { color: "#ccc" }
-        }
+        legend: { display: false }
       }
     }
   });
 }
 
-// -------------------------------
-// DISPATCHER DOS GRÁFICOS
-// -------------------------------
-function renderGraficosFake(periodo) {
-  renderGraficoFinanceiroFake(periodo);
-  renderGraficoEventosFake();
-  renderGraficoGastosFake();
+// =====================================================
+// LIMPEZA TOTAL
+// =====================================================
+function destruirGraficos() {
+  if (graficoFinanceiro) {
+    graficoFinanceiro.destroy();
+    graficoFinanceiro = null;
+  }
+
+  if (graficoEventos) {
+    graficoEventos.destroy();
+    graficoEventos = null;
+  }
+
+  if (graficoGastos) {
+    graficoGastos.destroy();
+    graficoGastos = null;
+  }
 }
 
-// =====================================================
-// KPIs — VISÃO GERAL (FAKE)
-// =====================================================
-function carregarVisaoGeral() {
-  const dados = {
-    entradas: 12500,
-    saidas: 4200,
-    eventos: 18,
-    comparativo: "+12% vs mês anterior"
-  };
-
-  const lucro = dados.entradas - dados.saidas;
-  const saldo = lucro;
-
-  setValor("kpi-entradas", dados.entradas);
-  setValor("kpi-saidas", dados.saidas);
-  setValor("kpi-lucro", lucro);
-  setValor("kpi-saldo", saldo);
-
-  const eventosEl = document.getElementById("kpi-eventos");
-  const comparativoEl = document.getElementById("kpi-comparativo");
-
-  if (eventosEl) eventosEl.textContent = dados.eventos;
-  if (comparativoEl) comparativoEl.textContent = dados.comparativo;
-}
-
-function setValor(id, valor) {
-  const el = document.getElementById(id);
-  if (!el) return;
-
-  el.textContent = valor.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
+function limparKPIs() {
+  [
+    "kpi-entradas",
+    "kpi-saidas",
+    "kpi-lucro",
+    "kpi-saldo",
+    "kpi-eventos",
+    "kpi-comparativo"
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = "";
   });
 }
 
@@ -186,6 +126,7 @@ function setValor(id, valor) {
 // ABAS DO FINANCEIRO
 // =====================================================
 function abrirFinanceiro(secao) {
+  // Botões
   document.querySelectorAll(".tab-btn").forEach(btn =>
     btn.classList.remove("active")
   );
@@ -194,6 +135,7 @@ function abrirFinanceiro(secao) {
     event.target.classList.add("active");
   }
 
+  // Seções
   document.querySelectorAll(".catalogo-section").forEach(sec =>
     sec.classList.remove("active")
   );
@@ -205,31 +147,29 @@ function abrirFinanceiro(secao) {
 }
 
 function renderFinanceiro(secao) {
+  // Sempre limpa tudo antes
+  destruirGraficos();
+  limparKPIs();
+
   switch (secao) {
     case "visao":
       carregarVisaoGeral();
-      renderGraficosFake("mensal");
+      renderGraficosVazios();
       break;
+
     case "entradas":
-      if (typeof renderEntradas === "function") renderEntradas();
-      break;
     case "saidas":
-      if (typeof renderSaidas === "function") renderSaidas();
-      break;
     case "balanco":
-      if (typeof renderBalanco === "function") renderBalanco();
-      break;
     case "comparativos":
-      if (typeof renderComparativos === "function") renderComparativos();
-      break;
     case "relatorios":
-      if (typeof renderRelatorios === "function") renderRelatorios();
+      // propositalmente vazio
+      // JS dessas seções virão depois
       break;
   }
 }
 
 // =====================================================
-// FILTRO DE PERÍODO (DROPDOWN)
+// FILTRO DE PERÍODO (PREPARADO)
 // =====================================================
 function initFiltroPeriodo() {
   const periodoSelect = document.getElementById("filtro-periodo");
@@ -245,15 +185,25 @@ function initFiltroPeriodo() {
     wrapper.classList.remove("open");
   });
 
-  periodoSelect.addEventListener("change", e => {
-    renderGraficosFake(e.target.value);
+  periodoSelect.addEventListener("change", () => {
+    // ainda não consome dados
   });
 }
 
 // =====================================================
-// OPÇÕES PADRÃO DOS GRÁFICOS
+// HELPERS
 // =====================================================
-function chartOptions(temFill) {
+function setValor(id, valor) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.textContent = valor.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
+
+function chartOptions() {
   return {
     responsive: true,
     maintainAspectRatio: false,
