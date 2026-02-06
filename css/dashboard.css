@@ -2514,3 +2514,11 @@ canvas#graficoEventos {
 canvas#graficoGastos {
   height: 220px !important;
 }
+
+#financeiro .financeiro-section {
+  display: none;
+}
+
+#financeiro .financeiro-section.active {
+  display: block;
+}
