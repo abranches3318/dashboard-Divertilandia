@@ -1,10 +1,12 @@
 // =====================================================
-// FINANCEIRO — VISÃO GERAL (SOMENTE CONSUMO DE DADOS)
+// FINANCEIRO — VISÃO GERAL (SOMENTE CONSUMO)
 // =====================================================
 
 let graficoFinanceiro = null;
 let graficoEventos = null;
 let graficoGastos = null;
+
+let periodoAtual = "mensal";
 
 // =====================================================
 // INIT GLOBAL
@@ -15,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =====================================================
-// VISÃO GERAL — ESTADO ZERADO
+// VISÃO GERAL — ESTADO ZERO
 // =====================================================
 function carregarVisaoGeral() {
   setValor("kpi-entradas", 0);
@@ -27,85 +29,77 @@ function carregarVisaoGeral() {
   const comparativoEl = document.getElementById("kpi-comparativo");
 
   if (eventosEl) eventosEl.textContent = "0";
-  if (comparativoEl) comparativoEl.textContent = "-";
+  if (comparativoEl) comparativoEl.textContent = `Período: ${periodoAtual}`;
 }
 
 // =====================================================
-// GRÁFICOS — VAZIOS (SEM DADOS)
+// GRÁFICOS — SEMPRE EXISTENTES (ZERO REAL)
 // =====================================================
-function renderGraficosVazios() {
+function renderGraficosZerados() {
   destruirGraficos();
 
-  renderGraficoFinanceiroVazio();
-  renderGraficoEventosVazio();
-  renderGraficoGastosVazio();
-}
+  const labelsPadrao = getLabelsPorPeriodo(periodoAtual);
 
-function renderGraficoFinanceiroVazio() {
-  const ctx = document.getElementById("graficoFinanceiro");
-  if (!ctx) return;
+  graficoFinanceiro = new Chart(
+    document.getElementById("graficoFinanceiro"),
+    {
+      type: "line",
+      data: {
+        labels: labelsPadrao,
+        datasets: [
+          datasetZero("Entradas", "#2ecc71"),
+          datasetZero("Saídas", "#e74c3c"),
+          datasetZero("Saldo", "#4cafef")
+        ]
+      },
+      options: chartOptions()
+    }
+  );
 
-  graficoFinanceiro = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: []
-    },
-    options: chartOptions()
-  });
-}
+  graficoEventos = new Chart(
+    document.getElementById("graficoEventos"),
+    {
+      type: "line",
+      data: {
+        labels: labelsPadrao,
+        datasets: [datasetZero("Eventos", "#b794f4")]
+      },
+      options: chartOptions()
+    }
+  );
 
-function renderGraficoEventosVazio() {
-  const ctx = document.getElementById("graficoEventos");
-  if (!ctx) return;
-
-  graficoEventos = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: []
-    },
-    options: chartOptions()
-  });
-}
-
-function renderGraficoGastosVazio() {
-  const ctx = document.getElementById("graficoGastos");
-  if (!ctx) return;
-
-  graficoGastos = new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: [],
-      datasets: []
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false }
+  graficoGastos = new Chart(
+    document.getElementById("graficoGastos"),
+    {
+      type: "doughnut",
+      data: {
+        labels: ["Sem dados"],
+        datasets: [
+          {
+            data: [1],
+            backgroundColor: ["#333"]
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } }
       }
     }
-  });
+  );
 }
 
 // =====================================================
 // LIMPEZA TOTAL
 // =====================================================
 function destruirGraficos() {
-  if (graficoFinanceiro) {
-    graficoFinanceiro.destroy();
-    graficoFinanceiro = null;
-  }
+  [graficoFinanceiro, graficoEventos, graficoGastos].forEach(g => {
+    if (g) g.destroy();
+  });
 
-  if (graficoEventos) {
-    graficoEventos.destroy();
-    graficoEventos = null;
-  }
-
-  if (graficoGastos) {
-    graficoGastos.destroy();
-    graficoGastos = null;
-  }
+  graficoFinanceiro = null;
+  graficoEventos = null;
+  graficoGastos = null;
 }
 
 function limparKPIs() {
@@ -123,76 +117,77 @@ function limparKPIs() {
 }
 
 // =====================================================
-// ABAS DO FINANCEIRO
+// ABAS
 // =====================================================
 function abrirFinanceiro(secao) {
-  // Botões
-  document.querySelectorAll(".tab-btn").forEach(btn =>
-    btn.classList.remove("active")
+  document.querySelectorAll(".tab-btn").forEach(b =>
+    b.classList.remove("active")
+  );
+  if (event?.target) event.target.classList.add("active");
+
+  document.querySelectorAll(".catalogo-section").forEach(s =>
+    s.classList.remove("active")
   );
 
-  if (event?.target) {
-    event.target.classList.add("active");
-  }
-
-  // Seções
-  document.querySelectorAll(".catalogo-section").forEach(sec =>
-    sec.classList.remove("active")
-  );
-
-  const el = document.getElementById(secao);
-  if (el) el.classList.add("active");
+  const ativa = document.getElementById(secao);
+  if (ativa) ativa.classList.add("active");
 
   renderFinanceiro(secao);
 }
 
 function renderFinanceiro(secao) {
-  // Sempre limpa tudo antes
   destruirGraficos();
   limparKPIs();
 
-  switch (secao) {
-    case "visao":
-      carregarVisaoGeral();
-      renderGraficosVazios();
-      break;
-
-    case "entradas":
-    case "saidas":
-    case "balanco":
-    case "comparativos":
-    case "relatorios":
-      // propositalmente vazio
-      // JS dessas seções virão depois
-      break;
+  if (secao === "visao") {
+    carregarVisaoGeral();
+    renderGraficosZerados();
   }
 }
 
 // =====================================================
-// FILTRO DE PERÍODO (PREPARADO)
+// FILTRO DE PERÍODO (ESTADO GLOBAL)
 // =====================================================
 function initFiltroPeriodo() {
-  const periodoSelect = document.getElementById("filtro-periodo");
-  const wrapper = document.querySelector(".financeiro-periodo-wrapper");
+  const select = document.getElementById("filtro-periodo");
+  if (!select) return;
 
-  if (!periodoSelect || !wrapper) return;
+  select.addEventListener("change", e => {
+    periodoAtual = e.target.value;
 
-  periodoSelect.addEventListener("focus", () => {
-    wrapper.classList.add("open");
-  });
-
-  periodoSelect.addEventListener("blur", () => {
-    wrapper.classList.remove("open");
-  });
-
-  periodoSelect.addEventListener("change", () => {
-    // ainda não consome dados
+    if (document.getElementById("visao")?.classList.contains("active")) {
+      carregarVisaoGeral();
+      renderGraficosZerados();
+    }
   });
 }
 
 // =====================================================
 // HELPERS
 // =====================================================
+function datasetZero(label, color) {
+  return {
+    label,
+    data: Array(12).fill(0),
+    borderColor: color,
+    backgroundColor: "rgba(0,0,0,0)",
+    tension: 0.35
+  };
+}
+
+function getLabelsPorPeriodo(periodo) {
+  switch (periodo) {
+    case "trimestral":
+      return ["T1", "T2", "T3", "T4"];
+    case "semestral":
+      return ["S1", "S2"];
+    case "anual":
+      return ["Ano"];
+    default:
+      return ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  }
+}
+
 function setValor(id, valor) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -208,19 +203,11 @@ function chartOptions() {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        labels: { color: "#ccc" }
-      }
+      legend: { labels: { color: "#ccc" } }
     },
     scales: {
-      x: {
-        ticks: { color: "#aaa" },
-        grid: { color: "#222" }
-      },
-      y: {
-        ticks: { color: "#aaa" },
-        grid: { color: "#222" }
-      }
+      x: { ticks: { color: "#aaa" }, grid: { color: "#222" } },
+      y: { ticks: { color: "#aaa" }, grid: { color: "#222" } }
     }
   };
 }
