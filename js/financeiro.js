@@ -120,28 +120,53 @@ function limparKPIs() {
 // ABAS
 // =====================================================
 function abrirFinanceiro(secao) {
-  document.querySelectorAll(".tab-btn").forEach(b =>
-    b.classList.remove("active")
-  );
-  if (event?.target) event.target.classList.add("active");
 
-  document.querySelectorAll(".catalogo-section").forEach(s =>
-    s.classList.remove("active")
-  );
+  // Botões do financeiro
+  document
+    .querySelectorAll("#financeiro .tab-btn")
+    .forEach(b => b.classList.remove("active"));
 
-  const ativa = document.getElementById(secao);
+  if (event?.target) {
+    event.target.classList.add("active");
+  }
+
+  // Seções APENAS do financeiro
+  document
+    .querySelectorAll("#financeiro .catalogo-section")
+    .forEach(s => s.classList.remove("active"));
+
+  const ativa = document.querySelector(`#financeiro #${secao}`);
   if (ativa) ativa.classList.add("active");
 
   renderFinanceiro(secao);
 }
 
 function renderFinanceiro(secao) {
-  destruirGraficos();
-  limparKPIs();
 
+  // Só a Visão Geral usa KPIs e gráficos
   if (secao === "visao") {
+    destruirGraficos();
+    limparKPIs();
+
     carregarVisaoGeral();
     renderGraficosZerados();
+    return;
+  }
+
+  // Outras seções NÃO mexem na visão geral
+  if (secao === "entradas") {
+    carregarEntradas();
+    return;
+  }
+
+  if (secao === "saidas") {
+    carregarSaidas();
+    return;
+  }
+
+  if (secao === "relatorios") {
+    carregarRelatorios();
+    return;
   }
 }
 
