@@ -5,7 +5,7 @@
 let graficoFinanceiro = null;
 let graficoEventos = null;
 let graficoGastos = null;
-let mesAtualSelecionado = "atual";
+let mesAtualSelecionado = new Date().getMonth(); // 0–11
 let periodoAtual = "mensal";
 
 // =====================================================
@@ -19,17 +19,15 @@ document.addEventListener("DOMContentLoaded", () => {
 // =====================================================
 // VISÃO GERAL — ESTADO ZERO
 // =====================================================
-function carregarVisaoGeral() {
+async function carregarVisaoGeral() {
   setValor("kpi-entradas", 0);
   setValor("kpi-saidas", 0);
   setValor("kpi-lucro", 0);
   setValor("kpi-saldo", 0);
 
-  const eventosEl = document.getElementById("kpi-eventos");
-  const comparativoEl = document.getElementById("kpi-comparativo");
+  const mes = periodoAtual === "mensal" ? mesAtualSelecionado : null;
 
-  if (eventosEl) eventosEl.textContent = "0";
-  if (comparativoEl) comparativoEl.textContent = `Período: ${periodoAtual}`;
+  await atualizarEntradasVisaoGeral(periodoAtual, mes);
 }
 
 // =====================================================
@@ -257,7 +255,7 @@ function chartOptions() {
 }
 
 document.getElementById("filtro-mes")?.addEventListener("change", e => {
-  mesAtualSelecionado = e.target.value;
+ mesAtualSelecionado = Number(e.target.value);
 
   if (document.getElementById("visao")?.classList.contains("active")) {
     carregarVisaoGeral();
@@ -331,9 +329,9 @@ async function calcularEntradas(periodo, mesSelecionado) {
 async function atualizarEntradasVisaoGeral(periodo, mesSelecionado) {
   const total = await calcularEntradas(periodo, mesSelecionado);
 
-  document.getElementById("card-entradas").innerText =
-    total.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    });
+document.getElementById("kpi-entradas").innerText =
+  total.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
 }
