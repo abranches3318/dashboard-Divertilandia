@@ -2366,15 +2366,15 @@ select {
   color: #2ecc71;
 }
 
-/* Comparativo */
+
 .financeiro-card.saidas strong {
   font-size: 14px;
-  color: #FF0000;
+  color: #ff0000;
 }
 
 .financeiro-card.entradas strong {
   font-size: 14px;
-  color: #0000FF;
+  color: #0000ff;
 }
 
 /* -----------------------------------------------------
