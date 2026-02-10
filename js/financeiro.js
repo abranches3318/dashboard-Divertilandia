@@ -5,7 +5,7 @@
 let graficoFinanceiro = null;
 let graficoEventos = null;
 let graficoGastos = null;
-let mesAtualSelecionado = new Date().getMonth(); // 0–11
+let mesAtualSelecionado = new Date().getMonth(); 
 let periodoAtual = "mensal";
 
 // =====================================================
