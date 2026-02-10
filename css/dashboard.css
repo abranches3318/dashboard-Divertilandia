@@ -2558,7 +2558,3 @@ main.financeiro .financeiro-section.active {
 .financeiro-select:hover {
   border-color: #3a3a3a;
 }
-
-#filtro-mes {
-  display: none;
-}
