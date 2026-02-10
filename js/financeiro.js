@@ -340,12 +340,17 @@ async function calcularAgendamentos(periodo, mesSelecionado) {
 
   const snapshot = await db
     .collection("agendamentos")
-    .where("status", "!=", "cancelado")
     .where("data", ">=", inicio)
     .where("data", "<=", fim)
     .get();
 
-  return snapshot.size;
+  let total = 0;
+
+  snapshot.forEach(doc => {
+    if (doc.data().status !== "cancelado") total++;
+  });
+
+  return total;
 }
 
 async function atualizarAgendamentosVisaoGeral(periodo, mesSelecionado) {
@@ -385,7 +390,6 @@ async function calcularProjecao(periodo, mesSelecionado) {
 
   const snapshot = await db
     .collection("agendamentos")
-    .where("status", "!=", "cancelado")
     .where("data", ">=", inicio)
     .where("data", "<=", fim)
     .get();
@@ -393,7 +397,11 @@ async function calcularProjecao(periodo, mesSelecionado) {
   let total = 0;
 
   snapshot.forEach(doc => {
-    total += Number(doc.data().valor_final || 0);
+    const dados = doc.data();
+
+    if (dados.status === "cancelado") return;
+
+    total += Number(dados.valor_final || 0);
   });
 
   return total;
