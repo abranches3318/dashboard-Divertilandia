@@ -2368,12 +2368,12 @@ select {
 
 
 .financeiro-card.entrada strong {
-  font-size: 14px;
+  
   color: #007bff; /* azul */
 }
 
 .financeiro-card.saida strong {
-  font-size: 14px;
+ 
   color: #ff3b3b; /* vermelho */
 }
 
