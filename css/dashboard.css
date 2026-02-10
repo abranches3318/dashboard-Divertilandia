@@ -2554,3 +2554,11 @@ main.financeiro .financeiro-section.active {
   border-radius: 8px;
   cursor: pointer;
 }
+
+.financeiro-select:hover {
+  border-color: #3a3a3a;
+}
+
+#filtro-mes {
+  display: none;
+}
