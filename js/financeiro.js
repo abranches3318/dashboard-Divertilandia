@@ -325,14 +325,9 @@ async function calcularEntradas(periodo, mesSelecionado) {
   return total;
 }
 
-async function atualizarEntradasVisaoGeral(periodo, mesSelecionado) {
-  const total = await calcularEntradas(periodo, mesSelecionado);
-
-document.getElementById("kpi-entradas").innerText =
-  total.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
+async function atualizarEntradasVisaoGeral(periodo, mes) {
+  const total = await calcularEntradasComEntrada(periodo, mes);
+  setValor("kpi-entradas", total);
 }
 
 async function calcularAgendamentos(periodo, mesSelecionado) {
@@ -385,8 +380,90 @@ function getPeriodoProjecao(periodo, mesSelecionado = null) {
   };
 }
 
-async function calcularProjecao(periodo, mesSelecionado) {
-  const { inicio, fim } = getPeriodoProjecao(periodo, mesSelecionado);
+async function calcularProjecaoReal(periodo, mesSelecionado) {
+  const now = new Date();
+  const ano = now.getFullYear();
+
+  const inicio = new Date(
+    ano,
+    now.getMonth(),
+    now.getDate() + 1
+  );
+
+  let fim;
+
+  if (periodo === "mensal") {
+    fim = new Date(ano, mesSelecionado + 1, 0);
+  } else {
+    fim = new Date(ano, 11, 31);
+  }
+
+  const { inicio: iniISO, fim: fimISO } =
+    getIntervaloDatasISO(inicio, fim);
+
+  const snapshot = await db
+    .collection("agendamentos")
+    .where("data", ">=", iniISO)
+    .where("data", "<=", fimISO)
+    .get();
+
+  let total = 0;
+
+  snapshot.forEach(doc => {
+    const d = doc.data();
+
+    if (d.status === "cancelado") return;
+
+    const restante = Math.max(
+      0,
+      Number(d.valor_final || 0) - Number(d.entrada || 0)
+    );
+
+    total += restante;
+  });
+
+  return total;
+}
+
+async function atualizarProjecaoVisaoGeral(periodo, mes) {
+  const total = await calcularProjecaoReal(periodo, mes);
+
+  document.getElementById("kpi-projecao").textContent =
+    total.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
+}
+
+function getIntervaloDatasISO(inicioDate, fimDate) {
+  return {
+    inicio: formatarDataISO(inicioDate),
+    fim: formatarDataISO(fimDate)
+  };
+}
+
+async function calcularEntradasComEntrada(periodo, mesSelecionado) {
+  const now = new Date();
+  const ano = now.getFullYear();
+
+  let inicioPeriodo, fimPeriodo;
+
+  if (periodo === "mensal") {
+    inicioPeriodo = new Date(ano, mesSelecionado, 1);
+    fimPeriodo = new Date(ano, mesSelecionado + 1, 0);
+  } else {
+    inicioPeriodo = new Date(ano, 0, 1);
+    fimPeriodo = now;
+  }
+
+  // busca ampla: até 365 dias à frente
+  const fimBusca = new Date(now);
+  fimBusca.setDate(fimBusca.getDate() + 365);
+
+  const { inicio, fim } = getIntervaloDatasISO(
+    new Date(ano, 0, 1),
+    fimBusca
+  );
 
   const snapshot = await db
     .collection("agendamentos")
@@ -397,24 +474,33 @@ async function calcularProjecao(periodo, mesSelecionado) {
   let total = 0;
 
   snapshot.forEach(doc => {
-    const dados = doc.data();
+    const d = doc.data();
 
-    if (dados.status === "cancelado") return;
+    if (d.status === "cancelado") return;
 
-    total += Number(dados.valor_final || 0);
+    // 🔹 ENTRADAS PAGAS
+    if (d.entrada > 0 && d.atualizado_em) {
+      const dataEntrada = d.atualizado_em.toDate();
+
+      if (dataEntrada >= inicioPeriodo && dataEntrada <= fimPeriodo) {
+        total += Number(d.entrada);
+      }
+    }
+
+    // 🔹 CONCLUÍDOS NO PERÍODO (RESTANTE)
+    if (d.status === "concluido") {
+      const dataEvento = new Date(d.data);
+
+      if (dataEvento >= inicioPeriodo && dataEvento <= fimPeriodo) {
+        const restante = Math.max(
+          0,
+          Number(d.valor_final || 0) - Number(d.entrada || 0)
+        );
+
+        total += restante;
+      }
+    }
   });
 
   return total;
-}
-
-async function atualizarProjecaoVisaoGeral(periodo, mesSelecionado) {
-  const total = await calcularProjecao(periodo, mesSelecionado);
-
-  const el = document.getElementById("kpi-projecao");
-  if (!el) return;
-
-  el.textContent = total.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
 }
