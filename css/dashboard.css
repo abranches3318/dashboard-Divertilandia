@@ -2367,14 +2367,14 @@ select {
 }
 
 
-.financeiro-card.saidas strong {
+.financeiro-card.entrada strong {
   font-size: 14px;
-  color: #ff0000;
+  color: #007bff; /* azul */
 }
 
-.financeiro-card.entradas strong {
+.financeiro-card.saida strong {
   font-size: 14px;
-  color: #0000ff;
+  color: #ff3b3b; /* vermelho */
 }
 
 /* -----------------------------------------------------
