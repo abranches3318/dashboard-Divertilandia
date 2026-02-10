@@ -2522,3 +2522,8 @@ main.financeiro .financeiro-section {
 main.financeiro .financeiro-section.active {
   display: block;
 }
+
+.financeiro-mes-wrapper {
+  display: none;
+  margin-right: 12px;
+}
