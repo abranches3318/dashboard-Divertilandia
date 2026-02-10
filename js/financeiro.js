@@ -336,11 +336,12 @@ async function calcularAgendamentos(periodo, mesSelecionado) {
 
   const snapshot = await db
     .collection("agendamentos")
+    .where("status", "!=", "cancelado")
     .where("data", ">=", inicio)
     .where("data", "<=", fim)
     .get();
 
-  return snapshot.size; // 👈 total de agendamentos
+  return snapshot.size;
 }
 
 async function atualizarAgendamentosVisaoGeral(periodo, mesSelecionado) {
