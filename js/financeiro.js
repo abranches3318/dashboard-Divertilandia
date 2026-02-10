@@ -107,7 +107,7 @@ function limparKPIs() {
     "kpi-lucro",
     "kpi-saldo",
     "kpi-eventos",
-    "kpi-comparativo"
+    "kpi-projecao"
   ].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = "";
@@ -130,8 +130,7 @@ function abrirFinanceiro(secao) {
     saidas: 2,
     balanco: 3,
      projecao: 4,
-    comparativos: 5,
-    relatorios: 6
+    relatorios: 5
   };
 
   const index = mapa[secao];
