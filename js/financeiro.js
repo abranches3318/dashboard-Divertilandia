@@ -25,9 +25,13 @@ async function carregarVisaoGeral() {
   setValor("kpi-lucro", 0);
   setValor("kpi-saldo", 0);
 
+  const elAg = document.getElementById("kpi-agendamentos");
+  if (elAg) elAg.textContent = "0";
+
   const mes = periodoAtual === "mensal" ? mesAtualSelecionado : null;
 
   await atualizarEntradasVisaoGeral(periodoAtual, mes);
+  await atualizarAgendamentosVisaoGeral(periodoAtual, mes);
 }
 
 // =====================================================
@@ -286,23 +290,9 @@ function getPeriodoDatas(periodo, mesSelecionado = null) {
       fim = new Date(ano, mesSelecionado + 1, 0);
       break;
 
-    case "trimestre": {
-      const t = Math.floor(now.getMonth() / 3);
-      inicio = new Date(ano, t * 3, 1);
-      fim = new Date(ano, t * 3 + 3, 0);
-      break;
-    }
-
-    case "semestre": {
-      const s = now.getMonth() < 6 ? 0 : 1;
-      inicio = new Date(ano, s * 6, 1);
-      fim = new Date(ano, s * 6 + 6, 0);
-      break;
-    }
-
     case "anual":
       inicio = new Date(ano, 0, 1);
-      fim = new Date(ano, 11, 31);
+      fim = now; // 👈 ATÉ HOJE
       break;
   }
 
@@ -339,4 +329,23 @@ document.getElementById("kpi-entradas").innerText =
     style: "currency",
     currency: "BRL"
   });
+}
+
+async function calcularAgendamentos(periodo, mesSelecionado) {
+  const { inicio, fim } = getPeriodoDatas(periodo, mesSelecionado);
+
+  const snapshot = await db
+    .collection("agendamentos")
+    .where("data", ">=", inicio)
+    .where("data", "<=", fim)
+    .get();
+
+  return snapshot.size; // 👈 total de agendamentos
+}
+
+async function atualizarAgendamentosVisaoGeral(periodo, mesSelecionado) {
+  const total = await calcularAgendamentos(periodo, mesSelecionado);
+
+  const el = document.getElementById("kpi-agendamentos");
+  if (el) el.textContent = total;
 }
