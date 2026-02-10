@@ -264,3 +264,76 @@ document.getElementById("filtro-mes")?.addEventListener("change", e => {
     renderGraficosZerados();
   }
 });
+
+function formatarDataISO(date) {
+  const ano = date.getFullYear();
+  const mes = String(date.getMonth() + 1).padStart(2, "0");
+  const dia = String(date.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+function getPeriodoDatas(periodo, mesSelecionado = null) {
+  const now = new Date();
+  const ano = now.getFullYear();
+  let inicio, fim;
+
+  switch (periodo) {
+    case "mensal":
+      inicio = new Date(ano, mesSelecionado, 1);
+      fim = new Date(ano, mesSelecionado + 1, 0);
+      break;
+
+    case "trimestre": {
+      const t = Math.floor(now.getMonth() / 3);
+      inicio = new Date(ano, t * 3, 1);
+      fim = new Date(ano, t * 3 + 3, 0);
+      break;
+    }
+
+    case "semestre": {
+      const s = now.getMonth() < 6 ? 0 : 1;
+      inicio = new Date(ano, s * 6, 1);
+      fim = new Date(ano, s * 6 + 6, 0);
+      break;
+    }
+
+    case "anual":
+      inicio = new Date(ano, 0, 1);
+      fim = new Date(ano, 11, 31);
+      break;
+  }
+
+  return {
+    inicio: formatarDataISO(inicio),
+    fim: formatarDataISO(fim)
+  };
+}
+
+async function calcularEntradas(periodo, mesSelecionado) {
+  const { inicio, fim } = getPeriodoDatas(periodo, mesSelecionado);
+
+  const snapshot = await db
+    .collection("agendamentos")
+    .where("status", "==", "concluido")
+    .where("data", ">=", inicio)
+    .where("data", "<=", fim)
+    .get();
+
+  let total = 0;
+
+  snapshot.forEach(doc => {
+    total += Number(doc.data().valor_final || 0);
+  });
+
+  return total;
+}
+
+async function atualizarEntradasVisaoGeral(periodo, mesSelecionado) {
+  const total = await calcularEntradas(periodo, mesSelecionado);
+
+  document.getElementById("card-entradas").innerText =
+    total.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
+}
