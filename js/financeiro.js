@@ -129,8 +129,9 @@ function abrirFinanceiro(secao) {
     entradas: 1,
     saidas: 2,
     balanco: 3,
-    comparativos: 4,
-    relatorios: 5
+     projecao: 4,
+    comparativos: 5,
+    relatorios: 6
   };
 
   const index = mapa[secao];
