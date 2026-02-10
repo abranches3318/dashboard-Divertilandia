@@ -5,7 +5,7 @@
 let graficoFinanceiro = null;
 let graficoEventos = null;
 let graficoGastos = null;
-
+let mesAtualSelecionado = "atual";
 let periodoAtual = "mensal";
 
 // =====================================================
@@ -183,16 +183,27 @@ function renderFinanceiro(secao) {
 // =====================================================
 function initFiltroPeriodo() {
   const select = document.getElementById("filtro-periodo");
+  const mesWrapper = document.getElementById("filtro-mes-wrapper");
   if (!select) return;
 
   select.addEventListener("change", e => {
     periodoAtual = e.target.value;
+
+    // Mostra seletor de mês só no mensal
+    if (periodoAtual === "mensal") {
+      mesWrapper.style.display = "flex";
+    } else {
+      mesWrapper.style.display = "none";
+    }
 
     if (document.getElementById("visao")?.classList.contains("active")) {
       carregarVisaoGeral();
       renderGraficosZerados();
     }
   });
+
+  // estado inicial
+  mesWrapper.style.display = periodoAtual === "mensal" ? "flex" : "none";
 }
 
 // =====================================================
@@ -244,3 +255,12 @@ function chartOptions() {
     }
   };
 }
+
+document.getElementById("filtro-mes")?.addEventListener("change", e => {
+  mesAtualSelecionado = e.target.value;
+
+  if (document.getElementById("visao")?.classList.contains("active")) {
+    carregarVisaoGeral();
+    renderGraficosZerados();
+  }
+});
