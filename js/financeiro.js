@@ -28,10 +28,14 @@ async function carregarVisaoGeral() {
   const elAg = document.getElementById("kpi-agendamentos");
   if (elAg) elAg.textContent = "0";
 
+  const elProj = document.getElementById("kpi-projecao");
+  if (elProj) elProj.textContent = "R$ 0,00";
+
   const mes = periodoAtual === "mensal" ? mesAtualSelecionado : null;
 
   await atualizarEntradasVisaoGeral(periodoAtual, mes);
   await atualizarAgendamentosVisaoGeral(periodoAtual, mes);
+  await atualizarProjecaoVisaoGeral(periodoAtual, mes);
 }
 
 // =====================================================
@@ -349,4 +353,60 @@ async function atualizarAgendamentosVisaoGeral(periodo, mesSelecionado) {
 
   const el = document.getElementById("kpi-agendamentos");
   if (el) el.textContent = total;
+}
+
+function getPeriodoProjecao(periodo, mesSelecionado = null) {
+  const now = new Date();
+  const ano = now.getFullYear();
+
+  // amanhã
+  const inicio = new Date(ano, now.getMonth(), now.getDate() + 1);
+
+  let fim;
+
+  switch (periodo) {
+    case "mensal":
+      fim = new Date(ano, mesSelecionado + 1, 0); // último dia do mês
+      break;
+
+    case "anual":
+      fim = new Date(ano, 11, 31); // 31/12
+      break;
+  }
+
+  return {
+    inicio: formatarDataISO(inicio),
+    fim: formatarDataISO(fim)
+  };
+}
+
+async function calcularProjecao(periodo, mesSelecionado) {
+  const { inicio, fim } = getPeriodoProjecao(periodo, mesSelecionado);
+
+  const snapshot = await db
+    .collection("agendamentos")
+    .where("status", "!=", "cancelado")
+    .where("data", ">=", inicio)
+    .where("data", "<=", fim)
+    .get();
+
+  let total = 0;
+
+  snapshot.forEach(doc => {
+    total += Number(doc.data().valor_final || 0);
+  });
+
+  return total;
+}
+
+async function atualizarProjecaoVisaoGeral(periodo, mesSelecionado) {
+  const total = await calcularProjecao(periodo, mesSelecionado);
+
+  const el = document.getElementById("kpi-projecao");
+  if (!el) return;
+
+  el.textContent = total.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
 }
