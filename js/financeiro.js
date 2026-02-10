@@ -121,21 +121,29 @@ function limparKPIs() {
 // =====================================================
 function abrirFinanceiro(secao) {
 
-  // Botões do financeiro
-  document
-    .querySelectorAll("#financeiro .tab-btn")
-    .forEach(b => b.classList.remove("active"));
+  // Botões do Financeiro (escopo correto)
+  const botoes = document.querySelectorAll(".financeiro-tabs .tab-btn");
+  botoes.forEach(b => b.classList.remove("active"));
 
-  if (event?.target) {
-    event.target.classList.add("active");
-  }
+  // Ativa o botão correspondente à seção
+  const mapa = {
+    visao: 0,
+    entradas: 1,
+    saidas: 2,
+    balanco: 3,
+    comparativos: 4,
+    relatorios: 5
+  };
 
-  // Seções APENAS do financeiro
+  const index = mapa[secao];
+  if (botoes[index]) botoes[index].classList.add("active");
+
+  // Seções do Financeiro
   document
-    .querySelectorAll("#financeiro .catalogo-section")
+    .querySelectorAll("main.financeiro section")
     .forEach(s => s.classList.remove("active"));
 
-  const ativa = document.querySelector(`#financeiro #${secao}`);
+  const ativa = document.getElementById(secao);
   if (ativa) ativa.classList.add("active");
 
   renderFinanceiro(secao);
