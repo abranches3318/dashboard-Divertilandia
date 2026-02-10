@@ -2367,9 +2367,14 @@ select {
 }
 
 /* Comparativo */
-.financeiro-card.comparativo strong {
+.financeiro-card.saidas strong {
   font-size: 14px;
-  color: #4cafef;
+  color: #FF0000;
+}
+
+.financeiro-card.entradas strong {
+  font-size: 14px;
+  color: #0000FF;
 }
 
 /* -----------------------------------------------------
