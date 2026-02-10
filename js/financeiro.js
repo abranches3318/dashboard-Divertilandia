@@ -171,6 +171,11 @@ function renderFinanceiro(secao) {
     return;
   }
 
+  if (secao === "projecao") {
+  carregarProjecao();
+  return;
+}
+
   if (secao === "relatorios") {
     carregarRelatorios();
     return;
