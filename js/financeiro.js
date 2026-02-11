@@ -448,13 +448,13 @@ async function calcularEntradasComEntrada(periodo, mesSelecionado) {
 
   let inicioPeriodo, fimPeriodo;
 
-  if (periodo === "mensal") {
-    inicioPeriodo = new Date(ano, mesSelecionado, 1);
-    fimPeriodo = new Date(ano, mesSelecionado + 1, 0);
-  } else {
-    inicioPeriodo = new Date(ano, 0, 1);
-    fimPeriodo = now;
-  }
+if (periodo === "mensal") {
+  inicioPeriodo = new Date(ano, mesSelecionado, 1, 0, 0, 0, 0);
+  fimPeriodo = new Date(ano, mesSelecionado + 1, 0, 23, 59, 59, 999);
+} else {
+  inicioPeriodo = new Date(ano, 0, 1, 0, 0, 0, 0);
+  fimPeriodo = new Date();
+}
 
   // busca ampla: até 365 dias à frente
   const fimBusca = new Date(now);
