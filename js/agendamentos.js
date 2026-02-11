@@ -57,8 +57,13 @@ const listaComprovantesEl = document.getElementById("lista-comprovantes"); // no
 
 const containerMonitores = document.getElementById("ag-monitores");
 
+
 const btnCancelar = document.getElementById("btnCancelar");
 const btnSalvar = document.getElementById("btnSalvarAg");
+
+if (inputEntrada && inputDataEntrada) {
+  inputEntrada.addEventListener("input", atualizarEstadoDataEntrada);
+}
 
 // ---------- STATE ----------
 const STATE = {
@@ -680,6 +685,8 @@ function abrirModalNovo(dateInitial = null) {
     inputData, inputHoraInicio, inputHoraFim, selectItem, inputPreco, inputDesconto, inputEntrada, inputDataEntrada, inputValorFinal, inputRestante, inputObservacao
   ].forEach(el => { if (el) el.value = ""; });
 
+  atualizarEstadoDataEntrada();
+
   // ---------- COMPROVANTES (NOVO AGENDAMENTO) ----------
 STATE.comprovantesExistentes = [];
 STATE.comprovantesNovos = [];
@@ -739,6 +746,9 @@ async function abrirModalEditar(id) {
     if (inputPreco) setCurrencyInput(inputPreco, a.preco ?? a.preço ?? 0);
     if (inputDesconto) setCurrencyInput(inputDesconto, a.desconto ?? 0);
     if (inputEntrada) setCurrencyInput(inputEntrada, a.entrada ?? 0);
+
+    atualizarEstadoDataEntrada();
+    
     if (inputDataEntrada)
   inputDataEntrada.value = a.data_entrada
     ? toYMD(parseDateField(a.data_entrada))
@@ -1589,6 +1599,19 @@ else if (isNew && dateParam) {
   }
 }
 document.addEventListener("DOMContentLoaded", init);
+
+function atualizarEstadoDataEntrada() {
+  const entradaVal = parseFloat(inputEntrada.value) || 0;
+
+  if (entradaVal > 0) {
+    inputDataEntrada.disabled = false;
+  } else {
+    inputDataEntrada.value = "";
+    inputDataEntrada.disabled = true;
+  }
+}
+
+
 
 // ---------- EXPORT API ----------
 window.agendamentosModule = window.agendamentosModule || {};
