@@ -7,6 +7,7 @@ let graficoEventos = null;
 let graficoGastos = null;
 let mesAtualSelecionado = new Date().getMonth(); 
 let periodoAtual = "mensal";
+let anoAtualSelecionado = new Date().getFullYear();
 
 // =====================================================
 // INIT GLOBAL
@@ -19,9 +20,31 @@ document.addEventListener("DOMContentLoaded", () => {
     selectMes.value = mesAtualSelecionado;
   }
 
+  const selectAno = document.getElementById("filtro-ano");
+if (selectAno) {
+  const anoAtual = new Date().getFullYear();
+
+  for (let a = anoAtual - 5; a <= anoAtual + 1; a++) {
+    const option = document.createElement("option");
+    option.value = a;
+    option.textContent = a;
+    selectAno.appendChild(option);
+  }
+
+  selectAno.value = anoAtualSelecionado;
+}
+
   abrirFinanceiro("visao");
 });
 
+document.getElementById("filtro-ano")?.addEventListener("change", e => {
+  anoAtualSelecionado = Number(e.target.value);
+
+  if (document.getElementById("visao")?.classList.contains("active")) {
+    carregarVisaoGeral();
+    renderGraficosZerados();
+  }
+});
 // =====================================================
 // VISÃO GERAL — ESTADO ZERO
 // =====================================================
@@ -290,8 +313,7 @@ function formatarDataISO(date) {
 }
 
 function getPeriodoDatas(periodo, mesSelecionado = null) {
-  const now = new Date();
-  const ano = now.getFullYear();
+  const ano = anoAtualSelecionado;
   let inicio, fim;
 
   switch (periodo) {
@@ -362,8 +384,7 @@ async function atualizarAgendamentosVisaoGeral(periodo, mesSelecionado) {
 }
 
 function getPeriodoProjecao(periodo, mesSelecionado = null) {
-  const now = new Date();
-  const ano = now.getFullYear();
+ const ano = anoAtualSelecionado;
 
   // amanhã
   const inicio = new Date(ano, now.getMonth(), now.getDate() + 1);
@@ -387,8 +408,7 @@ function getPeriodoProjecao(periodo, mesSelecionado = null) {
 }
 
 async function calcularProjecaoReal(periodo, mesSelecionado) {
-  const now = new Date();
-  const ano = now.getFullYear();
+  const ano = anoAtualSelecionado;
 
   const inicio = new Date(
     ano,
@@ -449,8 +469,7 @@ function getIntervaloDatasISO(inicioDate, fimDate) {
 }
 
 async function calcularEntradasComEntrada(periodo, mesSelecionado) {
-  const now = new Date();
-  const ano = now.getFullYear();
+const ano = anoAtualSelecionado;
 
   let inicioPeriodo, fimPeriodo;
 
