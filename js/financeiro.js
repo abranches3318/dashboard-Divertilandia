@@ -12,8 +12,14 @@ let periodoAtual = "mensal";
 // INIT GLOBAL
 // =====================================================
 document.addEventListener("DOMContentLoaded", () => {
-  abrirFinanceiro("visao");
   initFiltroPeriodo();
+
+  const selectMes = document.getElementById("filtro-mes");
+  if (selectMes) {
+    selectMes.value = mesAtualSelecionado;
+  }
+
+  abrirFinanceiro("visao");
 });
 
 // =====================================================
