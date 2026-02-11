@@ -46,6 +46,7 @@ const selectItem = document.getElementById("ag-item");
 const inputPreco = document.getElementById("ag-preco");
 const inputDesconto = document.getElementById("ag-desconto");
 const inputEntrada = document.getElementById("ag-entrada");
+const inputDataEntrada = document.getElementById("ag-data-entrada");
 const inputValorFinal = document.getElementById("ag-valor-final");
 const inputRestante = document.getElementById("ag-restante"); // novo
 
@@ -676,7 +677,7 @@ function abrirModalNovo(dateInitial = null) {
   // clear fields
   [
     inputCliente, inputTelefone, inputEndRua, inputEndNumero, inputEndBairro, inputEndCidade,
-    inputData, inputHoraInicio, inputHoraFim, selectItem, inputPreco, inputDesconto, inputEntrada, inputValorFinal, inputRestante, inputObservacao
+    inputData, inputHoraInicio, inputHoraFim, selectItem, inputPreco, inputDesconto, inputEntrada, inputDataEntrada, inputValorFinal, inputRestante, inputObservacao
   ].forEach(el => { if (el) el.value = ""; });
 
   // ---------- COMPROVANTES (NOVO AGENDAMENTO) ----------
@@ -738,6 +739,10 @@ async function abrirModalEditar(id) {
     if (inputPreco) setCurrencyInput(inputPreco, a.preco ?? a.preço ?? 0);
     if (inputDesconto) setCurrencyInput(inputDesconto, a.desconto ?? 0);
     if (inputEntrada) setCurrencyInput(inputEntrada, a.entrada ?? 0);
+    if (inputDataEntrada)
+  inputDataEntrada.value = a.data_entrada
+    ? toYMD(parseDateField(a.data_entrada))
+    : "";
     if (inputValorFinal) setCurrencyInput(inputValorFinal, a.valor_final ?? a.preco ?? 0);
 
     // restante
@@ -996,6 +1001,16 @@ async function salvarAgendamento() {
   const id = inputId ? inputId.value || null : null;
   const desconto = Math.max(0, safeNumFromInputEl(inputDesconto));
   const entrada = Math.max(0, safeNumFromInputEl(inputEntrada));
+  const dataEntradaVal = inputDataEntrada ? inputDataEntrada.value : "";
+  if (entrada > 0 && !dataEntradaVal) {
+  Swal.fire({
+    title: "Atenção",
+    text: "Informe a data da entrada.",
+    icon: "warning",
+    customClass: { popup: 'swal-high-z' }
+  });
+  return;
+}
   let valorFinal = safeNumFromInputEl(inputValorFinal);
   if (!valorFinal || valorFinal === 0) valorFinal = Math.max(0, preco - desconto);
   if (valorFinal < 0) valorFinal = 0;
@@ -1123,6 +1138,7 @@ if (result.warning) {
     preco,
     desconto,
     entrada,
+    data_entrada: dataEntradaVal || null,
     valor_final: valorFinal,
     monitores,
     observacao,
