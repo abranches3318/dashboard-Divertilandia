@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
 if (selectAno) {
   const anoAtual = new Date().getFullYear();
 
-  for (let a = anoAtual - 5; a <= anoAtual + 1; a++) {
+  for (let a = anoAtual - 2; a <= anoAtual + 1; a++) {
     const option = document.createElement("option");
     option.value = a;
     option.textContent = a;
@@ -314,6 +314,8 @@ function formatarDataISO(date) {
 
 function getPeriodoDatas(periodo, mesSelecionado = null) {
   const ano = anoAtualSelecionado;
+  const now = new Date();
+
   let inicio, fim;
 
   switch (periodo) {
@@ -324,7 +326,7 @@ function getPeriodoDatas(periodo, mesSelecionado = null) {
 
     case "anual":
       inicio = new Date(ano, 0, 1);
-      fim = now; // 👈 ATÉ HOJE
+      fim = new Date(ano, 11, 31);
       break;
   }
 
@@ -384,20 +386,24 @@ async function atualizarAgendamentosVisaoGeral(periodo, mesSelecionado) {
 }
 
 function getPeriodoProjecao(periodo, mesSelecionado = null) {
- const ano = anoAtualSelecionado;
+  const ano = anoAtualSelecionado;
+  const now = new Date();
 
-  // amanhã
-  const inicio = new Date(ano, now.getMonth(), now.getDate() + 1);
+  const inicio = new Date(
+    ano,
+    now.getMonth(),
+    now.getDate() + 1
+  );
 
   let fim;
 
   switch (periodo) {
     case "mensal":
-      fim = new Date(ano, mesSelecionado + 1, 0); // último dia do mês
+      fim = new Date(ano, mesSelecionado + 1, 0);
       break;
 
     case "anual":
-      fim = new Date(ano, 11, 31); // 31/12
+      fim = new Date(ano, 11, 31);
       break;
   }
 
@@ -409,6 +415,7 @@ function getPeriodoProjecao(periodo, mesSelecionado = null) {
 
 async function calcularProjecaoReal(periodo, mesSelecionado) {
   const ano = anoAtualSelecionado;
+  const now = new Date();
 
   const inicio = new Date(
     ano,
@@ -469,21 +476,20 @@ function getIntervaloDatasISO(inicioDate, fimDate) {
 }
 
 async function calcularEntradasComEntrada(periodo, mesSelecionado) {
-const ano = anoAtualSelecionado;
+  const ano = anoAtualSelecionado;
+  const now = new Date();
 
   let inicioPeriodo, fimPeriodo;
 
-if (periodo === "mensal") {
-  inicioPeriodo = new Date(ano, mesSelecionado, 1, 0, 0, 0, 0);
-  fimPeriodo = new Date(ano, mesSelecionado + 1, 0, 23, 59, 59, 999);
-} else {
-  inicioPeriodo = new Date(ano, 0, 1, 0, 0, 0, 0);
-  fimPeriodo = new Date();
-}
+  if (periodo === "mensal") {
+    inicioPeriodo = new Date(ano, mesSelecionado, 1, 0, 0, 0, 0);
+    fimPeriodo = new Date(ano, mesSelecionado + 1, 0, 23, 59, 59, 999);
+  } else {
+    inicioPeriodo = new Date(ano, 0, 1, 0, 0, 0, 0);
+    fimPeriodo = new Date(ano, 11, 31, 23, 59, 59, 999);
+  }
 
-  // busca ampla: até 365 dias à frente
-  const fimBusca = new Date(now);
-  fimBusca.setDate(fimBusca.getDate() + 365);
+  const fimBusca = new Date(ano + 1, 11, 31);
 
   const { inicio, fim } = getIntervaloDatasISO(
     new Date(ano, 0, 1),
