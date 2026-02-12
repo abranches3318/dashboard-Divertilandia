@@ -417,17 +417,42 @@ async function calcularProjecaoReal(periodo, mesSelecionado) {
   const ano = anoAtualSelecionado;
   const now = new Date();
 
-  const inicio = new Date(
-    ano,
-    now.getMonth(),
-    now.getDate() + 1
-  );
-
-  let fim;
+  let inicio, fim;
 
   if (periodo === "mensal") {
+
+    // 🔹 Se o ano selecionado for menor que o atual → zero
+    if (ano < now.getFullYear()) return 0;
+
+    // 🔹 Se for o ano atual
+    if (ano === now.getFullYear()) {
+
+      // Mês passado → zero
+      if (mesSelecionado < now.getMonth()) return 0;
+
+      // Mês atual → amanhã até final do mês
+      if (mesSelecionado === now.getMonth()) {
+        inicio = new Date(ano, mesSelecionado, now.getDate() + 1);
+      } else {
+        // Mês futuro → mês inteiro
+        inicio = new Date(ano, mesSelecionado, 1);
+      }
+
+    } else {
+      // Ano futuro → mês inteiro
+      inicio = new Date(ano, mesSelecionado, 1);
+    }
+
     fim = new Date(ano, mesSelecionado + 1, 0);
+
   } else {
+    // 🔹 PROJEÇÃO ANUAL (continua acumulada até dezembro)
+    inicio = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1
+    );
+
     fim = new Date(ano, 11, 31);
   }
 
