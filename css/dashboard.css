@@ -2561,3 +2561,166 @@ main.financeiro .financeiro-section.active {
 .financeiro-select:hover {
   border-color: #3a3a3a;
 }
+
+/* =====================================================
+   FINANCEIRO — SEÇÃO ENTRADAS
+===================================================== */
+
+#entradas {
+  padding: 20px 25px;
+}
+
+.entradas-container {
+  background: #1c1c1c;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.35);
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.entradas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.entradas-filtros {
+  display: flex;
+  gap: 12px;
+}
+
+.financeiro-select {
+  background: #2a2a2a;
+  border: 1px solid #333;
+  color: #ddd;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.financeiro-select:hover {
+  border-color: #555;
+}
+
+.financeiro-select:focus {
+  border-color: #4cafef;
+}
+
+/* Total período (direita do topo) */
+
+.entradas-total-periodo {
+  font-size: 15px;
+  color: #aaa;
+}
+
+.entradas-total-periodo strong {
+  margin-left: 8px;
+  color: #2ecc71;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* =====================================================
+   TABELA
+===================================================== */
+
+.entradas-tabela-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+}
+
+.entradas-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.entradas-tabela thead {
+  background: #252525;
+}
+
+.entradas-tabela th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #999;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #333;
+}
+
+.entradas-tabela td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #2a2a2a;
+  font-size: 14px;
+  color: #ddd;
+}
+
+.entradas-tabela tbody tr {
+  transition: background 0.2s ease;
+}
+
+.entradas-tabela tbody tr:hover {
+  background: #232323;
+}
+
+/* Coluna valor */
+
+.entradas-tabela td:last-child {
+  font-weight: 600;
+  text-align: right;
+}
+
+/* =====================================================
+   RODAPÉ
+===================================================== */
+
+.entradas-footer {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.entradas-total-geral {
+  background: #252525;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #aaa;
+}
+
+.entradas-total-geral strong {
+  margin-left: 8px;
+  color: #2ecc71;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* =====================================================
+   RESPONSIVO
+===================================================== */
+
+@media (max-width: 768px) {
+
+  .entradas-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .entradas-total-periodo {
+    align-self: flex-end;
+  }
+
+  .entradas-footer {
+    justify-content: flex-start;
+  }
+
+}
