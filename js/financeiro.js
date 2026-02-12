@@ -535,8 +535,8 @@ async function calcularEntradasComEntrada(periodo, mesSelecionado) {
     if (d.status === "cancelado") return;
 
     // 🔹 ENTRADAS PAGAS
-  if (d.entrada > 0 && d.entrada_paga_em) {
-  const dataEntrada = d.entrada_paga_em.toDate();
+if (d.entrada > 0 && d.data_entrada) {
+  const dataEntrada = new Date(d.data_entrada + "T00:00:00");
 
   if (dataEntrada >= inicioPeriodo && dataEntrada <= fimPeriodo) {
     total += Number(d.entrada);
