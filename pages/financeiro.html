@@ -145,7 +145,66 @@
   </div>
 
 </section>
-  <section id="entradas" class="financeiro-section"></section>
+ <section id="entradas" class="financeiro-section">
+
+  <div class="entradas-container">
+
+    <!-- TOPO DA SEÇÃO -->
+    <div class="entradas-header">
+
+      <div class="entradas-filtros">
+
+        <select id="filtro-categoria-entrada" class="financeiro-select">
+          <option value="todas">Todas categorias</option>
+          <option value="sinal">Sinal (Entrada antecipada)</option>
+          <option value="integral">Pagamento integral antecipado</option>
+          <option value="pagamento_agendamento">Pagamento agendamento</option>
+          <option value="restante">Pagamento restante</option>
+        </select>
+
+      </div>
+
+      <div class="entradas-total-periodo">
+        <span>Total do período:</span>
+        <strong id="total-entradas-periodo">R$ 0,00</strong>
+      </div>
+
+    </div>
+
+    <!-- TABELA MODERNA -->
+    <div class="entradas-tabela-wrapper">
+
+      <table class="entradas-tabela">
+
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Cliente</th>
+            <th>Evento</th>
+            <th>Categoria</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+
+        <tbody id="tabela-entradas-body">
+          <!-- JS vai inserir linhas aqui -->
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <!-- RODAPÉ -->
+    <div class="entradas-footer">
+      <div class="entradas-total-geral">
+        <span>Total exibido:</span>
+        <strong id="total-entradas-filtrado">R$ 0,00</strong>
+      </div>
+    </div>
+
+  </div>
+
+</section>
 <section id="saidas" class="financeiro-section"></section>
 <section id="balanco" class="financeiro-section"></section>
 <section id="projecao" class="financeiro-section"></section>
