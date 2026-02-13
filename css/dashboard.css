@@ -2679,6 +2679,15 @@ main.financeiro .financeiro-section.active {
   text-align: right;
 }
 
+.entradas-tabela th:last-child {
+  text-align: right;
+}
+
+.entradas-tabela th,
+.entradas-tabela td {
+  padding: 12px 16px;
+}
+
 /* =====================================================
    RODAPÉ
 ===================================================== */
