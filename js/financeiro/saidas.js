@@ -1,4 +1,4 @@
-const db = firebase.firestore();
+db.collection("saidas")
 let saidasCache = [];
 
 document.addEventListener("DOMContentLoaded", () => {
