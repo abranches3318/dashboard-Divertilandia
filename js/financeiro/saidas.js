@@ -327,3 +327,19 @@ function formatarStatus(status) {
   };
   return mapa[status] || status;
 }
+
+function abrirModalSaida() {
+  const modal = document.getElementById("modal-saida");
+  modal.classList.add("ativo");
+}
+
+function fecharModalSaida() {
+  const modal = document.getElementById("modal-saida");
+  modal.classList.remove("ativo");
+}
+
+document.getElementById("modal-saida").addEventListener("click", function(e) {
+  if (e.target.classList.contains("modal-overlay")) {
+    fecharModalSaida();
+  }
+});
