@@ -81,15 +81,49 @@ function processarAgendamento(ag, ano, mes, periodo) {
 
       const restante = Math.max(0, valorFinal - entrada);
 
-      if (restante > 0) {
-        adicionarEntrada({
-          data: dataEvento,
-          cliente,
-          evento,
-          categoria: "restante",
-          valor: restante
-        });
-      }
+     // =========================
+// 2️⃣ PAGAMENTO NO EVENTO
+// =========================
+
+if (ag.status === "concluido" && ag.data) {
+
+  const dataEvento = new Date(ag.data + "T00:00:00");
+
+  if (estaNoPeriodo(dataEvento, ano, mes, periodo)) {
+
+    // 🔹 CASO 1: NÃO TEVE ENTRADA (PAGAMENTO TOTAL NO DIA)
+    if (entrada === 0) {
+
+      adicionarEntrada({
+        data: dataEvento,
+        cliente,
+        evento,
+        categoria: "pagamento_agendamento",
+        valor: valorFinal
+      });
+
+    }
+
+    // 🔹 CASO 2: TEVE ENTRADA PARCIAL (PAGAMENTO RESTANTE)
+    else if (entrada > 0 && entrada < valorFinal) {
+
+      const restante = valorFinal - entrada;
+
+      adicionarEntrada({
+        data: dataEvento,
+        cliente,
+        evento,
+        categoria: "restante",
+        valor: restante
+      });
+
+    }
+
+    // 🔹 CASO 3: INTEGRAL ANTECIPADO
+    // (entrada === valorFinal)
+    // Não adiciona nada aqui porque já foi contabilizado como "integral"
+  }
+}
     }
   }
 }
@@ -179,6 +213,7 @@ function formatarCategoria(cat) {
   const mapa = {
     sinal: "Sinal",
     integral: "Integral antecipado",
+    pagamento_agendamento: "Pagamento agendamento",
     restante: "Pagamento restante"
   };
   return mapa[cat] || cat;
