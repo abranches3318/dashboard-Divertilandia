@@ -2674,13 +2674,10 @@ main.financeiro .financeiro-section.active {
 
 /* Coluna valor */
 
+.entradas-tabela th:last-child,
 .entradas-tabela td:last-child {
+  text-align: right;
   font-weight: 600;
-  text-align: right;
-}
-
-.entradas-tabela th:last-child {
-  text-align: right;
 }
 
 .entradas-tabela th,
