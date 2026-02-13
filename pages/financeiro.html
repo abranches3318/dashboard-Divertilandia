@@ -242,6 +242,12 @@
 
       </div>
 
+       <div class="saidas-acoes">
+    <button id="btn-nova-saida" class="btn-primario">
+      + Inserir nova saída
+    </button>
+  </div>
+
       <div class="saidas-total-periodo">
         <span>Total do período:</span>
         <strong id="total-saidas-periodo">R$ 0,00</strong>
@@ -285,6 +291,83 @@
   </div>
 
 </section>
+
+  <!-- MODAL NOVA SAÍDA -->
+<div id="modal-nova-saida" class="modal-overlay">
+
+  <div class="modal">
+
+    <div class="modal-header">
+      <h3>Nova Saída</h3>
+      <button id="fechar-modal-saida" class="modal-close">×</button>
+    </div>
+
+    <form id="form-nova-saida" class="modal-body">
+
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label>Categoria</label>
+          <select id="saida-categoria" required>
+            <option value="">Selecione</option>
+            <option value="transporte">Transporte</option>
+            <option value="funcionarios">Funcionários</option>
+            <option value="equipamentos">Equipamentos</option>
+            <option value="estrutura">Estrutura</option>
+            <option value="impostos">Impostos</option>
+            <option value="financeiro">Financeiro</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Natureza</label>
+          <select id="saida-natureza" required>
+            <option value="pontual">Pontual</option>
+            <option value="fixa">Fixa</option>
+            <option value="parcelada">Parcelada</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Valor</label>
+          <input type="number" id="saida-valor" step="0.01" required>
+        </div>
+
+        <div class="form-group">
+          <label>Competência</label>
+          <input type="date" id="saida-competencia" required>
+        </div>
+
+        <div class="form-group">
+          <label>Vencimento</label>
+          <input type="date" id="saida-vencimento" required>
+        </div>
+
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" id="saida-descricao">
+        </div>
+
+        <!-- Parcelamento -->
+        <div class="form-group parcelamento-group" style="display:none;">
+          <label>Total de Parcelas</label>
+          <input type="number" id="saida-total-parcelas" min="2">
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="submit" class="btn-primario">
+          Salvar
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
 
 <section id="balanco" class="financeiro-section"></section>
 <section id="projecao" class="financeiro-section"></section>
