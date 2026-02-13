@@ -530,33 +530,33 @@ async function calcularEntradasComEntrada(periodo, mesSelecionado) {
   let total = 0;
 
   snapshot.forEach(doc => {
-    const d = doc.data();
+  const d = doc.data();
 
-    if (d.status === "cancelado") return;
+  if (d.status === "cancelado") return;
 
-    // 🔹 ENTRADAS PAGAS
-if (d.entrada > 0 && d.data_entrada) {
-  const dataEntrada = new Date(d.data_entrada + "T00:00:00");
+  // 🔹 ENTRADAS PAGAS
+  if (d.entrada > 0 && d.data_entrada) {
+    const dataEntrada = new Date(d.data_entrada + "T00:00:00");
 
-  if (dataEntrada >= inicioPeriodo && dataEntrada <= fimPeriodo) {
-    total += Number(d.entrada);
-  }
-}
-
-    // 🔹 CONCLUÍDOS NO PERÍODO (RESTANTE)
-    if (d.status === "concluido") {
-      const dataEvento = new Date(d.data);
-
-      if (dataEvento >= inicioPeriodo && dataEvento <= fimPeriodo) {
-        const restante = Math.max(
-          0,
-          Number(d.valor_final || 0) - Number(d.entrada || 0)
-        );
-
-        total += restante;
-      }
+    if (dataEntrada >= inicioPeriodo && dataEntrada <= fimPeriodo) {
+      total += Number(d.entrada);
     }
-  });
+  }
+
+  // 🔹 CONCLUÍDOS NO PERÍODO (RESTANTE)
+  if (d.status === "concluido" && d.data) {
+    const dataEvento = new Date(d.data + "T00:00:00");
+
+    if (dataEvento >= inicioPeriodo && dataEvento <= fimPeriodo) {
+      const restante = Math.max(
+        0,
+        Number(d.valor_final || 0) - Number(d.entrada || 0)
+      );
+
+      total += restante;
+    }
+  }
+});
 
   return total;
 }
