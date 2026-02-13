@@ -1,5 +1,4 @@
 const db = firebase.firestore();
-
 let entradasCache = [];
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -10,112 +9,85 @@ function inicializarEntradas() {
   carregarEntradas();
 
   document.getElementById("filtro-categoria-entrada")
-    .addEventListener("change", renderizarEntradas);
+    ?.addEventListener("change", renderizarEntradas);
 
   document.getElementById("filtro-mes")
-    .addEventListener("change", carregarEntradas);
+    ?.addEventListener("change", carregarEntradas);
 
   document.getElementById("filtro-ano")
-    .addEventListener("change", carregarEntradas);
+    ?.addEventListener("change", carregarEntradas);
 
   document.getElementById("filtro-periodo")
-    .addEventListener("change", carregarEntradas);
+    ?.addEventListener("change", carregarEntradas);
 }
 
 async function carregarEntradas() {
-  const ano = parseInt(document.getElementById("filtro-ano").value);
-  const mes = parseInt(document.getElementById("filtro-mes").value);
-  const periodo = document.getElementById("filtro-periodo").value;
 
-  const snapshot = await db.collection("agendamentos").get();
+  const ano = Number(document.getElementById("filtro-ano").value);
+  const mes = Number(document.getElementById("filtro-mes").value);
+  const periodo = document.getElementById("filtro-periodo").value;
 
   entradasCache = [];
 
-  snapshot.forEach(doc => {
-    const ag = doc.data();
+  const snapshot = await db.collection("agendamentos").get();
 
-    processarAgendamento(ag, ano, mes, periodo);
+  snapshot.forEach(doc => {
+    processarAgendamento(doc.data(), ano, mes, periodo);
   });
 
   renderizarEntradas();
 }
 
 function processarAgendamento(ag, ano, mes, periodo) {
-  const status = ag.status || "";
-  const valorFinal = Number(ag.valorFinal || 0);
-  const entrada = Number(ag.entrada || 0);
-  const frete = Number(ag.frete || 0);
 
-  const dataEvento = ag.data?.toDate ? ag.data.toDate() : null;
-  const dataPagamentoEntrada = ag.dataPagamentoEntrada?.toDate
-    ? ag.dataPagamentoEntrada.toDate()
-    : null;
+  if (ag.status === "cancelado") return;
 
   const cliente = ag.cliente || "—";
   const evento = ag.nomeEvento || "Evento";
 
-  // =============================
-  // 1️⃣ SINAL OU INTEGRAL
-  // =============================
-  if (status === "confirmado" && entrada > 0 && dataPagamentoEntrada) {
+  const valorFinal = Number(ag.valor_final || 0);
+  const entrada = Number(ag.entrada || 0);
 
-    if (estaNoPeriodo(dataPagamentoEntrada, ano, mes, periodo)) {
+  // =========================
+  // 1️⃣ ENTRADA (SINAL / INTEGRAL)
+  // =========================
 
-      if (entrada === valorFinal) {
-        adicionarEntrada({
-          data: dataPagamentoEntrada,
-          cliente,
-          evento,
-          categoria: "integral",
-          valor: entrada
-        });
-      } else {
-        adicionarEntrada({
-          data: dataPagamentoEntrada,
-          cliente,
-          evento,
-          categoria: "sinal",
-          valor: entrada
-        });
-      }
+  if (entrada > 0 && ag.data_entrada) {
+
+    const dataEntrada = new Date(ag.data_entrada + "T00:00:00");
+
+    if (estaNoPeriodo(dataEntrada, ano, mes, periodo)) {
+
+      adicionarEntrada({
+        data: dataEntrada,
+        cliente,
+        evento,
+        categoria: entrada === valorFinal ? "integral" : "sinal",
+        valor: entrada
+      });
+
     }
   }
 
-  // =============================
-  // 2️⃣ PAGAMENTO FINAL (CONCLUÍDO)
-  // =============================
-  if (status === "concluido" && dataEvento) {
+  // =========================
+  // 2️⃣ RESTANTE (SE CONCLUÍDO)
+  // =========================
+
+  if (ag.status === "concluido" && ag.data) {
+
+    const dataEvento = new Date(ag.data + "T00:00:00");
 
     if (estaNoPeriodo(dataEvento, ano, mes, periodo)) {
 
-      if (entrada === 0) {
-        adicionarEntrada({
-          data: dataEvento,
-          cliente,
-          evento,
-          categoria: "pagamento_agendamento",
-          valor: valorFinal
-        });
-      } else if (entrada < valorFinal) {
+      const restante = Math.max(0, valorFinal - entrada);
+
+      if (restante > 0) {
         adicionarEntrada({
           data: dataEvento,
           cliente,
           evento,
           categoria: "restante",
-          valor: valorFinal - entrada
-        });
-      }
-
-      // =============================
-      // 3️⃣ FRETE
-      // =============================
-      if (frete > 0) {
-        adicionarEntrada({
-          data: dataEvento,
-          cliente,
-          evento,
-          categoria: "frete",
-          valor: frete
+          valor: restante
         });
       }
     }
@@ -127,6 +99,7 @@ function adicionarEntrada(item) {
 }
 
 function estaNoPeriodo(data, ano, mes, periodo) {
+
   if (!data) return false;
 
   const anoData = data.getFullYear();
@@ -144,24 +117,29 @@ function estaNoPeriodo(data, ano, mes, periodo) {
 }
 
 function renderizarEntradas() {
-  const categoriaFiltro = document.getElementById("filtro-categoria-entrada").value;
-  const tbody = document.getElementById("tabela-entradas-body");
+
+  const categoriaFiltro =
+    document.getElementById("filtro-categoria-entrada").value;
+
+  const tbody =
+    document.getElementById("tabela-entradas-body");
 
   tbody.innerHTML = "";
 
   let lista = [...entradasCache];
 
-  // FILTRO CATEGORIA
   if (categoriaFiltro !== "todas") {
-    lista = lista.filter(item => item.categoria === categoriaFiltro);
+    lista = lista.filter(item =>
+      item.categoria === categoriaFiltro
+    );
   }
 
-  // ORDENAÇÃO - MAIS RECENTE PRIMEIRO
   lista.sort((a, b) => b.data - a.data);
 
   let total = 0;
 
   lista.forEach(item => {
+
     total += item.valor;
 
     const tr = document.createElement("tr");
@@ -177,15 +155,13 @@ function renderizarEntradas() {
     tbody.appendChild(tr);
   });
 
-  document.getElementById("total-entradas-filtrado").innerText =
-    `R$ ${formatarMoeda(total)}`;
+  document.getElementById("total-entradas-filtrado")
+    .innerText = `R$ ${formatarMoeda(total)}`;
 
-  document.getElementById("total-entradas-periodo").innerText =
-    `R$ ${formatarMoeda(calcularTotalPeriodo())}`;
-}
-
-function calcularTotalPeriodo() {
-  return entradasCache.reduce((acc, item) => acc + item.valor, 0);
+  document.getElementById("total-entradas-periodo")
+    .innerText = `R$ ${formatarMoeda(
+      entradasCache.reduce((acc, i) => acc + i.valor, 0)
+    )}`;
 }
 
 function formatarData(data) {
@@ -193,17 +169,17 @@ function formatarData(data) {
 }
 
 function formatarMoeda(valor) {
-  return valor.toFixed(2).replace(".", ",");
+  return valor.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 function formatarCategoria(cat) {
   const mapa = {
     sinal: "Sinal",
     integral: "Integral antecipado",
-    pagamento_agendamento: "Pagamento agendamento",
-    restante: "Pagamento restante",
-    frete: "Frete"
+    restante: "Pagamento restante"
   };
-
   return mapa[cat] || cat;
 }
