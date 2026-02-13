@@ -205,7 +205,87 @@
   </div>
 
 </section>
-<section id="saidas" class="financeiro-section"></section>
+<section id="saidas" class="financeiro-section">
+
+  <div class="saidas-container">
+
+    <!-- TOPO -->
+    <div class="saidas-header">
+
+      <div class="saidas-filtros">
+
+        <select id="filtro-categoria-saida" class="financeiro-select">
+          <option value="todas">Todas categorias</option>
+          <option value="transporte">Transporte</option>
+          <option value="funcionarios">Funcionários</option>
+          <option value="equipamentos">Equipamentos</option>
+          <option value="estrutura">Estrutura</option>
+          <option value="impostos">Impostos</option>
+          <option value="financeiro">Financeiro</option>
+        </select>
+
+        <select id="filtro-natureza-saida" class="financeiro-select">
+          <option value="todas">Todas naturezas</option>
+          <option value="pontual">Pontual</option>
+          <option value="fixa">Fixa</option>
+          <option value="parcelada">Parcelada</option>
+        </select>
+
+        <select id="filtro-status-saida" class="financeiro-select">
+          <option value="todas">Todos status</option>
+          <option value="em_aberto">Em aberto</option>
+          <option value="atraso">Em atraso</option>
+          <option value="pago">Pago</option>
+          <option value="cancelado">Cancelado</option>
+          <option value="renegociado">Renegociado</option>
+        </select>
+
+      </div>
+
+      <div class="saidas-total-periodo">
+        <span>Total do período:</span>
+        <strong id="total-saidas-periodo">R$ 0,00</strong>
+      </div>
+
+    </div>
+
+    <!-- TABELA -->
+    <div class="saidas-tabela-wrapper">
+
+      <table class="saidas-tabela">
+
+        <thead>
+          <tr>
+            <th>Competência</th>
+            <th>Vencimento</th>
+            <th>Categoria</th>
+            <th>Natureza</th>
+            <th>Status</th>
+            <th>Valor</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+
+        <tbody id="tabela-saidas-body">
+          <!-- JS insere aqui -->
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <!-- RODAPÉ -->
+    <div class="saidas-footer">
+      <div class="saidas-total-geral">
+        <span>Total exibido:</span>
+        <strong id="total-saidas-filtrado">R$ 0,00</strong>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
 <section id="balanco" class="financeiro-section"></section>
 <section id="projecao" class="financeiro-section"></section>
 <section id="relatorios" class="financeiro-section"></section>
@@ -224,6 +304,7 @@
 <!-- FINANCEIRO -->
 <script src="../js/financeiro/visao_geral.js"></script>
   <script src="../js/financeiro/entradas.js"></script>
+  <script src="../js/financeiro/saidas.js"></script>
 
 <!-- GRAFICOS -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
