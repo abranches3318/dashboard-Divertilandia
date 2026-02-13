@@ -2914,10 +2914,14 @@ main.financeiro .financeiro-section.active {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
-  display: flex;
+  display: none; /* começa oculto */
   justify-content: center;
   align-items: center;
   z-index: 999;
+}
+
+.modal-overlay.ativo {
+  display: flex;
 }
 
 .modal-saida {
