@@ -28,14 +28,22 @@ function configurarModal() {
   const form = document.getElementById("form-nova-saida");
 
   btnNova?.addEventListener("click", () => {
-    modal.style.display = "flex";
+    modal.classList.add("ativo");
   });
 
-  fechar?.addEventListener("click", () => {
-    modal.style.display = "none";
+  fechar?.addEventListener("click", fecharModal);
+
+  modal?.addEventListener("click", (e) => {
+    if (e.target.classList.contains("modal-overlay")) {
+      fecharModal();
+    }
+  });
+
+  function fecharModal() {
+    modal.classList.remove("ativo");
     form.reset();
     parcelamentoGroup.style.display = "none";
-  });
+  }
 
   naturezaSelect?.addEventListener("change", () => {
     parcelamentoGroup.style.display =
@@ -328,18 +336,4 @@ function formatarStatus(status) {
   return mapa[status] || status;
 }
 
-function abrirModalSaida() {
-  const modal = document.getElementById("modal-saida");
-  modal.classList.add("ativo");
-}
 
-function fecharModalSaida() {
-  const modal = document.getElementById("modal-saida");
-  modal.classList.remove("ativo");
-}
-
-document.getElementById("modal-saida").addEventListener("click", function(e) {
-  if (e.target.classList.contains("modal-overlay")) {
-    fecharModalSaida();
-  }
-});
