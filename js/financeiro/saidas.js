@@ -353,7 +353,7 @@ function renderizarSaidas() {
 function gerarMenuAcoesSaida(saida, statusVisual) {
   return `
     <div class="menu-acoes-wrapper">
-      <button class="menu-acoes-btn" onclick="toggleMenuAcoes('${saida.id}')">
+      <button class="menu-acoes-btn"  data-id="${saida.id}">
         ⋮
       </button>
 
@@ -370,6 +370,21 @@ function gerarMenuAcoesSaida(saida, statusVisual) {
     </div>
   `;
 }
+
+document.addEventListener("click", function (e) {
+  const btn = e.target.closest(".menu-acoes-btn");
+  if (!btn) return;
+
+  const id = btn.dataset.id;
+
+  document.querySelectorAll(".menu-acoes-dropdown")
+    .forEach(menu => menu.style.display = "none");
+
+  const menu = document.getElementById(`menu-${id}`);
+  if (menu) {
+    menu.style.display = "block";
+  }
+});
 
 /* =====================================================
    UTILITÁRIOS
