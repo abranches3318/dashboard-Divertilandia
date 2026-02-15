@@ -313,7 +313,8 @@ function estaNoPeriodoSaida(data, ano, mes, periodo) {
   return false;
 }
 
-function formatarDataSaida {
+function formatarDataSaida(dataStr) {
+  if (!dataStr) return "—";
   return new Date(dataStr + "T00:00:00")
     .toLocaleDateString("pt-BR");
 }
