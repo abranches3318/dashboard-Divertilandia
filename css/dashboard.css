@@ -3013,3 +3013,66 @@ main.financeiro .financeiro-section.active {
   }
 
 }
+
+/* =====================================================
+   SAÍDAS — BOTÕES PADRONIZADOS
+===================================================== */
+
+/* ===== BOTÃO INSERIR NOVA SAÍDA ===== */
+#btn-nova-saida {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(76,175,239,.25);
+}
+
+#btn-nova-saida:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(76,175,239,.35);
+}
+
+/* ===== MODAL SAÍDAS ===== */
+#modal-saida .modal-content {
+  position: relative;
+}
+
+/* ===== BOTÃO FECHAR (X) ===== */
+#modal-saida .btn-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: #aaa;
+  cursor: pointer;
+  transition: .2s ease;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+#modal-saida .btn-close:hover {
+  background: rgba(255,255,255,.08);
+  color: #fff;
+}
+
+/* ===== FOOTER DO MODAL ===== */
+#modal-saida .modal-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* ===== BOTÃO SALVAR ===== */
+#modal-saida .btn-salvar {
+  font-weight: 600;
+  padding: 10px 22px;
+  box-shadow: 0 4px 12px rgba(76,175,239,.25);
+}
+
+#modal-saida .btn-salvar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(76,175,239,.35);
+}
