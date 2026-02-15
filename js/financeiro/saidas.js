@@ -237,7 +237,7 @@ function renderizarSaidas() {
 
     const data = new Date(s.dataCompetencia + "T00:00:00");
 
-    if (!estaNoPeriodo(data, ano, mes, periodo)) return false;
+    if (!estaNoPeriodoSaida(data, ano, mes, periodo)) return false;
     if (categoriaFiltro !== "todas" && s.categoria !== categoriaFiltro) return false;
     if (naturezaFiltro !== "todas" && s.natureza !== naturezaFiltro) return false;
 
@@ -265,14 +265,14 @@ function renderizarSaidas() {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${formatarData(s.dataCompetencia)}</td>
-      <td>${formatarData(s.dataVencimento)}</td>
+      <td>${formatarDataSaida(s.dataCompetencia)}</td>
+      <td>${formatarDataSaida(s.dataVencimento)}</td>
       <td>${s.categoria}</td>
       <td>${s.natureza}</td>
       <td class="status-${statusVisual}">
         ${formatarStatus(statusVisual)}
       </td>
-      <td>R$ ${formatarMoeda(s.valor)}</td>
+      <td>R$ ${formatarMoedaSaida(s.valor)}</td>
       <td>
         ${
           statusVisual !== "pago"
@@ -286,17 +286,17 @@ function renderizarSaidas() {
   });
 
   document.getElementById("total-saidas-filtrado")
-    .innerText = `R$ ${formatarMoeda(totalFiltrado)}`;
+    .innerText = `R$ ${formatarMoedaSaida(totalFiltrado)}`;
 
   document.getElementById("total-saidas-periodo")
-    .innerText = `R$ ${formatarMoeda(totalPeriodo)}`;
+    .innerText = `R$ ${formatarMoedaSaida(totalPeriodo)}`;
 }
 
 /* =====================================================
    UTILITÁRIOS
 ===================================================== */
 
-function estaNoPeriodo(data, ano, mes, periodo) {
+function estaNoPeriodoSaida(data, ano, mes, periodo) {
   if (!data) return false;
 
   const anoData = data.getFullYear();
@@ -313,12 +313,12 @@ function estaNoPeriodo(data, ano, mes, periodo) {
   return false;
 }
 
-function formatarData(dataStr) {
+function formatarDataSaida {
   return new Date(dataStr + "T00:00:00")
     .toLocaleDateString("pt-BR");
 }
 
-function formatarMoeda(valor) {
+function formatarMoedaSaida {
   return valor.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
