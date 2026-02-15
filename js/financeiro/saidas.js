@@ -313,13 +313,14 @@ function estaNoPeriodoSaida(data, ano, mes, periodo) {
   return false;
 }
 
+
 function formatarDataSaida(dataStr) {
   if (!dataStr) return "—";
   return new Date(dataStr + "T00:00:00")
     .toLocaleDateString("pt-BR");
 }
 
-function formatarMoedaSaida {
+function formatarMoedaSaida(valor) {
   return valor.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
