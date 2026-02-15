@@ -116,6 +116,21 @@ async function salvarNovaSaida(e) {
     return;
   }
 
+  if (window.saidaEditando) {
+  await db.collection("saidas").doc(window.saidaEditando).update({
+    categoria,
+    natureza,
+    valor,
+    dataCompetencia: competencia,
+    dataVencimento: vencimento,
+    descricao
+  });
+
+  window.saidaEditando = null;
+  carregarSaidas();
+  return;
+}
+
   if (natureza === "parcelada") {
     await gerarParcelas({
       categoria,
@@ -146,6 +161,50 @@ async function salvarNovaSaida(e) {
   carregarSaidas();
 }
 
+function editarSaida(id) {
+  const saida = saidasCache.find(s => s.id === id);
+  if (!saida) return;
+
+  document.getElementById("saida-categoria").value = saida.categoria;
+  document.getElementById("saida-natureza").value = saida.natureza;
+  document.getElementById("saida-valor").value = saida.valor;
+  document.getElementById("saida-competencia").value = saida.dataCompetencia;
+  document.getElementById("saida-vencimento").value = saida.dataVencimento;
+  document.getElementById("saida-descricao").value = saida.descricao;
+
+  document.getElementById("modal-nova-saida").classList.add("ativo");
+
+  // você pode guardar id temporariamente
+  window.saidaEditando = id;
+}
+
+async function excluirSaida(id) {
+  const saida = saidasCache.find(s => s.id === id);
+  if (!saida) return;
+
+  const snapshot = await db.collection("saidas")
+    .where("grupoId", "==", saida.grupoId)
+    .get();
+
+  const batch = db.batch();
+
+  snapshot.forEach(doc => {
+    batch.delete(doc.ref);
+  });
+
+  await batch.commit();
+
+  carregarSaidas();
+}
+
+async function suspenderSaida(id) {
+  await db.collection("saidas").doc(id).update({
+    status: "cancelado"
+  });
+
+  carregarSaidas();
+}
+
 /* =====================================================
    GERAR PARCELAS
 ===================================================== */
@@ -167,6 +226,8 @@ async function gerarParcelas({
 
     const venc = novaData.toISOString().split("T")[0];
 
+    const grupoId = Date.now().toString();
+
     await db.collection("saidas").add({
       tipo: "manual",
       categoria,
@@ -178,6 +239,7 @@ async function gerarParcelas({
       status: "em_aberto",
       parcelaAtual: i,
       totalParcelas,
+      grupoId: Date.now().toString(),
       descricao: `${descricao} (${i}/${totalParcelas})`,
       criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -273,13 +335,9 @@ function renderizarSaidas() {
         ${formatarStatus(statusVisual)}
       </td>
       <td>R$ ${formatarMoedaSaida(s.valor)}</td>
-      <td>
-        ${
-          statusVisual !== "pago"
-            ? `<button onclick="marcarComoPago('${s.id}')">Pagar</button>`
-            : "—"
-        }
-      </td>
+      <td class="col-acao">
+  ${gerarMenuAcoesSaida(s, statusVisual)}
+</td>
     `;
 
     tbody.appendChild(tr);
@@ -290,6 +348,27 @@ function renderizarSaidas() {
 
   document.getElementById("total-saidas-periodo")
     .innerText = `R$ ${formatarMoedaSaida(totalPeriodo)}`;
+}
+
+function gerarMenuAcoesSaida(saida, statusVisual) {
+  return `
+    <div class="menu-acoes-wrapper">
+      <button class="menu-acoes-btn" onclick="toggleMenuAcoes('${saida.id}')">
+        ⋮
+      </button>
+
+      <div class="menu-acoes-dropdown" id="menu-${saida.id}">
+        <button onclick="editarSaida('${saida.id}')">Editar</button>
+        ${
+          statusVisual !== "pago"
+            ? `<button onclick="marcarComoPago('${saida.id}')">Marcar como pago</button>`
+            : ""
+        }
+        <button onclick="suspenderSaida('${saida.id}')">Suspender</button>
+        <button class="danger" onclick="excluirSaida('${saida.id}')">Excluir</button>
+      </div>
+    </div>
+  `;
 }
 
 /* =====================================================
