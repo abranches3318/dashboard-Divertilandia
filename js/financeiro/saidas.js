@@ -116,22 +116,33 @@ async function salvarNovaSaida(e) {
     return;
   }
 
+  /* ===============================
+     MODO EDIÇÃO
+  =============================== */
   if (window.saidaEditando) {
-  await db.collection("saidas").doc(window.saidaEditando).update({
-    categoria,
-    natureza,
-    valor,
-    dataCompetencia: competencia,
-    dataVencimento: vencimento,
-    descricao
-  });
 
-  window.saidaEditando = null;
-  carregarSaidas();
-  return;
-}
+    await db.collection("saidas")
+      .doc(window.saidaEditando)
+      .update({
+        categoria,
+        natureza,
+        valor,
+        dataCompetencia: competencia,
+        dataVencimento: vencimento,
+        descricao
+      });
+
+    fecharModalSaida();
+    carregarSaidas();
+    return;
+  }
+
+  /* ===============================
+     NOVO REGISTRO
+  =============================== */
 
   if (natureza === "parcelada") {
+
     await gerarParcelas({
       categoria,
       valor,
@@ -140,7 +151,9 @@ async function salvarNovaSaida(e) {
       descricao,
       totalParcelas
     });
+
   } else {
+
     await db.collection("saidas").add({
       tipo: "manual",
       categoria,
@@ -153,17 +166,18 @@ async function salvarNovaSaida(e) {
       descricao,
       criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
+
   }
 
-  document.getElementById("modal-nova-saida").style.display = "none";
-  document.getElementById("form-nova-saida").reset();
-
+  fecharModalSaida();
   carregarSaidas();
 }
 
-function editarSaida(id) {
+window.editarSaida = function (id) {
   const saida = saidasCache.find(s => s.id === id);
   if (!saida) return;
+
+  window.saidaEditando = id;
 
   document.getElementById("saida-categoria").value = saida.categoria;
   document.getElementById("saida-natureza").value = saida.natureza;
@@ -173,14 +187,17 @@ function editarSaida(id) {
   document.getElementById("saida-descricao").value = saida.descricao;
 
   document.getElementById("modal-nova-saida").classList.add("ativo");
-
-  // você pode guardar id temporariamente
-  window.saidaEditando = id;
-}
+};
 
 async function excluirSaida(id) {
   const saida = saidasCache.find(s => s.id === id);
   if (!saida) return;
+
+  if (!saida.grupoId) {
+    await db.collection("saidas").doc(id).delete();
+    carregarSaidas();
+    return;
+  }
 
   const snapshot = await db.collection("saidas")
     .where("grupoId", "==", saida.grupoId)
@@ -196,6 +213,7 @@ async function excluirSaida(id) {
 
   carregarSaidas();
 }
+
 
 async function suspenderSaida(id) {
   await db.collection("saidas").doc(id).update({
@@ -220,13 +238,13 @@ async function gerarParcelas({
   const valorParcela = valor / totalParcelas;
   const dataBase = new Date(vencimento + "T00:00:00");
 
+  const grupoId = Date.now().toString(); // ← AGORA CORRETO
+
   for (let i = 1; i <= totalParcelas; i++) {
     const novaData = new Date(dataBase);
     novaData.setMonth(novaData.getMonth() + (i - 1));
 
     const venc = novaData.toISOString().split("T")[0];
-
-    const grupoId = Date.now().toString();
 
     await db.collection("saidas").add({
       tipo: "manual",
@@ -239,7 +257,7 @@ async function gerarParcelas({
       status: "em_aberto",
       parcelaAtual: i,
       totalParcelas,
-      grupoId: Date.now().toString(),
+      grupoId: grupoId, // ← MESMO GRUPO PARA TODAS
       descricao: `${descricao} (${i}/${totalParcelas})`,
       criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -373,18 +391,31 @@ function gerarMenuAcoesSaida(saida, statusVisual) {
 
 document.addEventListener("click", function (e) {
   const btn = e.target.closest(".menu-acoes-btn");
-  if (!btn) return;
 
-  const id = btn.dataset.id;
+  // Clique no botão ⋮
+  if (btn) {
+    e.stopPropagation();
 
+    const id = btn.dataset.id;
+
+    document.querySelectorAll(".menu-acoes-dropdown")
+      .forEach(menu => menu.style.display = "none");
+
+    const menu = document.getElementById(`menu-${id}`);
+    if (menu) menu.style.display = "block";
+
+    return;
+  }
+
+  // Clique dentro do dropdown → não fechar
+  if (e.target.closest(".menu-acoes-dropdown")) {
+    return;
+  }
+
+  // Clique fora → fecha tudo
   document.querySelectorAll(".menu-acoes-dropdown")
     .forEach(menu => menu.style.display = "none");
-
-  const menu = document.getElementById(`menu-${id}`);
-  if (menu) {
-    menu.style.display = "block";
-  }
-});
+})
 
 /* =====================================================
    UTILITÁRIOS
