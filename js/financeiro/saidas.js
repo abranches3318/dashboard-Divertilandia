@@ -1,6 +1,8 @@
 db.collection("saidas")
 let saidasCache = [];
 
+window.saidaEditando = null;
+
 document.addEventListener("DOMContentLoaded", () => {
   inicializarSaidas();
 });
@@ -53,6 +55,23 @@ function configurarModal() {
   form?.addEventListener("submit", salvarNovaSaida);
 }
 
+
+
+
+
+/* =====================================
+   FUNÇÃO FECHAR MODAL
+===================================== */
+function fecharModalSaida() {
+  const modal = document.getElementById("modal-nova-saida");
+  const form = document.getElementById("form-nova-saida");
+  const parcelamentoGroup = document.querySelector(".parcelamento-group");
+
+  modal.classList.remove("ativo");
+  form.reset();
+  parcelamentoGroup.style.display = "none";
+  window.saidaEditando = null;
+}
 /* =====================================================
    FILTROS
 ===================================================== */
