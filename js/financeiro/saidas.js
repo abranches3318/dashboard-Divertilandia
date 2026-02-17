@@ -164,18 +164,7 @@ async function salvarNovaSaida(e) {
      NOVO REGISTRO
   =============================== */
 
-  if (natureza === "parcelada") {
-
-    await gerarParcelas({
-      categoria,
-      valor,
-      competencia,
-      vencimento,
-      descricao,
-      totalParcelas
-    });
-
-  } if (natureza === "parcelada") {
+ if (natureza === "parcelada") {
 
   await gerarParcelas({
     categoria,
