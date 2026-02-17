@@ -29,9 +29,13 @@ function configurarModal() {
   const parcelamentoGroup = document.querySelector(".parcelamento-group");
   const form = document.getElementById("form-nova-saida");
 
-  btnNova?.addEventListener("click", () => {
-    modal.classList.add("ativo");
-  });
+btnNova?.addEventListener("click", () => {
+  window.saidaEditando = null;
+
+  document.getElementById("titulo-modal-saida").innerText = "Nova Saída";
+
+  modal.classList.add("ativo");
+});
 
   fechar?.addEventListener("click", fecharModal);
 
@@ -197,6 +201,7 @@ window.editarSaida = function (id) {
   if (!saida) return;
 
   window.saidaEditando = id;
+    document.getElementById("titulo-modal-saida").innerText = "Editar Saída";
 
   document.getElementById("saida-categoria").value = saida.categoria;
   document.getElementById("saida-natureza").value = saida.natureza;
