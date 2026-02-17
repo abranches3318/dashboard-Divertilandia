@@ -380,9 +380,15 @@ function renderizarSaidas() {
   let totalPeriodo = 0;
   let totalFiltrado = 0;
 
-  saidasCache.forEach(s => {
-    if (s.status === "pago") totalPeriodo += s.valor;
-  });
+ saidasCache.forEach(s => {
+  if (!s.dataCompetencia) return;
+
+  const data = new Date(s.dataCompetencia + "T00:00:00");
+
+  if (estaNoPeriodoSaida(data, ano, mes, periodo) && s.status === "pago") {
+    totalPeriodo += s.valor;
+  }
+});
 
   lista.forEach(s => {
     const statusVisual = obterStatusVisual(s);
