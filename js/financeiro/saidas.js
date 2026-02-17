@@ -175,22 +175,55 @@ async function salvarNovaSaida(e) {
       totalParcelas
     });
 
-  } else {
+  } if (natureza === "parcelada") {
+
+  await gerarParcelas({
+    categoria,
+    valor,
+    competencia,
+    vencimento,
+    descricao,
+    totalParcelas
+  });
+
+} else if (natureza === "fixa") {
+
+  for (let i = 0; i < 12; i++) {
+
+    const competenciaMes = adicionarMeses(competencia, i);
+    const vencimentoMes = adicionarMeses(vencimento, i);
 
     await db.collection("saidas").add({
-      tipo: "manual",
+      tipo: "fixa",
       categoria,
       natureza,
       valor,
-      dataCompetencia: competencia,
-      dataVencimento: vencimento,
+      dataCompetencia: competenciaMes,
+      dataVencimento: vencimentoMes,
       dataPagamento: null,
       status: "em_aberto",
       descricao,
+      fixaIndex: i,
       criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
-
   }
+
+} else {
+
+  await db.collection("saidas").add({
+    tipo: "manual",
+    categoria,
+    natureza,
+    valor,
+    dataCompetencia: competencia,
+    dataVencimento: vencimento,
+    dataPagamento: null,
+    status: "em_aberto",
+    descricao,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+}
 
   fecharModalSaida();
   carregarSaidas();
@@ -488,4 +521,14 @@ function formatarStatus(status) {
   return mapa[status] || status;
 }
 
+function adicionarMeses(dataString, meses) {
+  const data = new Date(dataString + "T00:00:00");
+  data.setMonth(data.getMonth() + meses);
+
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+
+  return `${ano}-${mes}-${dia}`;
+}
 
