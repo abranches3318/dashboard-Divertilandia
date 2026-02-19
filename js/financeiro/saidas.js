@@ -17,6 +17,19 @@ function inicializarSaidas() {
   carregarSaidas();
 }
 
+
+function parseMoedaBR(valorStr) {
+  if (!valorStr) return 0;
+
+  return Number(
+    valorStr
+      .toString()
+      .replace(/[^\d,.-]/g, "") // remove tudo exceto números, vírgula, ponto
+      .replace(/\./g, "")       // remove milhar
+      .replace(",", ".")        // decimal BR → JS
+  ) || 0;
+}
+
 /* =====================================================
    CONFIGURAÇÃO MODAL
 ===================================================== */
@@ -146,11 +159,7 @@ async function salvarNovaSaida(e) {
 const natureza = document.getElementById("saida-natureza").value;
 const valorInput = document.getElementById("saida-valor").value.trim();
 
-const valor = Number(
-  valorInput
-    .replace(/\./g, "")   // remove milhar
-    .replace(",", ".")    // decimal pt-BR → JS
-);
+const valor = parseMoedaBR(valorInput);
 
   if (isNaN(valor) || valor <= 0) {
   Swal.fire({
@@ -303,11 +312,18 @@ window.editarSaida = function (id) {
   if (!saida) return;
 
   window.saidaEditando = id;
-    document.getElementById("titulo-modal-saida").innerText = "Editar Saída";
+  document.getElementById("titulo-modal-saida").innerText = "Editar Saída";
 
   document.getElementById("saida-categoria").value = saida.categoria;
   document.getElementById("saida-natureza").value = saida.natureza;
-  document.getElementById("saida-valor").value = saida.valor;
+
+  // FORMATA CORRETAMENTE
+  document.getElementById("saida-valor").value =
+    Number(saida.valor).toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
   document.getElementById("saida-competencia").value = saida.dataCompetencia;
   document.getElementById("saida-vencimento").value = saida.dataVencimento;
   document.getElementById("saida-descricao").value = saida.descricao;
@@ -393,13 +409,10 @@ async function gerarParcelas({
   inicioParcelamento
 }) {
 
-  // ===============================
-  // SEGURANÇA NUMÉRICA
-  // ===============================
   valor = Number(valor);
   totalParcelas = Number(totalParcelas);
 
-  if (isNaN(valor) || isNaN(totalParcelas) || totalParcelas <= 0) {
+  if (isNaN(valor) || valor <= 0 || totalParcelas <= 0) {
     Swal.fire({
       icon: "error",
       title: "Erro no parcelamento",
@@ -411,12 +424,6 @@ async function gerarParcelas({
   const dataBase = new Date(inicioParcelamento + "T00:00:00");
   const grupoId = Date.now().toString();
 
-  // ===============================
-  // CÁLCULO FINANCEIRO CORRETO
-  // ===============================
-  const valorBase = Math.floor((valor / totalParcelas) * 100) / 100;
-  let acumulado = 0;
-
   for (let i = 1; i <= totalParcelas; i++) {
 
     const novaData = new Date(dataBase);
@@ -424,18 +431,7 @@ async function gerarParcelas({
 
     const venc = novaData.toISOString().split("T")[0];
 
-    // Última parcela recebe o ajuste de centavos
-    let valorParcela = valorBase;
-
-    if (i === totalParcelas) {
-      valorParcela = Number((valor - acumulado).toFixed(2));
-    }
-
-    acumulado += valorParcela;
-
-    // ===============================
     // STATUS AUTOMÁTICO
-    // ===============================
     const hoje = new Date();
     hoje.setHours(0,0,0,0);
 
@@ -453,7 +449,7 @@ async function gerarParcelas({
       tipo: "manual",
       categoria,
       natureza: "parcelada",
-      valor: valorParcela,
+      valor: valor, // ← NÃO DIVIDE MAIS
       dataCompetencia: venc,
       dataVencimento: venc,
       dataPagamento,
@@ -535,16 +531,22 @@ function renderizarSaidas() {
   );
 
   let totalPeriodo = 0;
-  let totalFiltrado = 0;
+let totalFiltrado = 0;
 
- saidasCache.forEach(s => {
+// Total do período (apenas pagos)
+saidasCache.forEach(s => {
   if (!s.dataCompetencia) return;
 
   const data = new Date(s.dataCompetencia + "T00:00:00");
 
   if (estaNoPeriodoSaida(data, ano, mes, periodo) && s.status === "pago") {
-   totalFiltrado += Number(s.valor);
+    totalPeriodo += Number(s.valor);
   }
+});
+
+// Total filtrado (o que aparece na tabela)
+lista.forEach(s => {
+  totalFiltrado += Number(s.valor);
 });
 
   lista.forEach(s => {
