@@ -159,7 +159,7 @@ async function salvarNovaSaida(e) {
 const natureza = document.getElementById("saida-natureza").value;
 const valor = Number(document.getElementById("saida-valor").value);
 
-const valor = parseMoedaBR(valorInput);
+
 
   if (isNaN(valor) || valor <= 0) {
   Swal.fire({
