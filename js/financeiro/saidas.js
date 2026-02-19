@@ -124,16 +124,16 @@ async function carregarSaidas() {
 async function salvarNovaSaida(e) {
   e.preventDefault();
 
-  const inicioParcelamento =
-  document.getElementById("saida-inicio-parcelamento").value || vencimento;
-
   const categoria = document.getElementById("saida-categoria").value;
-  const natureza = document.getElementById("saida-natureza").value;
-  const valor = Number(document.getElementById("saida-valor").value);
-  const competencia = document.getElementById("saida-competencia").value;
-  const vencimento = document.getElementById("saida-vencimento").value;
-  const descricao = document.getElementById("saida-descricao").value;
-  const totalParcelas = Number(document.getElementById("saida-total-parcelas").value);
+const natureza = document.getElementById("saida-natureza").value;
+const valor = Number(document.getElementById("saida-valor").value);
+const competencia = document.getElementById("saida-competencia").value;
+const vencimento = document.getElementById("saida-vencimento").value;
+const descricao = document.getElementById("saida-descricao").value;
+const totalParcelas = Number(document.getElementById("saida-total-parcelas").value);
+
+const inicioParcelamento =
+  document.getElementById("saida-inicio-parcelamento").value || vencimento;
 
   if (!categoria || !valor || !competencia || !vencimento) return;
 
