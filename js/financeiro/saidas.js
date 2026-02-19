@@ -124,6 +124,9 @@ async function carregarSaidas() {
 async function salvarNovaSaida(e) {
   e.preventDefault();
 
+  const inicioParcelamento =
+  document.getElementById("saida-inicio-parcelamento").value || vencimento;
+
   const categoria = document.getElementById("saida-categoria").value;
   const natureza = document.getElementById("saida-natureza").value;
   const valor = Number(document.getElementById("saida-valor").value);
@@ -167,15 +170,18 @@ async function salvarNovaSaida(e) {
  if (natureza === "parcelada") {
 
   await gerarParcelas({
-    categoria,
-    valor,
-    competencia,
-    vencimento,
-    descricao,
-    totalParcelas
-  });
+  categoria,
+  valor,
+  competencia,
+  vencimento,
+  descricao,
+  totalParcelas,
+  inicioParcelamento
+});
 
-} else if (natureza === "fixa") {
+}  else if (natureza === "fixa") {
+
+  const grupoId = Date.now().toString(); // ← NOVO
 
   for (let i = 0; i < 12; i++) {
 
@@ -193,10 +199,10 @@ async function salvarNovaSaida(e) {
       status: "em_aberto",
       descricao,
       fixaIndex: i,
+      grupoId: grupoId, // ← IMPORTANTE
       criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
   }
-
 } else {
 
   await db.collection("saidas").add({
@@ -279,10 +285,11 @@ async function gerarParcelas({
   competencia,
   vencimento,
   descricao,
-  totalParcelas
+  totalParcelas,
+  inicioParcelamento
 }) {
   const valorParcela = valor / totalParcelas;
-  const dataBase = new Date(vencimento + "T00:00:00");
+  const dataBase = new Date(inicioParcelamento + "T00:00:00");
 
   const grupoId = Date.now().toString(); // ← AGORA CORRETO
 
