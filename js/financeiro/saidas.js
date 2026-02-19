@@ -117,6 +117,9 @@ function configurarFiltros() {
 ===================================================== */
 
 async function carregarSaidas() {
+
+  await renovarFixasAutomaticamente(); 
+  
   const snapshot = await db.collection("saidas").get();
   saidasCache = [];
 
@@ -151,14 +154,32 @@ const totalParcelas = Number(document.getElementById("saida-total-parcelas").val
 const inicioParcelamento =
   document.getElementById("saida-inicio-parcelamento").value || vencimento;
 
-  if (!categoria || !valor || !competencia) return;
+  if (!categoria || !valor || !competencia) {
+  Swal.fire({
+    icon: "warning",
+    title: "Campos obrigatórios",
+    text: "Preencha categoria, valor e competência."
+  });
+  return;
+}
 
-if (natureza !== "pontual" && !vencimento) return;
+if (natureza !== "pontual" && !vencimento) {
+  Swal.fire({
+    icon: "warning",
+    title: "Vencimento obrigatório",
+    text: "Informe a data de vencimento."
+  });
+  return;
+}
 
   if (natureza === "parcelada" && totalParcelas < 2) {
-    alert("Informe o total de parcelas (mínimo 2).");
-    return;
-  }
+  Swal.fire({
+    icon: "warning",
+    title: "Parcelamento inválido",
+    text: "Informe pelo menos 2 parcelas."
+  });
+  return;
+}
 
   /* ===============================
      MODO EDIÇÃO
@@ -199,15 +220,16 @@ if (natureza !== "pontual" && !vencimento) return;
 
 }  else if (natureza === "fixa") {
 
-  const grupoId = Date.now().toString(); // ← NOVO
+  const grupoFixa = Date.now().toString(); // identifica a série
 
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 3; i++) {
 
     const competenciaMes = adicionarMeses(competencia, i);
     const vencimentoMes = adicionarMeses(vencimento, i);
 
     await db.collection("saidas").add({
       tipo: "fixa",
+      grupoFixa,
       categoria,
       natureza,
       valor,
@@ -216,22 +238,36 @@ if (natureza !== "pontual" && !vencimento) return;
       dataPagamento: null,
       status: "em_aberto",
       descricao,
-      fixaIndex: i,
-      grupoId: grupoId, // ← IMPORTANTE
       criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
   }
 } else {
 
- await db.collection("saidas").add({
+const hoje = new Date();
+hoje.setHours(0,0,0,0);
+
+const dataBase = new Date(
+  (natureza === "pontual" ? competencia : vencimento) + "T00:00:00"
+);
+
+let status = "em_aberto";
+let dataPagamento = null;
+
+// Se já passou, considera pago automaticamente
+if (dataBase < hoje) {
+  status = "pago";
+  dataPagamento = dataBase.toISOString().split("T")[0];
+}
+
+await db.collection("saidas").add({
   tipo: "manual",
   categoria,
   natureza,
   valor,
   dataCompetencia: competencia,
   dataVencimento: natureza === "pontual" ? competencia : vencimento,
-  dataPagamento: null,
-  status: "em_aberto",
+  dataPagamento,
+  status,
   descricao,
   criadoEm: firebase.firestore.FieldValue.serverTimestamp()
 });
@@ -240,6 +276,12 @@ if (natureza !== "pontual" && !vencimento) return;
 
   fecharModalSaida();
   carregarSaidas();
+  Swal.fire({
+  icon: "success",
+  title: "Saída salva",
+  timer: 1200,
+  showConfirmButton: false
+});
 }
 
 window.editarSaida = function (id) {
@@ -263,25 +305,55 @@ async function excluirSaida(id) {
   const saida = saidasCache.find(s => s.id === id);
   if (!saida) return;
 
-  if (!saida.grupoId) {
-    await db.collection("saidas").doc(id).delete();
-    carregarSaidas();
-    return;
-  }
-
-  const snapshot = await db.collection("saidas")
-    .where("grupoId", "==", saida.grupoId)
-    .get();
-
-  const batch = db.batch();
-
-  snapshot.forEach(doc => {
-    batch.delete(doc.ref);
+  const confirmacao = await Swal.fire({
+    title: "Excluir saída?",
+    text: saida.grupoId
+      ? "Todas as ocorrências desta despesa serão removidas."
+      : "Essa ação não pode ser desfeita.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Excluir",
+    cancelButtonText: "Cancelar",
+    reverseButtons: true
   });
 
-  await batch.commit();
+  if (!confirmacao.isConfirmed) return;
 
-  carregarSaidas();
+  try {
+    // Se não for recorrente
+    if (!saida.grupoId) {
+      await db.collection("saidas").doc(id).delete();
+    } else {
+      // Excluir grupo inteiro
+      const snapshot = await db.collection("saidas")
+        .where("grupoId", "==", saida.grupoId)
+        .get();
+
+      const batch = db.batch();
+
+      snapshot.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+
+      await batch.commit();
+    }
+
+    Swal.fire({
+      icon: "success",
+      title: "Saída excluída",
+      timer: 1200,
+      showConfirmButton: false
+    });
+
+    carregarSaidas();
+
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Erro ao excluir",
+      text: error.message
+    });
+  }
 }
 
 
@@ -565,3 +637,56 @@ function adicionarMeses(dataString, meses) {
   return `${ano}-${mes}-${dia}`;
 }
 
+async function renovarFixasAutomaticamente() {
+
+  const hoje = new Date();
+  hoje.setDate(1);
+  const hojeStr = hoje.toISOString().split("T")[0];
+
+  const snapshot = await db.collection("saidas")
+    .where("tipo", "==", "fixa")
+    .get();
+
+  const grupos = {};
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    if (!grupos[data.grupoFixa]) {
+      grupos[data.grupoFixa] = [];
+    }
+    grupos[data.grupoFixa].push(data);
+  });
+
+  for (const grupoId in grupos) {
+
+    const fixas = grupos[grupoId];
+
+    // pega a última competência
+    fixas.sort((a,b) => a.dataCompetencia.localeCompare(b.dataCompetencia));
+    const ultima = fixas[fixas.length - 1];
+
+    const ultimaData = new Date(ultima.dataCompetencia + "T00:00:00");
+    const limite = new Date();
+    limite.setMonth(limite.getMonth() + 3);
+    limite.setDate(1);
+
+    // enquanto faltar meses, cria novos
+    let dataNova = new Date(ultimaData);
+
+    while (dataNova < limite) {
+
+      dataNova.setMonth(dataNova.getMonth() + 1);
+
+      const competenciaNova = dataNova.toISOString().split("T")[0];
+
+      await db.collection("saidas").add({
+        ...ultima,
+        dataCompetencia: competenciaNova,
+        dataVencimento: competenciaNova,
+        dataPagamento: null,
+        status: "em_aberto",
+        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  }
+}
