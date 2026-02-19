@@ -123,12 +123,15 @@ async function carregarSaidas() {
   const snapshot = await db.collection("saidas").get();
   saidasCache = [];
 
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    data.id = doc.id;
-    saidasCache.push(data);
-  });
+ snapshot.forEach(doc => {
+  const data = doc.data();
+  data.id = doc.id;
 
+  // CORREÇÃO AQUI
+  data.valor = Number(data.valor) || 0;
+
+  saidasCache.push(data);
+});
   renderizarSaidas();
 }
 
@@ -540,7 +543,7 @@ function renderizarSaidas() {
   const data = new Date(s.dataCompetencia + "T00:00:00");
 
   if (estaNoPeriodoSaida(data, ano, mes, periodo) && s.status === "pago") {
-    totalPeriodo += s.valor;
+   totalFiltrado += Number(s.valor);
   }
 });
 
