@@ -157,7 +157,7 @@ async function salvarNovaSaida(e) {
 
   const categoria = document.getElementById("saida-categoria").value;
 const natureza = document.getElementById("saida-natureza").value;
-const valorInput = document.getElementById("saida-valor").value.trim();
+const valor = Number(document.getElementById("saida-valor").value);
 
 const valor = parseMoedaBR(valorInput);
 
