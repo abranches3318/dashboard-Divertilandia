@@ -141,11 +141,22 @@ async function salvarNovaSaida(e) {
 
   const categoria = document.getElementById("saida-categoria").value;
 const natureza = document.getElementById("saida-natureza").value;
-const valor = parseFloat(
-  document.getElementById("saida-valor").value
-    .replace(/\./g, "")
-    .replace(",", ".")
+const valorInput = document.getElementById("saida-valor").value.trim();
+
+const valor = Number(
+  valorInput
+    .replace(/\./g, "")   // remove milhar
+    .replace(",", ".")    // decimal pt-BR → JS
 );
+
+  if (isNaN(valor) || valor <= 0) {
+  Swal.fire({
+    icon: "warning",
+    title: "Valor inválido",
+    text: "Informe um valor válido."
+  });
+  return;
+}
 const competencia = document.getElementById("saida-competencia").value;
 const vencimento = document.getElementById("saida-vencimento").value;
 const descricao = document.getElementById("saida-descricao").value;
@@ -378,45 +389,78 @@ async function gerarParcelas({
   totalParcelas,
   inicioParcelamento
 }) {
-  const valorParcela = valor / totalParcelas;
-  const dataBase = new Date(inicioParcelamento + "T00:00:00");
 
-  const grupoId = Date.now().toString(); // ← AGORA CORRETO
+  // ===============================
+  // SEGURANÇA NUMÉRICA
+  // ===============================
+  valor = Number(valor);
+  totalParcelas = Number(totalParcelas);
+
+  if (isNaN(valor) || isNaN(totalParcelas) || totalParcelas <= 0) {
+    Swal.fire({
+      icon: "error",
+      title: "Erro no parcelamento",
+      text: "Valor ou número de parcelas inválido."
+    });
+    return;
+  }
+
+  const dataBase = new Date(inicioParcelamento + "T00:00:00");
+  const grupoId = Date.now().toString();
+
+  // ===============================
+  // CÁLCULO FINANCEIRO CORRETO
+  // ===============================
+  const valorBase = Math.floor((valor / totalParcelas) * 100) / 100;
+  let acumulado = 0;
 
   for (let i = 1; i <= totalParcelas; i++) {
+
     const novaData = new Date(dataBase);
     novaData.setMonth(novaData.getMonth() + (i - 1));
 
     const venc = novaData.toISOString().split("T")[0];
 
-const hoje = new Date();
-hoje.setHours(0,0,0,0);
+    // Última parcela recebe o ajuste de centavos
+    let valorParcela = valorBase;
 
-const dataParcela = new Date(venc + "T00:00:00");
+    if (i === totalParcelas) {
+      valorParcela = Number((valor - acumulado).toFixed(2));
+    }
 
-let status = "em_aberto";
-let dataPagamento = null;
+    acumulado += valorParcela;
 
-if (dataParcela < hoje) {
-  status = "pago";
-  dataPagamento = venc;
-}
+    // ===============================
+    // STATUS AUTOMÁTICO
+    // ===============================
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
 
-await db.collection("saidas").add({
-  tipo: "manual",
-  categoria,
-  natureza: "parcelada",
-  valor: Number(valorParcela.toFixed(2)),
-  dataCompetencia: venc,
-  dataVencimento: venc,
-  dataPagamento,
-  status,
-  parcelaAtual: i,
-  totalParcelas,
-  grupoId,
-  descricao: `${descricao} (${i}/${totalParcelas})`,
-  criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-});
+    const dataParcela = new Date(venc + "T00:00:00");
+
+    let status = "em_aberto";
+    let dataPagamento = null;
+
+    if (dataParcela < hoje) {
+      status = "pago";
+      dataPagamento = venc;
+    }
+
+    await db.collection("saidas").add({
+      tipo: "manual",
+      categoria,
+      natureza: "parcelada",
+      valor: valorParcela,
+      dataCompetencia: venc,
+      dataVencimento: venc,
+      dataPagamento,
+      status,
+      parcelaAtual: i,
+      totalParcelas,
+      grupoId,
+      descricao: `${descricao} (${i}/${totalParcelas})`,
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    });
   }
 }
 
