@@ -28,6 +28,18 @@ function configurarModal() {
   const naturezaSelect = document.getElementById("saida-natureza");
   const parcelamentoGroup = document.querySelector(".parcelamento-group");
   const form = document.getElementById("form-nova-saida");
+  const grupoVencimento = document.getElementById("grupo-vencimento");
+
+naturezaSelect?.addEventListener("change", () => {
+
+  // Parcelamento
+  parcelamentoGroup.style.display =
+    naturezaSelect.value === "parcelada" ? "block" : "none";
+
+  // Pontual sem vencimento
+  grupoVencimento.style.display =
+    naturezaSelect.value === "pontual" ? "none" : "block";
+});
 
 btnNova?.addEventListener("click", () => {
   window.saidaEditando = null;
@@ -126,7 +138,11 @@ async function salvarNovaSaida(e) {
 
   const categoria = document.getElementById("saida-categoria").value;
 const natureza = document.getElementById("saida-natureza").value;
-const valor = Number(document.getElementById("saida-valor").value);
+const valor = parseFloat(
+  document.getElementById("saida-valor").value
+    .replace(/\./g, "")
+    .replace(",", ".")
+);
 const competencia = document.getElementById("saida-competencia").value;
 const vencimento = document.getElementById("saida-vencimento").value;
 const descricao = document.getElementById("saida-descricao").value;
@@ -135,7 +151,9 @@ const totalParcelas = Number(document.getElementById("saida-total-parcelas").val
 const inicioParcelamento =
   document.getElementById("saida-inicio-parcelamento").value || vencimento;
 
-  if (!categoria || !valor || !competencia || !vencimento) return;
+  if (!categoria || !valor || !competencia) return;
+
+if (natureza !== "pontual" && !vencimento) return;
 
   if (natureza === "parcelada" && totalParcelas < 2) {
     alert("Informe o total de parcelas (mínimo 2).");
@@ -205,18 +223,18 @@ const inicioParcelamento =
   }
 } else {
 
-  await db.collection("saidas").add({
-    tipo: "manual",
-    categoria,
-    natureza,
-    valor,
-    dataCompetencia: competencia,
-    dataVencimento: vencimento,
-    dataPagamento: null,
-    status: "em_aberto",
-    descricao,
-    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-  });
+ await db.collection("saidas").add({
+  tipo: "manual",
+  categoria,
+  natureza,
+  valor,
+  dataCompetencia: competencia,
+  dataVencimento: natureza === "pontual" ? competencia : vencimento,
+  dataPagamento: null,
+  status: "em_aberto",
+  descricao,
+  criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+});
 
 }
 
@@ -299,21 +317,34 @@ async function gerarParcelas({
 
     const venc = novaData.toISOString().split("T")[0];
 
-    await db.collection("saidas").add({
-      tipo: "manual",
-      categoria,
-      natureza: "parcelada",
-      valor: Number(valorParcela.toFixed(2)),
-      dataCompetencia: venc,
-      dataVencimento: venc,
-      dataPagamento: null,
-      status: "em_aberto",
-      parcelaAtual: i,
-      totalParcelas,
-      grupoId: grupoId, // ← MESMO GRUPO PARA TODAS
-      descricao: `${descricao} (${i}/${totalParcelas})`,
-      criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-    });
+const hoje = new Date();
+hoje.setHours(0,0,0,0);
+
+const dataParcela = new Date(venc + "T00:00:00");
+
+let status = "em_aberto";
+let dataPagamento = null;
+
+if (dataParcela < hoje) {
+  status = "pago";
+  dataPagamento = venc;
+}
+
+await db.collection("saidas").add({
+  tipo: "manual",
+  categoria,
+  natureza: "parcelada",
+  valor: Number(valorParcela.toFixed(2)),
+  dataCompetencia: venc,
+  dataVencimento: venc,
+  dataPagamento,
+  status,
+  parcelaAtual: i,
+  totalParcelas,
+  grupoId,
+  descricao: `${descricao} (${i}/${totalParcelas})`,
+  criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+});
   }
 }
 
