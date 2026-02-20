@@ -487,17 +487,15 @@ async function gerarParcelas({
    STATUS AUTOMÁTICO
 ===================================================== */
 
-function obterStatusVisual(saida) {
-  if (saida.status === "pago") return "pago";
-  if (saida.status === "cancelado") return "cancelado";
-  if (saida.status === "renegociado") return "renegociado";
+function obterStatusVisual(s) {
+  if (s.status === "pago") return "pago";
 
   const hoje = new Date();
-  const venc = new Date(saida.dataVencimento + "T00:00:00");
+  hoje.setHours(0,0,0,0);
 
-  if (saida.status === "em_aberto" && hoje > venc) {
-    return "atraso";
-  }
+  const vencimento = new Date(s.dataVencimento + "T00:00:00");
+
+  if (vencimento < hoje) return "atrasado";
 
   return "em_aberto";
 }
@@ -872,13 +870,22 @@ async function gerarFixas({
   });
 }
 
-
 function obterClasseStatus(status) {
   if (!status) return "status-aberto";
 
-  status = status.toLowerCase();
+  const s = status.toString().toLowerCase().trim();
 
-  if (status === "pago") return "status-pago";
-  if (status === "atrasado") return "status-atrasado";
+  if (s === "pago") return "status-pago";
+
+  if (
+    s === "atrasado"
+  ) return "status-atrasado";
+
+  if (
+    s === "em aberto" ||
+    s === "em_aberto" ||
+    s === "aberto"
+  ) return "status-aberto";
+
   return "status-aberto";
 }
