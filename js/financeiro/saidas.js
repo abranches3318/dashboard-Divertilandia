@@ -616,20 +616,23 @@ function renderizarSaidas() {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${formatarDataSaida(s.dataVencimento)}</td>
-      <td>${formatarDataSaida(s.dataPagamento)}</td>
-      <td>${s.categoria}</td>
-      <td>${s.descricao || "—"}</td>
-      <td>${s.natureza}</td>
-      <td class="status-${statusVisual}">
-        ${formatarStatus(statusVisual)}
-      </td>
-      <td>R$ ${formatarMoedaSaida(s.valor)}</td>
-      <td class="col-acao">
-        ${gerarMenuAcoesSaida(s, statusVisual)}
-      </td>
-    `;
-
+  <td>
+    ${s.dataPagamento 
+      ? formatarDataSaida(s.dataPagamento)
+      : "—"}
+  </td>
+  <td>${formatarDataSaida(s.dataVencimento)}</td>
+  <td>${s.categoria}</td>
+  <td>${s.descricao || "—"}</td>
+  <td>${s.natureza}</td>
+  <td class="status-${statusVisual}">
+    ${formatarStatus(statusVisual)}
+  </td>
+  <td>R$ ${formatarMoedaSaida(s.valor)}</td>
+  <td class="col-acao">
+    ${gerarMenuAcoesSaida(s, statusVisual)}
+  </td>
+`;
     tbody.appendChild(tr);
   });
 
