@@ -169,7 +169,7 @@ const valor = Number(document.getElementById("saida-valor").value);
   });
   return;
 }
-const competencia = document.getElementById("saida-competencia").value;
+
 const vencimento = document.getElementById("saida-vencimento").value;
 const descricao = document.getElementById("saida-descricao").value;
 const totalParcelas = Number(document.getElementById("saida-total-parcelas").value);
@@ -177,7 +177,7 @@ const totalParcelas = Number(document.getElementById("saida-total-parcelas").val
 const inicioParcelamento =
   document.getElementById("saida-inicio-parcelamento").value || vencimento;
 
-  if (!categoria || !valor || !competencia) {
+  if (!categoria || !valor) {
   Swal.fire({
     icon: "warning",
     title: "Campos obrigatórios",
@@ -287,8 +287,7 @@ await db.collection("saidas").add({
   categoria,
   natureza,
   valor,
-  dataCompetencia: competencia,
-  dataVencimento: natureza === "pontual" ? competencia : vencimento,
+  dataVencimento: natureza === "pontual" ? vencimento : vencimento,
   dataPagamento,
   status,
   descricao,
@@ -450,7 +449,6 @@ async function gerarParcelas({
       categoria,
       natureza: "parcelada",
       valor: valor, // ← NÃO DIVIDE MAIS
-      dataCompetencia: venc,
       dataVencimento: venc,
       dataPagamento,
       status,
@@ -558,9 +556,8 @@ function renderizarSaidas() {
   // FILTRO
   // ===============================
   let lista = saidasCache.filter(s => {
-    if (!s.dataCompetencia) return false;
-
-    const data = new Date(s.dataCompetencia + "T00:00:00");
+    if (!s.dataVencimento) return false;
+const data = new Date(s.dataVencimento + "T00:00:00");
 
     if (!estaNoPeriodoSaida(data, ano, mes, periodo)) return false;
     if (categoriaFiltro !== "todas" && s.categoria !== categoriaFiltro) return false;
@@ -573,7 +570,7 @@ function renderizarSaidas() {
   });
 
   lista.sort((a, b) =>
-    new Date(b.dataCompetencia) - new Date(a.dataCompetencia)
+    new new Date(b.dataVencimento) - new Date(a.dataVencimento)
   );
 
   // ===============================
@@ -587,7 +584,7 @@ function renderizarSaidas() {
   if (s.status !== "pago") return;
 
   // REGRA: pago conta pela data de pagamento
-  const dataBase = s.dataPagamento || s.dataCompetencia;
+const dataBase = s.dataPagamento || s.dataVencimento;
   if (!dataBase) return;
 
   const data = new Date(dataBase + "T00:00:00");
@@ -609,8 +606,12 @@ function renderizarSaidas() {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${formatarDataSaida(s.dataCompetencia)}</td>
-      <td>${formatarDataSaida(s.dataVencimento)}</td>
+     <td>
+  ${s.dataPagamento 
+      ? formatarDataSaida(s.dataPagamento) 
+      : "—"}
+</td>
+<td>${formatarDataSaida(s.dataVencimento)}</td>
       <td>${s.categoria}</td>
       <td>${s.descricao || "—"}</td>
       <td>${s.natureza}</td>
@@ -744,53 +745,68 @@ function adicionarMeses(dataString, meses) {
 
 async function renovarFixasAutomaticamente() {
 
-  const hoje = new Date();
-  hoje.setDate(1);
-  const hojeStr = hoje.toISOString().split("T")[0];
-
   const snapshot = await db.collection("saidas")
     .where("tipo", "==", "fixa")
     .get();
 
   const grupos = {};
 
+  // Agrupa por série
   snapshot.forEach(doc => {
     const data = doc.data();
+    data.id = doc.id;
+
     if (!grupos[data.grupoFixa]) {
       grupos[data.grupoFixa] = [];
     }
+
     grupos[data.grupoFixa].push(data);
   });
+
+  // Limite = 3 meses à frente
+  const limite = new Date();
+  limite.setDate(1);
+  limite.setMonth(limite.getMonth() + 3);
 
   for (const grupoId in grupos) {
 
     const fixas = grupos[grupoId];
 
-    // pega a última competência
-    fixas.sort((a,b) => a.dataCompetencia.localeCompare(b.dataCompetencia));
+    // Ordena pela data de vencimento
+    fixas.sort((a, b) =>
+      a.dataVencimento.localeCompare(b.dataVencimento)
+    );
+
     const ultima = fixas[fixas.length - 1];
 
-    const ultimaData = new Date(ultima.dataCompetencia + "T00:00:00");
-    const limite = new Date();
-    limite.setMonth(limite.getMonth() + 3);
-    limite.setDate(1);
-
-    // enquanto faltar meses, cria novos
-    let dataNova = new Date(ultimaData);
+    let dataNova = new Date(ultima.dataVencimento + "T00:00:00");
 
     while (dataNova < limite) {
 
       dataNova.setMonth(dataNova.getMonth() + 1);
 
-      const competenciaNova = dataNova.toISOString().split("T")[0];
+      const novaDataStr = dataNova.toISOString().split("T")[0];
+
+      // Verifica se já existe esse mês (evita duplicação)
+      const jaExiste = fixas.some(f => f.dataVencimento === novaDataStr);
+      if (jaExiste) continue;
 
       await db.collection("saidas").add({
-        ...ultima,
-        dataCompetencia: competenciaNova,
-        dataVencimento: competenciaNova,
+        tipo: "fixa",
+        grupoFixa: grupoId,
+        categoria: ultima.categoria,
+        natureza: "fixa",
+        valor: Number(ultima.valor) || 0,
+        dataVencimento: novaDataStr,
         dataPagamento: null,
         status: "em_aberto",
+        descricao: ultima.descricao || "",
         criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // adiciona na lista local para evitar duplicar no mesmo loop
+      fixas.push({
+        dataVencimento: novaDataStr
       });
     }
   }
