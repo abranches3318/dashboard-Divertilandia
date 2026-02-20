@@ -511,6 +511,9 @@ function renderizarSaidas() {
   const mes = Number(document.getElementById("filtro-mes").value);
   const periodo = document.getElementById("filtro-periodo").value;
 
+  // ===============================
+  // FILTRO
+  // ===============================
   let lista = saidasCache.filter(s => {
     if (!s.dataCompetencia) return false;
 
@@ -530,40 +533,55 @@ function renderizarSaidas() {
     new Date(b.dataCompetencia) - new Date(a.dataCompetencia)
   );
 
+  // ===============================
+  // TOTAIS
+  // ===============================
   let totalPeriodo = 0;
-let totalFiltrado = 0;
+  let totalFiltrado = 0;
 
-// Total do período (apenas pagos)
-saidasCache.forEach(s => {
-  if (!s.dataCompetencia) return;
+  // Total do período (apenas pagos)
+  saidasCache.forEach(s => {
+    if (!s.dataCompetencia) return;
 
-  const data = new Date(s.dataCompetencia + "T00:00:00");
+    const data = new Date(s.dataCompetencia + "T00:00:00");
 
-  if (estaNoPeriodoSaida(data, ano, mes, periodo) && s.status === "pago") {
-    totalPeriodo += Number(s.valor);
-  }
-});
+    if (estaNoPeriodoSaida(data, ano, mes, periodo) && s.status === "pago") {
+      totalPeriodo += Number(s.valor);
+    }
+  });
+
+  // ===============================
+  // RENDER TABELA  ← AQUI ESTAVA O ERRO
+  // ===============================
+  lista.forEach(s => {
+
+    totalFiltrado += Number(s.valor);
+
+    const statusVisual = obterStatusVisual(s);
 
     const tr = document.createElement("tr");
 
-   tr.innerHTML = `
-  <td>${formatarDataSaida(s.dataCompetencia)}</td>
-  <td>${formatarDataSaida(s.dataVencimento)}</td>
-  <td>${s.categoria}</td>
-  <td>${s.descricao || "—"}</td>
-  <td>${s.natureza}</td>
-  <td class="status-${statusVisual}">
-    ${formatarStatus(statusVisual)}
-  </td>
-  <td>R$ ${formatarMoedaSaida(s.valor)}</td>
-  <td class="col-acao">
-    ${gerarMenuAcoesSaida(s, statusVisual)}
-  </td>
-`;
+    tr.innerHTML = `
+      <td>${formatarDataSaida(s.dataCompetencia)}</td>
+      <td>${formatarDataSaida(s.dataVencimento)}</td>
+      <td>${s.categoria}</td>
+      <td>${s.descricao || "—"}</td>
+      <td>${s.natureza}</td>
+      <td class="status-${statusVisual}">
+        ${formatarStatus(statusVisual)}
+      </td>
+      <td>R$ ${formatarMoedaSaida(s.valor)}</td>
+      <td class="col-acao">
+        ${gerarMenuAcoesSaida(s, statusVisual)}
+      </td>
+    `;
 
     tbody.appendChild(tr);
   });
 
+  // ===============================
+  // ATUALIZA TOTAIS NA TELA
+  // ===============================
   document.getElementById("total-saidas-filtrado")
     .innerText = `R$ ${formatarMoedaSaida(totalFiltrado)}`;
 
