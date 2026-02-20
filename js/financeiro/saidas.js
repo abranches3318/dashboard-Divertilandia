@@ -174,6 +174,9 @@ const valor = Number(document.getElementById("saida-valor").value);
 }
 
 const vencimento = document.getElementById("saida-vencimento").value;
+  const competencia =
+  document.getElementById("saida-competencia")?.value || vencimento;
+  
 const descricao = document.getElementById("saida-descricao").value;
 const totalParcelas = Number(document.getElementById("saida-total-parcelas").value);
 
@@ -326,7 +329,10 @@ window.editarSaida = function (id) {
       maximumFractionDigits: 2
     });
 
-  document.getElementById("saida-competencia").value = saida.dataCompetencia;
+  const campoCompetencia = document.getElementById("saida-competencia");
+if (campoCompetencia) {
+  campoCompetencia.value = saida.dataCompetencia;
+}
   document.getElementById("saida-vencimento").value = saida.dataVencimento;
   document.getElementById("saida-descricao").value = saida.descricao;
 
