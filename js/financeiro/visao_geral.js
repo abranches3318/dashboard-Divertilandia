@@ -49,32 +49,30 @@ document.getElementById("filtro-ano")?.addEventListener("change", e => {
 // VISÃO GERAL — ESTADO ZERO
 // =====================================================
 async function carregarVisaoGeral() {
+
+  if (!window.saidasCache) {
+    await carregarSaidasCache();
+  }
+
   setValor("kpi-entradas", 0);
   setValor("kpi-saidas", 0);
   setValor("kpi-contas-pagar", 0);
   setValor("kpi-saldo", 0);
 
-  const elAg = document.getElementById("kpi-agendamentos");
-  if (elAg) elAg.textContent = "0";
-
-  const elProj = document.getElementById("kpi-projecao");
-  if (elProj) elProj.textContent = "R$ 0,00";
-
   const mes = periodoAtual === "mensal" ? mesAtualSelecionado : null;
 
-  await atualizarEntradasVisaoGeral(periodoAtual, mes);
-  // Saídas pagas
-const totalSaidas = await calcularSaidasPagas(periodoAtual, mes);
-setValor("kpi-saidas", totalSaidas);
+  const totalEntradas = await calcularEntradasComEntrada(periodoAtual, mes);
+  setValor("kpi-entradas", totalEntradas);
 
-// Contas a pagar (aberto + atraso)
-const contasAPagar = calcularContasAPagar();
-setValor("kpi-contas-pagar", contasAPagar);
+  const totalSaidas = await calcularSaidasPagas(periodoAtual, mes);
+  setValor("kpi-saidas", totalSaidas);
 
-// Resultado do período
-const totalEntradas = await calcularEntradasComEntrada(periodoAtual, mes);
-const resultado = totalEntradas - totalSaidas;
-setValor("kpi-saldo", resultado);
+  const contasAPagar = calcularContasAPagar();
+  setValor("kpi-contas-pagar", contasAPagar);
+
+  const resultado = totalEntradas - totalSaidas;
+  setValor("kpi-saldo", resultado);
+
   await atualizarAgendamentosVisaoGeral(periodoAtual, mes);
   await atualizarProjecaoVisaoGeral(periodoAtual, mes);
 }
@@ -583,11 +581,14 @@ async function calcularSaidasPagas(periodo, mesSelecionado) {
 
   let total = 0;
 
-  saidasCache.forEach(s => {
+  window.saidasCache.forEach(s => {
     if (s.status !== "pago") return;
-    if (!s.dataPagamento) return;
 
-    const data = new Date(s.dataPagamento + "T00:00:00");
+    // prioridade: dataPagamento
+    const dataBase = s.dataPagamento || s.data_pagamento || s.vencimento;
+    if (!dataBase) return;
+
+    const data = new Date(dataBase + "T00:00:00");
 
     if (data >= dataInicio && data <= dataFim) {
       total += Number(s.valor || 0);
@@ -607,6 +608,19 @@ function calcularContasAPagar() {
       total += Number(s.valor || 0);
     }
   });
+
+  async function carregarSaidasCache() {
+  const snapshot = await db.collection("saidas").get();
+
+  window.saidasCache = [];
+
+  snapshot.forEach(doc => {
+    window.saidasCache.push({
+      id: doc.id,
+      ...doc.data()
+    });
+  });
+}
 
   return total;
 }
