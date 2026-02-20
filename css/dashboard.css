@@ -3097,19 +3097,19 @@ main.financeiro .financeiro-section.active {
 /* Pago */
 .status-pago {
   background-color: #0ced57;
-  color: #000000;
+  color: #D3D3D3;
 }
 
 /* Atrasado */
 .status-atrasado {
   background-color: #ed091e;
-  color:#000000;
+  color:#D3D3D3;
 }
 
 /* Em aberto */
 .status-aberto {
   background-color: #f5da2c;
-  color: #000000;
+  color: #D3D3D3;
 }
 
 
