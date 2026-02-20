@@ -603,11 +603,14 @@ function calcularContasAPagar() {
 
   let total = 0;
 
-  saidasCache.forEach(s => {
-    if (s.status === "em_aberto" || s.status === "atraso") {
+  window.saidasCache.forEach(s => {
+    if (s.status === "em_aberto" || s.status === "atrasado") {
       total += Number(s.valor || 0);
     }
   });
+
+  return total;
+}
 
   async function carregarSaidasCache() {
   const snapshot = await db.collection("saidas").get();
