@@ -768,145 +768,99 @@ async function gerarDadosFinanceirosAno() {
   };
 }
 
+// =====================================================
+// GRÁFICO — EVENTOS
+// =====================================================
 async function renderGraficoEventos() {
-  if (graficoEventos) graficoEventos.destroy();
+  const ano = anoAtualSelecionado;
 
-  let labels;
-  let dados;
+  const eventosMes = Array(12).fill(0);
 
-  if (periodoAtual === "mensal") {
-    const ano = anoAtualSelecionado;
-    const mes = mesAtualSelecionado;
-    const dias = new Date(ano, mes + 1, 0).getDate();
+  const inicio = `${ano}-01-01`;
+  const fim = `${ano}-12-31`;
 
-    labels = Array.from({ length: dias }, (_, i) => i + 1);
-    dados = Array(dias).fill(0);
+  const snapshot = await db
+    .collection("agendamentos")
+    .where("data", ">=", inicio)
+    .where("data", "<=", fim)
+    .get();
 
-    const { inicio, fim } = getPeriodoDatas("mensal", mes);
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    if (d.status === "cancelado") return;
 
-    const snapshot = await db
-      .collection("agendamentos")
-      .where("data", ">=", inicio)
-      .where("data", "<=", fim)
-      .get();
+    const data = new Date(d.data + "T00:00:00");
+    const mes = data.getMonth();
 
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      if (d.status === "cancelado") return;
-
-      const dia = new Date(d.data).getDate() - 1;
-      dados[dia]++;
-    });
-
-  } else {
-    labels = getLabelsPorPeriodo("mensal");
-    dados = Array(12).fill(0);
-
-    const ano = anoAtualSelecionado;
-    const inicio = `${ano}-01-01`;
-    const fim = `${ano}-12-31`;
-
-    const snapshot = await db
-      .collection("agendamentos")
-      .where("data", ">=", inicio)
-      .where("data", "<=", fim)
-      .get();
-
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      if (d.status === "cancelado") return;
-
-      const mes = new Date(d.data).getMonth();
-      dados[mes]++;
-    });
-  }
+    eventosMes[mes]++;
+  });
 
   graficoEventos = new Chart(
     document.getElementById("graficoEventos"),
     {
-      type: "line",
+      type: "bar",
       data: {
-        labels,
-        datasets: [{
-          label: "Eventos",
-          data: dados,
-          borderColor: "#b794f4",
-          tension: 0.35
-        }]
+        labels: getLabelsPorPeriodo("mensal"),
+        datasets: [
+          {
+            label: "Eventos",
+            data: eventosMes
+          }
+        ]
       },
       options: chartOptions()
     }
   );
 }
 
-async function renderGraficoEventos() {
-  if (graficoEventos) graficoEventos.destroy();
 
-  let labels;
-  let dados;
-
-  if (periodoAtual === "mensal") {
-    const ano = anoAtualSelecionado;
-    const mes = mesAtualSelecionado;
-    const dias = new Date(ano, mes + 1, 0).getDate();
-
-    labels = Array.from({ length: dias }, (_, i) => i + 1);
-    dados = Array(dias).fill(0);
-
-    const { inicio, fim } = getPeriodoDatas("mensal", mes);
-
-    const snapshot = await db
-      .collection("agendamentos")
-      .where("data", ">=", inicio)
-      .where("data", "<=", fim)
-      .get();
-
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      if (d.status === "cancelado") return;
-
-      const dia = new Date(d.data).getDate() - 1;
-      dados[dia]++;
-    });
-
-  } else {
-    labels = getLabelsPorPeriodo("mensal");
-    dados = Array(12).fill(0);
-
-    const ano = anoAtualSelecionado;
-    const inicio = `${ano}-01-01`;
-    const fim = `${ano}-12-31`;
-
-    const snapshot = await db
-      .collection("agendamentos")
-      .where("data", ">=", inicio)
-      .where("data", "<=", fim)
-      .get();
-
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      if (d.status === "cancelado") return;
-
-      const mes = new Date(d.data).getMonth();
-      dados[mes]++;
-    });
+// =====================================================
+// GRÁFICO — DISTRIBUIÇÃO DE GASTOS
+// =====================================================
+async function renderGraficoGastos() {
+  if (!window.saidasCache) {
+    await carregarSaidasCache();
   }
 
-  graficoEventos = new Chart(
-    document.getElementById("graficoEventos"),
+  const { inicio, fim } = getPeriodoDatas(
+    periodoAtual,
+    periodoAtual === "mensal" ? mesAtualSelecionado : null
+  );
+
+  const dataInicio = new Date(inicio + "T00:00:00");
+  const dataFim = new Date(fim + "T23:59:59");
+
+  const categorias = {};
+
+  window.saidasCache.forEach(s => {
+    if (s.status !== "pago") return;
+
+    const dataBase = s.dataPagamento || s.data_pagamento || s.vencimento;
+    if (!dataBase) return;
+
+    const data = new Date(dataBase + "T00:00:00");
+    if (data < dataInicio || data > dataFim) return;
+
+    const categoria = s.categoria || "Outros";
+    categorias[categoria] = (categorias[categoria] || 0) + Number(s.valor || 0);
+  });
+
+  const labels = Object.keys(categorias);
+  const valores = Object.values(categorias);
+
+  graficoGastos = new Chart(
+    document.getElementById("graficoGastos"),
     {
-      type: "line",
+      type: "doughnut",
       data: {
         labels,
-        datasets: [{
-          label: "Eventos",
-          data: dados,
-          borderColor: "#b794f4",
-          tension: 0.35
-        }]
+        datasets: [
+          {
+            data: valores
+          }
+        ]
       },
       options: chartOptions()
     }
   );
 }
-
