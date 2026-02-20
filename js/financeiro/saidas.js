@@ -130,21 +130,24 @@ function configurarFiltros() {
 ===================================================== */
 
 async function carregarSaidas() {
-
-  await renovarFixasAutomaticamente(); 
-  
   const snapshot = await db.collection("saidas").get();
+
   saidasCache = [];
 
- snapshot.forEach(doc => {
-  const data = doc.data();
-  data.id = doc.id;
+  snapshot.forEach(doc => {
+    const data = doc.data();
 
-  // CORREÇÃO AQUI
-  data.valor = Number(data.valor) || 0;
+    // Migração automática (dados antigos)
+    if (!data.dataVencimento && data.dataCompetencia) {
+      data.dataVencimento = data.dataCompetencia;
+    }
 
-  saidasCache.push(data);
-});
+    saidasCache.push({
+      id: doc.id,
+      ...data
+    });
+  });
+
   renderizarSaidas();
 }
 
@@ -401,12 +404,15 @@ async function suspenderSaida(id) {
 async function gerarParcelas({
   categoria,
   valor,
-  competencia,
-  vencimento,
   descricao,
   totalParcelas,
   inicioParcelamento
 }) {
+
+  // Corrige valor vindo de campo com máscara (1.658,00 → 1658.00)
+  if (typeof valor === "string") {
+    valor = valor.replace(/\./g, "").replace(",", ".");
+  }
 
   valor = Number(valor);
   totalParcelas = Number(totalParcelas);
@@ -421,7 +427,10 @@ async function gerarParcelas({
   }
 
   const dataBase = new Date(inicioParcelamento + "T00:00:00");
-  const grupoId = Date.now().toString();
+  const grupoId = "parc_" + Date.now();
+
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
 
   for (let i = 1; i <= totalParcelas; i++) {
 
@@ -430,10 +439,7 @@ async function gerarParcelas({
 
     const venc = novaData.toISOString().split("T")[0];
 
-    // STATUS AUTOMÁTICO
-    const hoje = new Date();
-    hoje.setHours(0,0,0,0);
-
+    // Status automático
     const dataParcela = new Date(venc + "T00:00:00");
 
     let status = "em_aberto";
@@ -445,20 +451,30 @@ async function gerarParcelas({
     }
 
     await db.collection("saidas").add({
-      tipo: "manual",
+      tipo: "parcelada",
+      grupoId,
       categoria,
       natureza: "parcelada",
-      valor: valor, // ← NÃO DIVIDE MAIS
+      valor, // valor da parcela (não divide)
       dataVencimento: venc,
       dataPagamento,
       status,
       parcelaAtual: i,
       totalParcelas,
-      grupoId,
-      descricao: `${descricao} (${i}/${totalParcelas})`,
+      descricao: descricao
+        ? `${descricao} (${i}/${totalParcelas})`
+        : `Parcela ${i}/${totalParcelas}`,
       criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
   }
+
+  Swal.fire({
+    icon: "success",
+    title: "Parcelamento criado",
+    text: `${totalParcelas} parcelas geradas com sucesso.`,
+    timer: 1500,
+    showConfirmButton: false
+  });
 }
 
 /* =====================================================
@@ -552,12 +568,10 @@ function renderizarSaidas() {
   const mes = Number(document.getElementById("filtro-mes").value);
   const periodo = document.getElementById("filtro-periodo").value;
 
-  // ===============================
-  // FILTRO
-  // ===============================
   let lista = saidasCache.filter(s => {
     if (!s.dataVencimento) return false;
-const data = new Date(s.dataVencimento + "T00:00:00");
+
+    const data = new Date(s.dataVencimento + "T00:00:00");
 
     if (!estaNoPeriodoSaida(data, ano, mes, periodo)) return false;
     if (categoriaFiltro !== "todas" && s.categoria !== categoriaFiltro) return false;
@@ -569,49 +583,35 @@ const data = new Date(s.dataVencimento + "T00:00:00");
     return true;
   });
 
-  lista.sort((a, b) =>
-    new new Date(b.dataVencimento) - new Date(a.dataVencimento)
-  );
+  // Ordenação correta
+  lista.sort((a, b) => {
+    const dataA = a.dataVencimento
+      ? new Date(a.dataVencimento + "T00:00:00").getTime()
+      : 0;
 
-  // ===============================
-  // TOTAIS
-  // ===============================
+    const dataB = b.dataVencimento
+      ? new Date(b.dataVencimento + "T00:00:00").getTime()
+      : 0;
+
+    return dataB - dataA;
+  });
+
   let totalPeriodo = 0;
   let totalFiltrado = 0;
 
-  // Total do período (apenas pagos)
-  saidasCache.forEach(s => {
-  if (s.status !== "pago") return;
-
-  // REGRA: pago conta pela data de pagamento
-const dataBase = s.dataPagamento || s.dataVencimento;
-  if (!dataBase) return;
-
-  const data = new Date(dataBase + "T00:00:00");
-
-  if (estaNoPeriodoSaida(data, ano, mes, periodo)) {
-    totalPeriodo += Number(s.valor);
-  }
-});
-
-  // ===============================
-  // RENDER TABELA  ← AQUI ESTAVA O ERRO
-  // ===============================
   lista.forEach(s => {
-
-    totalFiltrado += Number(s.valor);
-
     const statusVisual = obterStatusVisual(s);
+    totalFiltrado += Number(s.valor || 0);
+
+    if (statusVisual === "pago") {
+      totalPeriodo += Number(s.valor || 0);
+    }
 
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-     <td>
-  ${s.dataPagamento 
-      ? formatarDataSaida(s.dataPagamento) 
-      : "—"}
-</td>
-<td>${formatarDataSaida(s.dataVencimento)}</td>
+      <td>${formatarDataSaida(s.dataVencimento)}</td>
+      <td>${formatarDataSaida(s.dataPagamento)}</td>
       <td>${s.categoria}</td>
       <td>${s.descricao || "—"}</td>
       <td>${s.natureza}</td>
@@ -627,9 +627,6 @@ const dataBase = s.dataPagamento || s.dataVencimento;
     tbody.appendChild(tr);
   });
 
-  // ===============================
-  // ATUALIZA TOTAIS NA TELA
-  // ===============================
   document.getElementById("total-saidas-filtrado")
     .innerText = `R$ ${formatarMoedaSaida(totalFiltrado)}`;
 
@@ -751,10 +748,9 @@ async function renovarFixasAutomaticamente() {
 
   const grupos = {};
 
-  // Agrupa por série
   snapshot.forEach(doc => {
     const data = doc.data();
-    data.id = doc.id;
+    if (!data.grupoFixa) return;
 
     if (!grupos[data.grupoFixa]) {
       grupos[data.grupoFixa] = [];
@@ -763,51 +759,101 @@ async function renovarFixasAutomaticamente() {
     grupos[data.grupoFixa].push(data);
   });
 
-  // Limite = 3 meses à frente
-  const limite = new Date();
-  limite.setDate(1);
-  limite.setMonth(limite.getMonth() + 3);
-
   for (const grupoId in grupos) {
 
     const fixas = grupos[grupoId];
 
-    // Ordena pela data de vencimento
     fixas.sort((a, b) =>
-      a.dataVencimento.localeCompare(b.dataVencimento)
+      new Date(a.dataVencimento) - new Date(b.dataVencimento)
     );
 
     const ultima = fixas[fixas.length - 1];
-
     let dataNova = new Date(ultima.dataVencimento + "T00:00:00");
+
+    const limite = new Date();
+    limite.setMonth(limite.getMonth() + 3);
+    limite.setDate(1);
 
     while (dataNova < limite) {
 
       dataNova.setMonth(dataNova.getMonth() + 1);
 
-      const novaDataStr = dataNova.toISOString().split("T")[0];
-
-      // Verifica se já existe esse mês (evita duplicação)
-      const jaExiste = fixas.some(f => f.dataVencimento === novaDataStr);
-      if (jaExiste) continue;
+      const vencimentoNovo = dataNova.toISOString().split("T")[0];
 
       await db.collection("saidas").add({
-        tipo: "fixa",
-        grupoFixa: grupoId,
-        categoria: ultima.categoria,
-        natureza: "fixa",
-        valor: Number(ultima.valor) || 0,
-        dataVencimento: novaDataStr,
+        ...ultima,
+        dataVencimento: vencimentoNovo,
         dataPagamento: null,
         status: "em_aberto",
-        descricao: ultima.descricao || "",
         criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      // adiciona na lista local para evitar duplicar no mesmo loop
-      fixas.push({
-        dataVencimento: novaDataStr
       });
     }
   }
+}
+
+async function gerarFixas({
+  categoria,
+  valor,
+  descricao,
+  vencimento,
+  meses = 12
+}) {
+
+  // Corrige máscara
+  if (typeof valor === "string") {
+    valor = valor.replace(/\./g, "").replace(",", ".");
+  }
+
+  valor = Number(valor);
+
+  if (isNaN(valor) || valor <= 0) {
+    Swal.fire({
+      icon: "error",
+      title: "Erro",
+      text: "Valor inválido."
+    });
+    return;
+  }
+
+  const grupoFixa = "fixa_" + Date.now();
+
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+
+  for (let i = 0; i < meses; i++) {
+
+    const data = new Date(vencimento + "T00:00:00");
+    data.setMonth(data.getMonth() + i);
+
+    const venc = data.toISOString().split("T")[0];
+
+    let status = "em_aberto";
+    let dataPagamento = null;
+
+    if (data < hoje) {
+      status = "pago";
+      dataPagamento = venc;
+    }
+
+    await db.collection("saidas").add({
+      tipo: "fixa",
+      grupoFixa,
+      categoria,
+      natureza: "fixa",
+      valor,
+      dataVencimento: venc,
+      dataPagamento,
+      status,
+      descricao,
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  Swal.fire({
+    icon: "success",
+    title: "Conta fixa criada",
+    text: `${meses} meses gerados.`,
+    timer: 1500,
+    showConfirmButton: false
+  });
 }
