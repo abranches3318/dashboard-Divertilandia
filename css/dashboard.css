@@ -3112,4 +3112,22 @@ main.financeiro .financeiro-section.active {
   color: #808080;
 }
 
+.menu-acoes-wrapper {
+  position: relative;
+}
+
+.menu-acoes-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 999;
+  display: none;
+}
+
+/* quando não houver espaço abaixo */
+.menu-acoes-dropdown.up {
+  top: auto;
+  bottom: 100%;
+}
+
 
