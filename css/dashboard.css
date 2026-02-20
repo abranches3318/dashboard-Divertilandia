@@ -3096,20 +3096,20 @@ main.financeiro .financeiro-section.active {
 
 /* Pago */
 .status-pago {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: #0ced57;
+  color: #FFFFFF;
 }
 
 /* Atrasado */
 .status-atrasado {
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: #ed091e;
+  color:#FFFFFF;
 }
 
 /* Em aberto */
 .status-aberto {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: #f5da2c;
+  color: #FFFFFF;
 }
 
 
