@@ -3083,3 +3083,32 @@ main.financeiro .financeiro-section.active {
   background: rgba(255,95,95,0.1);
 }
 
+/* Coluna Status */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  display: inline-block;
+  min-width: 90px;
+}
+
+/* Pago */
+.status-pago {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+/* Atrasado */
+.status-atrasado {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Em aberto */
+.status-aberto {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
