@@ -612,7 +612,10 @@ function calcularContasAPagar() {
   return total;
 }
 
-  async function carregarSaidasCache() {
+// =====================================================
+// CACHE DE SAÍDAS (GLOBAL)
+// =====================================================
+async function carregarSaidasCache() {
   const snapshot = await db.collection("saidas").get();
 
   window.saidasCache = [];
@@ -623,7 +626,4 @@ function calcularContasAPagar() {
       ...doc.data()
     });
   });
-}
-
-  return total;
 }
