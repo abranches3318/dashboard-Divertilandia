@@ -487,14 +487,57 @@ function obterStatusVisual(saida) {
 ===================================================== */
 
 async function marcarComoPago(id) {
-  await db.collection("saidas").doc(id).update({
-    status: "pago",
-    dataPagamento: new Date().toISOString().split("T")[0]
+  const saida = saidasCache.find(s => s.id === id);
+  if (!saida) return;
+
+  const hoje = new Date().toISOString().split("T")[0];
+
+  const { value: dataPagamento } = await Swal.fire({
+    title: "Confirmar pagamento",
+    html: `
+      <p><strong>${saida.descricao || saida.categoria}</strong></p>
+      <p>Valor: R$ ${formatarMoedaSaida(saida.valor)}</p>
+      <input type="date" id="data-pagamento" class="swal2-input" value="${hoje}">
+    `,
+    showCancelButton: true,
+    confirmButtonText: "Confirmar",
+    cancelButtonText: "Cancelar",
+    focusConfirm: false,
+    preConfirm: () => {
+      const data = document.getElementById("data-pagamento").value;
+      if (!data) {
+        Swal.showValidationMessage("Informe a data do pagamento");
+        return false;
+      }
+      return data;
+    }
   });
 
-  carregarSaidas();
-}
+  if (!dataPagamento) return;
 
+  try {
+    await db.collection("saidas").doc(id).update({
+      status: "pago",
+      dataPagamento: dataPagamento
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "Pagamento registrado",
+      timer: 1200,
+      showConfirmButton: false
+    });
+
+    carregarSaidas();
+
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Erro ao registrar pagamento",
+      text: error.message
+    });
+  }
+}
 /* =====================================================
    RENDERIZAÇÃO
 ===================================================== */
@@ -541,14 +584,18 @@ function renderizarSaidas() {
 
   // Total do período (apenas pagos)
   saidasCache.forEach(s => {
-    if (!s.dataCompetencia) return;
+  if (s.status !== "pago") return;
 
-    const data = new Date(s.dataCompetencia + "T00:00:00");
+  // REGRA: pago conta pela data de pagamento
+  const dataBase = s.dataPagamento || s.dataCompetencia;
+  if (!dataBase) return;
 
-    if (estaNoPeriodoSaida(data, ano, mes, periodo) && s.status === "pago") {
-      totalPeriodo += Number(s.valor);
-    }
-  });
+  const data = new Date(dataBase + "T00:00:00");
+
+  if (estaNoPeriodoSaida(data, ano, mes, periodo)) {
+    totalPeriodo += Number(s.valor);
+  }
+});
 
   // ===============================
   // RENDER TABELA  ← AQUI ESTAVA O ERRO
