@@ -42,7 +42,7 @@ document.getElementById("filtro-ano")?.addEventListener("change", e => {
 
   if (document.getElementById("visao")?.classList.contains("active")) {
     carregarVisaoGeral();
-    renderGraficosZerados();
+    renderGraficosFinanceiros();
   }
 });
 // =====================================================
@@ -83,9 +83,83 @@ async function carregarVisaoGeral() {
 async function renderGraficosFinanceiros() {
   destruirGraficos();
 
-  const labels = getLabelsPorPeriodo("mensal");
-  const dados = await gerarDadosFinanceirosAno();
+  let labels;
+  let entradas = [];
+  let saidas = [];
+  let saldo = [];
 
+  if (periodoAtual === "mensal") {
+    // =========================
+    // PERÍODO MENSAL (dias)
+    // =========================
+    const ano = anoAtualSelecionado;
+    const mes = mesAtualSelecionado;
+
+    const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+    labels = Array.from({ length: diasNoMes }, (_, i) => i + 1);
+
+    entradas = Array(diasNoMes).fill(0);
+    saidas = Array(diasNoMes).fill(0);
+    saldo = Array(diasNoMes).fill(0);
+
+    // ENTRADAS
+    const { inicio, fim } = getPeriodoDatas("mensal", mes);
+
+    const snapshot = await db
+      .collection("agendamentos")
+      .where("data", ">=", inicio)
+      .where("data", "<=", fim)
+      .get();
+
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      if (d.status === "cancelado") return;
+
+      const data = new Date(d.data + "T00:00:00");
+      const dia = data.getDate() - 1;
+
+      entradas[dia] += Number(d.valor_final || 0);
+    });
+
+    // SAÍDAS
+    if (!window.saidasCache) await carregarSaidasCache();
+
+    window.saidasCache.forEach(s => {
+      if (s.status !== "pago") return;
+
+      const base = s.dataPagamento || s.vencimento;
+      if (!base) return;
+
+      const data = new Date(base + "T00:00:00");
+
+      if (
+        data.getFullYear() === ano &&
+        data.getMonth() === mes
+      ) {
+        const dia = data.getDate() - 1;
+        saidas[dia] += Number(s.valor || 0);
+      }
+    });
+
+    for (let i = 0; i < diasNoMes; i++) {
+      saldo[i] = entradas[i] - saidas[i];
+    }
+
+  } else {
+    // =========================
+    // PERÍODO ANUAL (meses)
+    // =========================
+    labels = getLabelsPorPeriodo("mensal");
+
+    const dados = await gerarDadosFinanceirosAno();
+    entradas = dados.entradasMes;
+    saidas = dados.saidasMes;
+    saldo = dados.saldoMes;
+  }
+
+  // =========================
+  // RENDER
+  // =========================
   graficoFinanceiro = new Chart(
     document.getElementById("graficoFinanceiro"),
     {
@@ -95,19 +169,19 @@ async function renderGraficosFinanceiros() {
         datasets: [
           {
             label: "Entradas",
-            data: dados.entradasMes,
+            data: entradas,
             borderColor: "#2ecc71",
             tension: 0.35
           },
           {
             label: "Saídas",
-            data: dados.saidasMes,
+            data: saidas,
             borderColor: "#e74c3c",
             tension: 0.35
           },
           {
             label: "Saldo",
-            data: dados.saldoMes,
+            data: saldo,
             borderColor: "#4cafef",
             tension: 0.35
           }
@@ -116,6 +190,10 @@ async function renderGraficosFinanceiros() {
       options: chartOptions()
     }
   );
+
+  // Render dos outros gráficos
+  renderGraficoEventos();
+  renderGraficoGastos();
 }
 
 // =====================================================
@@ -232,7 +310,7 @@ function initFiltroPeriodo() {
 
     if (document.getElementById("visao")?.classList.contains("active")) {
       carregarVisaoGeral();
-      renderGraficosZerados();
+      renderGraficosFinanceiros();
     }
   });
 
@@ -295,7 +373,7 @@ document.getElementById("filtro-mes")?.addEventListener("change", e => {
 
   if (document.getElementById("visao")?.classList.contains("active")) {
     carregarVisaoGeral();
-    renderGraficosZerados();
+    renderGraficosFinanceiros();
   }
 });
 
@@ -688,5 +766,147 @@ async function gerarDadosFinanceirosAno() {
     saidasMes,
     saldoMes
   };
+}
+
+async function renderGraficoEventos() {
+  if (graficoEventos) graficoEventos.destroy();
+
+  let labels;
+  let dados;
+
+  if (periodoAtual === "mensal") {
+    const ano = anoAtualSelecionado;
+    const mes = mesAtualSelecionado;
+    const dias = new Date(ano, mes + 1, 0).getDate();
+
+    labels = Array.from({ length: dias }, (_, i) => i + 1);
+    dados = Array(dias).fill(0);
+
+    const { inicio, fim } = getPeriodoDatas("mensal", mes);
+
+    const snapshot = await db
+      .collection("agendamentos")
+      .where("data", ">=", inicio)
+      .where("data", "<=", fim)
+      .get();
+
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      if (d.status === "cancelado") return;
+
+      const dia = new Date(d.data).getDate() - 1;
+      dados[dia]++;
+    });
+
+  } else {
+    labels = getLabelsPorPeriodo("mensal");
+    dados = Array(12).fill(0);
+
+    const ano = anoAtualSelecionado;
+    const inicio = `${ano}-01-01`;
+    const fim = `${ano}-12-31`;
+
+    const snapshot = await db
+      .collection("agendamentos")
+      .where("data", ">=", inicio)
+      .where("data", "<=", fim)
+      .get();
+
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      if (d.status === "cancelado") return;
+
+      const mes = new Date(d.data).getMonth();
+      dados[mes]++;
+    });
+  }
+
+  graficoEventos = new Chart(
+    document.getElementById("graficoEventos"),
+    {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Eventos",
+          data: dados,
+          borderColor: "#b794f4",
+          tension: 0.35
+        }]
+      },
+      options: chartOptions()
+    }
+  );
+}
+
+async function renderGraficoEventos() {
+  if (graficoEventos) graficoEventos.destroy();
+
+  let labels;
+  let dados;
+
+  if (periodoAtual === "mensal") {
+    const ano = anoAtualSelecionado;
+    const mes = mesAtualSelecionado;
+    const dias = new Date(ano, mes + 1, 0).getDate();
+
+    labels = Array.from({ length: dias }, (_, i) => i + 1);
+    dados = Array(dias).fill(0);
+
+    const { inicio, fim } = getPeriodoDatas("mensal", mes);
+
+    const snapshot = await db
+      .collection("agendamentos")
+      .where("data", ">=", inicio)
+      .where("data", "<=", fim)
+      .get();
+
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      if (d.status === "cancelado") return;
+
+      const dia = new Date(d.data).getDate() - 1;
+      dados[dia]++;
+    });
+
+  } else {
+    labels = getLabelsPorPeriodo("mensal");
+    dados = Array(12).fill(0);
+
+    const ano = anoAtualSelecionado;
+    const inicio = `${ano}-01-01`;
+    const fim = `${ano}-12-31`;
+
+    const snapshot = await db
+      .collection("agendamentos")
+      .where("data", ">=", inicio)
+      .where("data", "<=", fim)
+      .get();
+
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      if (d.status === "cancelado") return;
+
+      const mes = new Date(d.data).getMonth();
+      dados[mes]++;
+    });
+  }
+
+  graficoEventos = new Chart(
+    document.getElementById("graficoEventos"),
+    {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Eventos",
+          data: dados,
+          borderColor: "#b794f4",
+          tension: 0.35
+        }]
+      },
+      options: chartOptions()
+    }
+  );
 }
 
