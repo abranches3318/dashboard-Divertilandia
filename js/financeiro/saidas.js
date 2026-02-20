@@ -670,30 +670,46 @@ function gerarMenuAcoesSaida(saida, statusVisual) {
 document.addEventListener("click", function (e) {
   const btn = e.target.closest(".menu-acoes-btn");
 
-  // Clique no botão ⋮
+  // Clique no botão
   if (btn) {
     e.stopPropagation();
 
     const id = btn.dataset.id;
 
+    // Fecha todos
     document.querySelectorAll(".menu-acoes-dropdown")
-      .forEach(menu => menu.style.display = "none");
+      .forEach(menu => {
+        menu.style.display = "none";
+        menu.classList.remove("up");
+      });
 
     const menu = document.getElementById(`menu-${id}`);
-    if (menu) menu.style.display = "block";
+    if (!menu) return;
+
+    // Mostra temporariamente para medir
+    menu.style.display = "block";
+
+    const rect = menu.getBoundingClientRect();
+    const alturaJanela = window.innerHeight;
+
+    // Se passar da tela → abre para cima
+    if (rect.bottom > alturaJanela) {
+      menu.classList.add("up");
+    }
 
     return;
   }
 
-  // Clique dentro do dropdown → não fechar
-  if (e.target.closest(".menu-acoes-dropdown")) {
-    return;
-  }
+  // Clique dentro do menu → não fecha
+  if (e.target.closest(".menu-acoes-dropdown")) return;
 
   // Clique fora → fecha tudo
   document.querySelectorAll(".menu-acoes-dropdown")
-    .forEach(menu => menu.style.display = "none");
-})
+    .forEach(menu => {
+      menu.style.display = "none";
+      menu.classList.remove("up");
+    });
+});
 
 /* =====================================================
    UTILITÁRIOS
