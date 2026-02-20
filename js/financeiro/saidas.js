@@ -544,15 +544,6 @@ saidasCache.forEach(s => {
   }
 });
 
-// Total filtrado (o que aparece na tabela)
-lista.forEach(s => {
-  totalFiltrado += Number(s.valor);
-});
-
-  lista.forEach(s => {
-    const statusVisual = obterStatusVisual(s);
-    totalFiltrado += s.valor;
-
     const tr = document.createElement("tr");
 
    tr.innerHTML = `
