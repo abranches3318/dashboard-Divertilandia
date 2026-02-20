@@ -51,7 +51,7 @@ document.getElementById("filtro-ano")?.addEventListener("change", e => {
 async function carregarVisaoGeral() {
   setValor("kpi-entradas", 0);
   setValor("kpi-saidas", 0);
-  setValor("kpi-lucro", 0);
+  setValor("kpi-contas-pagar", 0);
   setValor("kpi-saldo", 0);
 
   const elAg = document.getElementById("kpi-agendamentos");
@@ -63,6 +63,18 @@ async function carregarVisaoGeral() {
   const mes = periodoAtual === "mensal" ? mesAtualSelecionado : null;
 
   await atualizarEntradasVisaoGeral(periodoAtual, mes);
+  // Saídas pagas
+const totalSaidas = await calcularSaidasPagas(periodoAtual, mes);
+setValor("kpi-saidas", totalSaidas);
+
+// Contas a pagar (aberto + atraso)
+const contasAPagar = calcularContasAPagar();
+setValor("kpi-contas-pagar", contasAPagar);
+
+// Resultado do período
+const totalEntradas = await calcularEntradasComEntrada(periodoAtual, mes);
+const resultado = totalEntradas - totalSaidas;
+setValor("kpi-saldo", resultado);
   await atualizarAgendamentosVisaoGeral(periodoAtual, mes);
   await atualizarProjecaoVisaoGeral(periodoAtual, mes);
 }
@@ -557,6 +569,44 @@ async function calcularEntradasComEntrada(periodo, mesSelecionado) {
     }
   }
 });
+
+  return total;
+}
+
+async function calcularSaidasPagas(periodo, mesSelecionado) {
+  if (!window.saidasCache) return 0;
+
+  const { inicio, fim } = getPeriodoDatas(periodo, mesSelecionado);
+
+  const dataInicio = new Date(inicio + "T00:00:00");
+  const dataFim = new Date(fim + "T23:59:59");
+
+  let total = 0;
+
+  saidasCache.forEach(s => {
+    if (s.status !== "pago") return;
+    if (!s.dataPagamento) return;
+
+    const data = new Date(s.dataPagamento + "T00:00:00");
+
+    if (data >= dataInicio && data <= dataFim) {
+      total += Number(s.valor || 0);
+    }
+  });
+
+  return total;
+}
+
+function calcularContasAPagar() {
+  if (!window.saidasCache) return 0;
+
+  let total = 0;
+
+  saidasCache.forEach(s => {
+    if (s.status === "em_aberto" || s.status === "atraso") {
+      total += Number(s.valor || 0);
+    }
+  });
 
   return total;
 }
