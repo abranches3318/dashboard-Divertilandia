@@ -589,7 +589,7 @@ function renderizarSaidas() {
     return true;
   });
 
-  // Ordenação correta
+  // Ordenação por data (mais recente primeiro)
   lista.sort((a, b) => {
     const dataA = a.dataVencimento
       ? new Date(a.dataVencimento + "T00:00:00").getTime()
@@ -607,6 +607,8 @@ function renderizarSaidas() {
 
   lista.forEach(s => {
     const statusVisual = obterStatusVisual(s);
+    const classeStatus = obterClasseStatus(statusVisual);
+
     totalFiltrado += Number(s.valor || 0);
 
     if (statusVisual === "pago") {
@@ -616,23 +618,26 @@ function renderizarSaidas() {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-  <td>
-    ${s.dataPagamento 
-      ? formatarDataSaida(s.dataPagamento)
-      : "—"}
-  </td>
-  <td>${formatarDataSaida(s.dataVencimento)}</td>
-  <td>${s.categoria}</td>
-  <td>${s.descricao || "—"}</td>
-  <td>${s.natureza}</td>
-  <td class="status-${statusVisual}">
-    ${formatarStatus(statusVisual)}
-  </td>
-  <td>R$ ${formatarMoedaSaida(s.valor)}</td>
-  <td class="col-acao">
-    ${gerarMenuAcoesSaida(s, statusVisual)}
-  </td>
-`;
+      <td>
+        ${s.dataPagamento 
+          ? formatarDataSaida(s.dataPagamento)
+          : "—"}
+      </td>
+      <td>${formatarDataSaida(s.dataVencimento)}</td>
+      <td>${s.categoria}</td>
+      <td>${s.descricao || "—"}</td>
+      <td>${s.natureza}</td>
+      <td>
+        <span class="status-badge ${classeStatus}">
+          ${formatarStatus(statusVisual)}
+        </span>
+      </td>
+      <td>R$ ${formatarMoedaSaida(s.valor)}</td>
+      <td class="col-acao">
+        ${gerarMenuAcoesSaida(s, statusVisual)}
+      </td>
+    `;
+
     tbody.appendChild(tr);
   });
 
@@ -865,4 +870,15 @@ async function gerarFixas({
     timer: 1500,
     showConfirmButton: false
   });
+}
+
+
+function obterClasseStatus(status) {
+  if (!status) return "status-aberto";
+
+  status = status.toLowerCase();
+
+  if (status === "pago") return "status-pago";
+  if (status === "atrasado") return "status-atrasado";
+  return "status-aberto";
 }
