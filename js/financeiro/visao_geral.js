@@ -67,7 +67,7 @@ async function carregarVisaoGeral() {
   const totalSaidas = await calcularSaidasPagas(periodoAtual, mes);
   setValor("kpi-saidas", totalSaidas);
 
-  const contasAPagar = calcularContasAPagar();
+  const contasAPagar = calcularContasAPagar(periodoAtual, mes);
   setValor("kpi-contas-pagar", contasAPagar);
 
   const resultado = totalEntradas - totalSaidas;
@@ -598,13 +598,27 @@ async function calcularSaidasPagas(periodo, mesSelecionado) {
   return total;
 }
 
-function calcularContasAPagar() {
+function calcularContasAPagar(periodo, mesSelecionado) {
   if (!window.saidasCache) return 0;
+
+  const { inicio, fim } = getPeriodoDatas(periodo, mesSelecionado);
+
+  const dataInicio = new Date(inicio + "T00:00:00");
+  const dataFim = new Date(fim + "T23:59:59");
 
   let total = 0;
 
   window.saidasCache.forEach(s => {
-    if (s.status === "em_aberto" || s.status === "atrasado") {
+    // Apenas contas não pagas
+    if (s.status !== "em_aberto" && s.status !== "atrasado") return;
+
+    const dataBase = s.vencimento || s.dataVencimento;
+    if (!dataBase) return;
+
+    const data = new Date(dataBase + "T00:00:00");
+
+    // 🔹 SOMENTE dentro do período selecionado
+    if (data >= dataInicio && data <= dataFim) {
       total += Number(s.valor || 0);
     }
   });
