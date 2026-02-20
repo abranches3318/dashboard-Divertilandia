@@ -80,56 +80,40 @@ async function carregarVisaoGeral() {
 // =====================================================
 // GRÁFICOS — SEMPRE EXISTENTES (ZERO REAL)
 // =====================================================
-function renderGraficosZerados() {
+async function renderGraficosFinanceiros() {
   destruirGraficos();
 
-  const labelsPadrao = getLabelsPorPeriodo(periodoAtual);
+  const labels = getLabelsPorPeriodo("mensal");
+  const dados = await gerarDadosFinanceirosAno();
 
   graficoFinanceiro = new Chart(
     document.getElementById("graficoFinanceiro"),
     {
       type: "line",
       data: {
-        labels: labelsPadrao,
-        datasets: [
-          datasetZero("Entradas", "#2ecc71"),
-          datasetZero("Saídas", "#e74c3c"),
-          datasetZero("Saldo", "#4cafef")
-        ]
-      },
-      options: chartOptions()
-    }
-  );
-
-  graficoEventos = new Chart(
-    document.getElementById("graficoEventos"),
-    {
-      type: "line",
-      data: {
-        labels: labelsPadrao,
-        datasets: [datasetZero("Eventos", "#b794f4")]
-      },
-      options: chartOptions()
-    }
-  );
-
-  graficoGastos = new Chart(
-    document.getElementById("graficoGastos"),
-    {
-      type: "doughnut",
-      data: {
-        labels: ["Sem dados"],
+        labels,
         datasets: [
           {
-            data: [1],
-            backgroundColor: ["#333"]
+            label: "Entradas",
+            data: dados.entradasMes,
+            borderColor: "#2ecc71",
+            tension: 0.35
+          },
+          {
+            label: "Saídas",
+            data: dados.saidasMes,
+            borderColor: "#e74c3c",
+            tension: 0.35
+          },
+          {
+            label: "Saldo",
+            data: dados.saldoMes,
+            borderColor: "#4cafef",
+            tension: 0.35
           }
         ]
       },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
-      }
+      options: chartOptions()
     }
   );
 }
@@ -202,7 +186,7 @@ function renderFinanceiro(secao) {
     limparKPIs();
 
     carregarVisaoGeral();
-    renderGraficosZerados();
+renderGraficosFinanceiros();
     return;
   }
 
@@ -641,3 +625,68 @@ async function carregarSaidasCache() {
     });
   });
 }
+
+async function gerarDadosFinanceirosAno() {
+  const entradasMes = Array(12).fill(0);
+  const saidasMes = Array(12).fill(0);
+  const saldoMes = Array(12).fill(0);
+
+  const ano = anoAtualSelecionado;
+
+  // =========================
+  // ENTRADAS (agendamentos)
+  // =========================
+  const inicio = `${ano}-01-01`;
+  const fim = `${ano}-12-31`;
+
+  const snapshot = await db
+    .collection("agendamentos")
+    .where("data", ">=", inicio)
+    .where("data", "<=", fim)
+    .get();
+
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    if (d.status === "cancelado") return;
+
+    const dataEvento = new Date(d.data + "T00:00:00");
+    const mes = dataEvento.getMonth();
+
+    const valorTotal = Number(d.valor_final || 0);
+    entradasMes[mes] += valorTotal;
+  });
+
+  // =========================
+  // SAÍDAS (cache)
+  // =========================
+  if (!window.saidasCache) {
+    await carregarSaidasCache();
+  }
+
+  window.saidasCache.forEach(s => {
+    if (s.status !== "pago") return;
+
+    const dataBase = s.dataPagamento || s.data_pagamento || s.vencimento;
+    if (!dataBase) return;
+
+    const data = new Date(dataBase + "T00:00:00");
+    if (data.getFullYear() !== ano) return;
+
+    const mes = data.getMonth();
+    saidasMes[mes] += Number(s.valor || 0);
+  });
+
+  // =========================
+  // SALDO
+  // =========================
+  for (let i = 0; i < 12; i++) {
+    saldoMes[i] = entradasMes[i] - saidasMes[i];
+  }
+
+  return {
+    entradasMes,
+    saidasMes,
+    saldoMes
+  };
+}
+
